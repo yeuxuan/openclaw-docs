@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://openclaw-docs.dx3n.cn/sitemap.xml

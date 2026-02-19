@@ -85,6 +85,34 @@ const tutProvidersCustom: SidebarItem[] = [
 ]
 const tutConcepts = listMdItems('tutorials/concepts')
 
+const SITE_URL = 'https://openclaw-docs.dx3n.cn'
+
+const jsonLd = JSON.stringify({
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'WebSite',
+      '@id': `${SITE_URL}/#website`,
+      url: `${SITE_URL}/`,
+      name: 'OpenClaw 源码剖析与指南',
+      description: '面向小白与开发者的 OpenClaw 实现剖析文档',
+      inLanguage: 'zh-CN',
+      potentialAction: {
+        '@type': 'SearchAction',
+        target: { '@type': 'EntryPoint', urlTemplate: `${SITE_URL}/?search={search_term_string}` },
+        'query-input': 'required name=search_term_string',
+      },
+    },
+    {
+      '@type': 'Organization',
+      '@id': `${SITE_URL}/#organization`,
+      name: 'OpenClaw',
+      url: `${SITE_URL}/`,
+      sameAs: ['https://github.com/yeuxuan/openclaw-docs'],
+    },
+  ],
+})
+
 export default withMermaid(defineConfig({
   lang: 'zh-CN',
   title: 'OpenClaw 源码剖析与指南',
@@ -93,18 +121,39 @@ export default withMermaid(defineConfig({
   cleanUrls: true,
   lastUpdated: true,
   ignoreDeadLinks: true,
+  sitemap: {
+    hostname: SITE_URL,
+  },
   head: [
     ['meta', { name: 'author', content: 'OpenClaw' }],
     ['meta', { name: 'robots', content: 'index, follow, max-image-preview:large' }],
     ['meta', { name: 'theme-color', content: '#161412' }],
     ['meta', { property: 'og:type', content: 'website' }],
     ['meta', { property: 'og:locale', content: 'zh_CN' }],
-    ['meta', { property: 'og:title', content: 'OpenClaw 源码剖析与指南' }],
-    ['meta', { property: 'og:description', content: '面向小白与开发者的 OpenClaw 实现剖析文档，覆盖智能体框架、通道适配器、上下文管理与状态机。' }],
+    ['meta', { property: 'og:site_name', content: 'OpenClaw Docs' }],
+    ['meta', { property: 'og:image', content: `${SITE_URL}/og-image.png` }],
+    ['meta', { property: 'og:image:width', content: '1200' }],
+    ['meta', { property: 'og:image:height', content: '630' }],
     ['meta', { name: 'twitter:card', content: 'summary_large_image' }],
-    ['meta', { name: 'twitter:title', content: 'OpenClaw 源码剖析与指南' }],
-    ['meta', { name: 'twitter:description', content: '从 0 到 1 拆解 OpenClaw 核心实现，帮助开发者快速复刻同类项目。' }],
+    ['meta', { name: 'twitter:image', content: `${SITE_URL}/og-image.png` }],
+    ['script', { type: 'application/ld+json' }, jsonLd],
   ],
+  transformHead({ page, title, description: pageDesc }) {
+    const path = page
+      .replace(/(^|\/)index\.md$/, '$1')
+      .replace(/\.md$/, '')
+    const canonical = path ? `${SITE_URL}/${path}` : `${SITE_URL}/`
+    const ogTitle = title || 'OpenClaw 源码剖析与指南'
+    const ogDesc = pageDesc || '面向小白与开发者的 OpenClaw 实现剖析文档，覆盖智能体框架、通道适配器、上下文管理与状态机。'
+    return [
+      ['link', { rel: 'canonical', href: canonical }],
+      ['meta', { property: 'og:url', content: canonical }],
+      ['meta', { property: 'og:title', content: ogTitle }],
+      ['meta', { property: 'og:description', content: ogDesc }],
+      ['meta', { name: 'twitter:title', content: ogTitle }],
+      ['meta', { name: 'twitter:description', content: ogDesc }],
+    ]
+  },
   themeConfig: {
     search: {
       provider: 'local',

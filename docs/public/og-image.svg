@@ -1,0 +1,66 @@
+<svg width="1200" height="630" viewBox="0 0 1200 630" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1" gradientUnits="objectBoundingBox">
+      <stop offset="0%" stop-color="#1d1a17"/>
+      <stop offset="100%" stop-color="#0e0c0a"/>
+    </linearGradient>
+    <pattern id="grid" x="0" y="0" width="48" height="48" patternUnits="userSpaceOnUse">
+      <path d="M 48 0 L 0 0 0 48" fill="none" stroke="#c87533" stroke-width="0.6" opacity="0.07"/>
+    </pattern>
+    <linearGradient id="accentLine" x1="0" y1="0" x2="1" y2="0" gradientUnits="objectBoundingBox">
+      <stop offset="0%" stop-color="#c87533" stop-opacity="0"/>
+      <stop offset="20%" stop-color="#c87533" stop-opacity="0.8"/>
+      <stop offset="80%" stop-color="#c87533" stop-opacity="0.8"/>
+      <stop offset="100%" stop-color="#c87533" stop-opacity="0"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1200" height="630" fill="url(#bg)"/>
+  <rect width="1200" height="630" fill="url(#grid)"/>
+
+  <!-- Outer border -->
+  <rect x="28" y="28" width="1144" height="574" rx="6" fill="none" stroke="#c87533" stroke-width="1" opacity="0.35"/>
+
+  <!-- Top accent line -->
+  <rect x="80" y="100" width="1040" height="1" fill="url(#accentLine)"/>
+  <!-- Bottom accent line -->
+  <rect x="80" y="528" width="1040" height="1" fill="url(#accentLine)"/>
+
+  <!-- Brand label -->
+  <text x="80" y="80" font-family="'Courier New',Courier,monospace" font-size="15" fill="#c87533" opacity="0.75" letter-spacing="3">OPENCLAW DOCS</text>
+
+  <!-- Main title: OpenClaw -->
+  <text x="80" y="245" font-family="Georgia,'Times New Roman',serif" font-size="88" font-weight="bold" fill="#e8c49a" letter-spacing="-2">OpenClaw</text>
+
+  <!-- Copper underline accent -->
+  <rect x="80" y="258" width="420" height="3" fill="#c87533" opacity="0.6" rx="2"/>
+
+  <!-- Subtitle -->
+  <text x="80" y="325" font-family="'Noto Sans SC',Arial,sans-serif" font-size="38" fill="#c87533" font-weight="500">源码剖析与实现指南</text>
+
+  <!-- Description -->
+  <text x="80" y="390" font-family="'Noto Sans SC',Arial,sans-serif" font-size="22" fill="#8b7a5e">面向开发者的 AI 智能体框架深度拆解与复刻实战</text>
+
+  <!-- Stats row -->
+  <text x="80" y="475" font-family="'Courier New',Courier,monospace" font-size="17" fill="#5c4a35">200+ 深度文档</text>
+  <text x="80" y="475" font-family="'Courier New',Courier,monospace" font-size="17" fill="#5c4a35" dx="250">3 学习主线</text>
+  <text x="80" y="475" font-family="'Courier New',Courier,monospace" font-size="17" fill="#5c4a35" dx="450">40+ 函数级剖析</text>
+
+  <!-- Domain -->
+  <text x="80" y="555" font-family="'Courier New',Courier,monospace" font-size="17" fill="#c87533" opacity="0.65">openclaw-docs.dx3n.cn</text>
+
+  <!-- Decorative gear icon (top right) -->
+  <g transform="translate(1050, 65)" opacity="0.12" fill="#c87533">
+    <circle cx="50" cy="50" r="20"/>
+    <circle cx="50" cy="50" r="12" fill="#0e0c0a"/>
+    <rect x="47" y="20" width="6" height="14" rx="2"/>
+    <rect x="47" y="66" width="6" height="14" rx="2"/>
+    <rect x="20" y="47" width="14" height="6" rx="2"/>
+    <rect x="66" y="47" width="14" height="6" rx="2"/>
+    <rect x="30" y="30" width="6" height="14" rx="2" transform="rotate(45 33 37)"/>
+    <rect x="64" y="30" width="6" height="14" rx="2" transform="rotate(-45 67 37)"/>
+    <rect x="30" y="56" width="6" height="14" rx="2" transform="rotate(-45 33 63)"/>
+    <rect x="64" y="56" width="6" height="14" rx="2" transform="rotate(45 67 63)"/>
+  </g>
+</svg>
