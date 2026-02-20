@@ -36,7 +36,7 @@ flowchart TB
 
 编辑 `~/.ssh/config` 并添加：
 
-```ssh
+```text
 Host remote-gateway
     HostName <REMOTE_IP>          # 例如 172.27.187.184
     User <REMOTE_USER>            # 例如 jefferson

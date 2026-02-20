@@ -194,7 +194,7 @@ git push
 
 建议的 `.gitignore` 起始配置：
 
-```gitignore
+```text
 .DS_Store
 .env
 **/*.key

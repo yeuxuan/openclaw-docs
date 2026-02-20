@@ -125,7 +125,7 @@ Google Chat Webhook 需要公共 HTTPS 端点。为安全起见，**仅将 `/goo
 
 如果你使用像 Caddy 这样的反向代理，仅代理特定路径：
 
-```caddy
+```text
 your-domain.com {
     reverse_proxy /googlechat* localhost:18789
 }

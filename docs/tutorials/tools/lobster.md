@@ -35,6 +35,8 @@ openclaw plugins install lobster
 
 工作流使用 YAML 格式定义：
 
+<div v-pre>
+
 ```yaml
 name: "数据分析工作流"
 version: "1.0"
@@ -52,6 +54,8 @@ steps:
     type: llm
     prompt: "根据以下分析结果生成一份执行摘要：\n\n{{analyze.result}}"
 ```
+
+</div>
 
 ::: details 完整工作流参数说明
 
@@ -74,6 +78,8 @@ steps:
 
 步骤按定义顺序依次执行，后续步骤可以引用前面步骤的输出：
 
+<div v-pre>
+
 ```yaml
 steps:
   - id: step1
@@ -85,9 +91,13 @@ steps:
     prompt: "根据大纲写正文：{{step1.result}}"
 ```
 
+</div>
+
 ### 并行模式（Parallel）
 
 多个步骤同时执行，加速处理效率：
+
+<div v-pre>
 
 ```yaml
 steps:
@@ -106,11 +116,15 @@ steps:
     prompt: "综合以下信息：\n新闻：{{fetch_news.result}}\n数据：{{fetch_data.result}}"
 ```
 
+</div>
+
 ---
 
 ## JSON-only LLM 步骤
 
 在需要结构化输出的步骤中，可以强制 LLM 以 JSON 格式响应：
+
+<div v-pre>
 
 ```yaml
 - id: extract
@@ -122,6 +136,8 @@ steps:
 
     文本内容：{{fetch.result}}
 ```
+
+</div>
 
 ---
 
