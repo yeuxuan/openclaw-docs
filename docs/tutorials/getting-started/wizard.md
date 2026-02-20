@@ -65,7 +65,7 @@ openclaw onboard --install-daemon
 ### 第 1 步：选择安装模式
 
 向导显示：
-```
+```text
 How would you like to set up OpenClaw?
 > Quick start (recommended)
   Advanced
@@ -79,7 +79,7 @@ How would you like to set up OpenClaw?
 ### 第 2 步：选择 AI 提供商（最重要）
 
 向导显示：
-```
+```text
 Which AI provider do you want to use?
 > Anthropic (Claude) — recommended
   OpenAI (ChatGPT)
@@ -90,7 +90,7 @@ Which AI provider do you want to use?
 **推荐选择 Anthropic（Claude）**，Claude 中文能力强，也是 OpenClaw 官方首选。
 
 选好后，向导会让你输入 API 密钥：
-```
+```text
 Enter your Anthropic API key:
 > （在这里粘贴你的密钥，回车确认）
 ```
@@ -109,7 +109,7 @@ Enter your Anthropic API key:
 ### 第 3 步：选择 AI 模型
 
 向导显示：
-```
+```text
 Select your default model:
 > claude-opus-4-6     （最强，花费最高）
   claude-sonnet-4-6   （均衡，推荐）
@@ -124,7 +124,7 @@ Select your default model:
 ### 第 4 步：工作区路径
 
 向导显示：
-```
+```text
 Where should the agent workspace be?
 > ~/.openclaw/workspace   （默认）
   Custom path             （自定义路径）
@@ -138,7 +138,7 @@ Where should the agent workspace be?
 ### 第 5 步：网关端口和认证
 
 向导显示：
-```
+```text
 Gateway port: 18789
 Gateway authentication: Token (auto-generated)
 ```
@@ -151,7 +151,7 @@ Gateway authentication: Token (auto-generated)
 ### 第 6 步：连接聊天软件（通道）
 
 向导显示：
-```
+```text
 Which channels would you like to set up?
 [ ] WhatsApp
 [ ] Telegram
@@ -167,7 +167,7 @@ Which channels would you like to set up?
 ### 第 7 步：安装为系统服务
 
 向导显示：
-```
+```text
 Install gateway as system service?
 > Yes (recommended)
   No
@@ -182,7 +182,7 @@ Install gateway as system service?
 
 向导会自动启动网关，然后验证它是否正常运行：
 
-```
+```text
 ✓ Gateway started successfully
 ✓ Health check: OK
 ```
@@ -196,7 +196,7 @@ Install gateway as system service?
 ### 第 9 步：安装推荐技能
 
 向导显示：
-```
+```text
 Install recommended skills?
 > Yes (recommended)
   No
@@ -211,7 +211,7 @@ Install recommended skills?
 
 结束时你会看到一个汇总：
 
-```
+```text
 ✓ AI Provider:  Anthropic (claude-sonnet-4-6)
 ✓ Workspace:    ~/.openclaw/workspace
 ✓ Gateway:      Running on port 18789

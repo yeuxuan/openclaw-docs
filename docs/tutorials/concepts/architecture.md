@@ -18,7 +18,7 @@ sidebarTitle: "OpenClaw 是怎么工作的"
 - **通道（Telegram/WhatsApp 等）** = 不同的点餐方式（电话点餐、外卖 App、到店点餐）
 - **AI 模型（Anthropic/OpenAI）** = 餐厅使用的食材供应商，厨师根据供应商的食材做菜
 
-```
+```text
 你的消息
     ↓
 Telegram / WhatsApp / Discord（通道）
@@ -85,7 +85,7 @@ AI 模型是真正产生智能回复的地方。OpenClaw 支持接入多种 AI �
 
 当你在 Telegram 发送"帮我写一首诗"时，这是发生的事情：
 
-```
+```text
 1. 你在 Telegram 发送消息
 2. Telegram Bot 把消息转发给 OpenClaw 网关
 3. 网关检查你是否有权限（安全验证）

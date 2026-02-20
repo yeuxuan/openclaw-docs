@@ -199,7 +199,7 @@ OpenClaw 默认就是一个不错的助手设置，但你通常需要调整：
 
 来自智能体的出站附件：在单独一行包含 `MEDIA:<path-or-url>`（无空格）。示例：
 
-```
+```text
 Here's the screenshot.
 MEDIA:https://example.com/screenshot.png
 ```

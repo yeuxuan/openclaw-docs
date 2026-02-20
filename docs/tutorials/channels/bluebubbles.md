@@ -130,7 +130,7 @@ launchctl load ~/Library/LaunchAgents/com.user.poke-messages.plist
 
 BlueBubbles 在交互式设置向导中可用：
 
-```
+```bash
 openclaw onboard
 ```
 
@@ -144,7 +144,7 @@ openclaw onboard
 
 你也可以通过 CLI 添加 BlueBubbles：
 
-```
+```bash
 openclaw channels add bluebubbles --http-url http://192.168.1.100:1234 --password <password>
 ```
 

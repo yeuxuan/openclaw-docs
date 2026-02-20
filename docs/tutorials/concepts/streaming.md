@@ -18,7 +18,7 @@ OpenClaw 有两个独立的"流式输出"层：
 
 块流式输出在助手输出可用时以粗粒度块发送。
 
-```
+```text
 Model output
   └─ text_delta/events
        ├─ (blockStreamingBreak=text_end)
@@ -120,7 +120,7 @@ Telegram 是唯一支持草稿流的通道：
 
 当草稿流活跃时，OpenClaw 为该回复禁用块流式输出以避免双重流。
 
-```
+```text
 Telegram (private + topics)
   └─ sendMessageDraft (draft bubble)
        ├─ streamMode=partial → update latest text

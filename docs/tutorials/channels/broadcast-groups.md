@@ -27,7 +27,7 @@ sidebarTitle: "广播组"
 
 部署具有原子化、专注职责的多个智能体：
 
-```
+```text
 Group: "Development Team"
 Agents:
   - CodeReviewer (reviews code snippets)
@@ -40,7 +40,7 @@ Agents:
 
 ### 2. 多语言支持
 
-```
+```text
 Group: "International Support"
 Agents:
   - Agent_EN (responds in English)
@@ -50,7 +50,7 @@ Agents:
 
 ### 3. 质量保证工作流
 
-```
+```text
 Group: "Customer Support"
 Agents:
   - SupportAgent (provides answer)
@@ -59,7 +59,7 @@ Agents:
 
 ### 4. 任务自动化
 
-```
+```text
 Group: "Project Management"
 Agents:
   - TaskTracker (updates task database)
@@ -194,7 +194,7 @@ Agents:
 
 **Alfred 的上下文：**
 
-```
+```json5
 Session: agent:alfred:whatsapp:group:120363403215116621@g.us
 History: [user message, alfred's previous responses]
 Workspace: /Users/pascal/openclaw-alfred/
@@ -203,7 +203,7 @@ Tools: read, write, exec
 
 **Baerbel 的上下文：**
 
-```
+```json5
 Session: agent:baerbel:whatsapp:group:120363403215116621@g.us
 History: [user message, baerbel's previous responses]
 Workspace: /Users/pascal/openclaw-baerbel/
@@ -272,7 +272,7 @@ Tools: read only
 
 智能体独立失败。一个智能体的错误不会阻塞其他智能体：
 
-```
+```text
 Message → [Agent A ✓, Agent B ✗ error, Agent C ✓]
 Result: Agent A and C respond, Agent B logs error
 ```

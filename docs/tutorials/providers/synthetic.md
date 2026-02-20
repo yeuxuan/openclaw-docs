@@ -20,7 +20,7 @@ openclaw onboard --auth-choice synthetic-api-key
 
 默认模型设置为：
 
-```
+```text
 synthetic/hf:MiniMaxAI/MiniMax-M2.1
 ```
 

@@ -84,6 +84,9 @@ const tutProvidersCustom: SidebarItem[] = [
   { text: '自定义模型提供商', link: '/tutorials/providers/custom' },
 ]
 const tutConcepts = listMdItems('tutorials/concepts')
+const tutAutomation = listMdItems('tutorials/automation')
+const tutHelp = listMdItems('tutorials/help')
+const tutTools = listMdItems('tutorials/tools')
 
 const SITE_URL = 'https://openclaw-docs.dx3n.cn'
 
@@ -170,7 +173,21 @@ export default withMermaid(defineConfig({
     },
     nav: [
       { text: '首页', link: '/' },
-      { text: '教程', link: '/tutorials/' },
+      {
+        text: '教程',
+        items: [
+          { text: '教程中心', link: '/tutorials/' },
+          { text: '快速入门', link: '/tutorials/getting-started/getting-started' },
+          { text: '安装部署', link: '/tutorials/installation/' },
+          { text: '网关配置', link: '/tutorials/gateway/' },
+          { text: '通道接入', link: '/tutorials/channels/' },
+          { text: 'AI 模型', link: '/tutorials/providers/' },
+          { text: '核心概念', link: '/tutorials/concepts/' },
+          { text: '工具系统', link: '/tutorials/tools/' },
+          { text: '自动化', link: '/tutorials/automation/' },
+          { text: '帮助与调试', link: '/tutorials/help/' },
+        ],
+      },
       { text: '项目拆解', link: '/beginner-openclaw-guide/' },
       { text: '重点框架', link: '/beginner-openclaw-framework-focus/' },
     ],
@@ -238,6 +255,33 @@ export default withMermaid(defineConfig({
           items: [
             { text: '教程中心', link: '/tutorials/' },
             ...tutConcepts,
+          ],
+        },
+      ],
+      '/tutorials/tools/': [
+        {
+          text: '工具系统',
+          items: [
+            { text: '教程中心', link: '/tutorials/' },
+            ...tutTools,
+          ],
+        },
+      ],
+      '/tutorials/automation/': [
+        {
+          text: '自动化',
+          items: [
+            { text: '教程中心', link: '/tutorials/' },
+            ...tutAutomation,
+          ],
+        },
+      ],
+      '/tutorials/help/': [
+        {
+          text: '帮助与故障排查',
+          items: [
+            { text: '教程中心', link: '/tutorials/' },
+            ...tutHelp,
           ],
         },
       ],

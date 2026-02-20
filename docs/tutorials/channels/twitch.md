@@ -287,7 +287,7 @@ openclaw channels status --probe
 
 **检查日志中的刷新事件：**
 
-```
+```text
 Using env token source for mybot
 Access token refreshed for user 123456 (expires in 14400s)
 ```

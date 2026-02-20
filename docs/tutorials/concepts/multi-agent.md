@@ -20,7 +20,7 @@ status: active
 
 认证配置文件是 **每智能体的**。每个智能体从自己的路径读取：
 
-```
+```text
 ~/.openclaw/agents/<agentId>/agent/auth-profiles.json
 ```
 

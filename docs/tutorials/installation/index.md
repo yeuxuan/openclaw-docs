@@ -63,7 +63,7 @@ iwr -useb https://openclaw.ai/install.ps1 | iex
 
 **安装成功后会看到：**
 
-```
+```text
 ✓ OpenClaw installed successfully!
 Run "openclaw onboard" to get started.
 ```

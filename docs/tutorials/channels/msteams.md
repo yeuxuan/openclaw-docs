@@ -749,7 +749,7 @@ Teams URL 中的 `groupId` 查询参数**不是**用于配置的团队 ID。请�
 
 **团队 URL：**
 
-```
+```text
 https://teams.microsoft.com/l/team/19%3ABk4j...%40thread.tacv2/conversations?groupId=...
                                     └────────────────────────────┘
                                     团队 ID（对此进行 URL 解码）
@@ -757,7 +757,7 @@ https://teams.microsoft.com/l/team/19%3ABk4j...%40thread.tacv2/conversations?gro
 
 **频道 URL：**
 
-```
+```text
 https://teams.microsoft.com/l/channel/19%3A15bc...%40thread.tacv2/ChannelName?groupId=...
                                       └─────────────────────────┘
                                       频道 ID（对此进行 URL 解码）

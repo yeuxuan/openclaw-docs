@@ -275,7 +275,7 @@ OpenClaw 内置了对主流 AI 服务商的支持，同时也允许你通过 `mo
 
 如果需要为特定智能体单独配置模型目录，可在智能体配置目录下创建 `models.json`：
 
-```
+```text
 ~/.openclaw/agents/<agentId>/agent/models.json
 ```
 

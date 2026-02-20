@@ -11,7 +11,7 @@ sidebarTitle: "消息"
 
 ## 消息流（高层概览）
 
-```
+```text
 Inbound message
   -> routing/bindings -> session key
   -> queue (if a run is active)

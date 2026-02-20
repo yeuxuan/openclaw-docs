@@ -25,7 +25,7 @@ TypeBox 是一个 TypeScript 优先的 schema 库。我们用它来定义 **网�
 
 连接流程（最小化）：
 
-```
+```text
 Client                    Gateway
   |---- req:connect -------->|
   |<---- res:hello-ok --------|

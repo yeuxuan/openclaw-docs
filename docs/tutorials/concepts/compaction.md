@@ -43,7 +43,7 @@ sidebarTitle: "压缩"
 
 使用 `/compact`（可选附带说明）来强制执行一次压缩：
 
-```
+```text
 /compact Focus on decisions and open questions
 ```
 

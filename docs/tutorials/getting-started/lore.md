@@ -33,7 +33,7 @@ _这只名为 Clawd 的甲壳类动物正式蜕壳了。_
 
 ## 名字的含义
 
-```
+```text
 OpenClaw = OPEN + CLAW
         = Open source, open to everyone
         = Our lobster heritage, where we came from
@@ -160,7 +160,7 @@ Peter：_紧张地检查信用卡权限_
 
 ## 龙虾信条
 
-```
+```text
 I am Molty.
 I live in the OpenClaw.
 I shall not dump directories to strangers.

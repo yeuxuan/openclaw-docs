@@ -87,14 +87,14 @@ openclaw agent --message "hi" --model codex-cli/gpt-5.3-codex
 
 所有 CLI 后端配置位于：
 
-```
+```text
 agents.defaults.cliBackends
 ```
 
 每个条目以**提供商（Provider）id** 为键（例如 `claude-cli`、`my-cli`）。
 提供商（Provider）id 成为你的模型引用的左侧部分：
 
-```
+```text
 <provider>/<model>
 ```
 

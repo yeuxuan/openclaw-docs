@@ -62,7 +62,7 @@ openclaw onboard
 
 如果设置了 `agents.defaults.models`，它会成为 `/model` 和会话覆盖的 **白名单**。当用户选择不在该白名单中的模型时，OpenClaw 返回：
 
-```
+```text
 Model "provider/model" is not allowed. Use /model to list available models.
 ```
 
@@ -92,7 +92,7 @@ Model "provider/model" is not allowed. Use /model to list available models.
 
 你可以在不重启的情况下切换当前会话的模型：
 
-```
+```text
 /model
 /model list
 /model 3

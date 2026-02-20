@@ -1,3 +1,8 @@
+---
+title: "可信代理认证"
+sidebarTitle: "可信代理认证"
+---
+
 # 可信代理认证
 
 > ⚠️ **安全敏感功能。**此模式将认证完全委托给你的反向代理。配置错误可能使你的网关（Gateway）暴露于未授权访问。在启用前请仔细阅读本页。
@@ -131,7 +136,7 @@ Caddy 配合 `caddy-security` 插件可以认证用户并传递身份头。
 
 Caddyfile 片段：
 
-```
+```text
 openclaw.example.com {
     authenticate with oauth2_provider
     authorize with policy1

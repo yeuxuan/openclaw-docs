@@ -25,7 +25,7 @@ sidebarTitle: "会话"
 
 会话记录存在你的电脑上：
 
-```
+```text
 ~/.openclaw/agents/<agentId>/sessions/
 ```
 

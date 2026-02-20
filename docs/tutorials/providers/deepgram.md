@@ -18,7 +18,7 @@ Deepgram 是一个语音转文本 API。在 OpenClaw 中，它通过 `tools.medi
 
 1. 设置你的 API 密钥：
 
-```
+```text
 DEEPGRAM_API_KEY=dg_...
 ```
 

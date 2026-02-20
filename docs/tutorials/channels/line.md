@@ -36,7 +36,7 @@ openclaw plugins install ./extensions/line
 4. 在 Messaging API 设置中启用 **Use webhook**。
 5. 将 Webhook URL 设置为你的网关端点（需要 HTTPS）：
 
-```
+```text
 https://gateway-host/line/webhook
 ```
 
@@ -172,7 +172,7 @@ LINE ID 区分大小写。有效 ID 格式如下：
 
 LINE 插件还提供了 `/card` 命令用于 Flex 消息预设：
 
-```
+```text
 /card info "Welcome" "Thanks for joining!"
 ```
 

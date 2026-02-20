@@ -71,7 +71,7 @@ openclaw models auth paste-token --provider anthropic
 
 如果你看到类似以下的 Anthropic 错误：
 
-```
+```text
 This credential is only authorized for use with Claude Code and cannot be used for other API requests.
 ```
 

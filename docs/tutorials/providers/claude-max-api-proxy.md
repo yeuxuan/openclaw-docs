@@ -22,7 +22,7 @@ sidebarTitle: "Claude Max API 代理"
 
 ## 工作原理
 
-```
+```text
 Your App → claude-max-api-proxy → Claude Code CLI → Anthropic (via subscription)
      (OpenAI format)              (converts format)      (uses your login)
 ```

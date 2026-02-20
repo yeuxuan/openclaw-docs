@@ -91,7 +91,7 @@ OpenClaw 可以为子智能体渲染更小的系统提示词。运行时为每�
 
 当存在合格技能时，OpenClaw 注入一个紧凑的 **可用技能列表**（`formatSkillsForPrompt`），包含每个技能的 **文件路径**。提示词指示模型使用 `read` 在列出的位置（工作区、托管或捆绑）加载 SKILL.md。如果没有合格技能，Skills 部分被省略。
 
-```
+```text
 <available_skills>
   <skill>
     <name>...</name>

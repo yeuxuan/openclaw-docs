@@ -1,3 +1,8 @@
+---
+title: "LiteLLM"
+sidebarTitle: "LiteLLM"
+---
+
 # LiteLLM
 
 [LiteLLM](https://litellm.ai) 是一个开源的 LLM 网关（Gateway），提供统一的 API 来访问 100 多个模型提供商。通过 LiteLLM 路由 OpenClaw 请求，可以获得集中式的费用追踪、日志记录，以及在不更改 OpenClaw 配置的情况下切换后端的灵活性。

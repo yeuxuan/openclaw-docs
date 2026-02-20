@@ -79,7 +79,7 @@ OpenClaw 从 `OPENCLAW_CONFIG_PATH` 读取 JSON5 配置，并将可变数据存�
 
 macOS 打包流程需要一个稳定的 Info.plist 模板位于：
 
-```
+```text
 apps/macos/Sources/OpenClaw/Resources/Info.plist
 ```
 

@@ -13,7 +13,7 @@ OpenClaw 标准化时间戳，以便模型看到 **单一的参考时间**。
 
 入站消息包装在如下信封中：
 
-```
+```text
 [Provider ... 2026-01-05 16:26 PST] message text
 ```
 
@@ -43,19 +43,19 @@ OpenClaw 标准化时间戳，以便模型看到 **单一的参考时间**。
 
 **本地（默认）：**
 
-```
+```text
 [Signal Alice +1555 2026-01-18 00:19 PST] hello
 ```
 
 **固定时区：**
 
-```
+```text
 [Signal Alice +1555 2026-01-18 06:19 GMT+1] hello
 ```
 
 **经过时间：**
 
-```
+```text
 [Signal Alice +1555 +2m 2026-01-18T05:19Z] follow-up
 ```
 

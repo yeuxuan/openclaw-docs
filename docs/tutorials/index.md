@@ -119,6 +119,43 @@ OpenClaw 把这些变成可能——它在你的电脑上持续运行，连接�
 </div>
 </section>
 
+<section class="oc-track">
+<h2 class="oc-track-title">工具系统</h2>
+<p>浏览器、命令执行、网络搜索、技能、子智能体等工具。</p>
+<div class="oc-links">
+<a href="/tutorials/tools/">工具系统总览</a>
+<a href="/tutorials/tools/browser">浏览器工具</a>
+<a href="/tutorials/tools/exec">执行命令</a>
+<a href="/tutorials/tools/skills">技能系统</a>
+<a href="/tutorials/tools/subagents">子智能体</a>
+<a href="/tutorials/tools/web">网络搜索</a>
+</div>
+</section>
+
+<section class="oc-track">
+<h2 class="oc-track-title">自动化</h2>
+<p>Hooks 事件钩子、Cron 定时任务、Webhook 外部触发。</p>
+<div class="oc-links">
+<a href="/tutorials/automation/">自动化总览</a>
+<a href="/tutorials/automation/hooks">Hooks 事件钩子</a>
+<a href="/tutorials/automation/cron-jobs">Cron 定时任务</a>
+<a href="/tutorials/automation/webhook">Webhook 外部触发</a>
+<a href="/tutorials/automation/cron-vs-heartbeat">Cron vs Heartbeat</a>
+</div>
+</section>
+
+<section class="oc-track">
+<h2 class="oc-track-title">帮助与故障排查</h2>
+<p>FAQ、调试指南、常见问题排查、环境变量说明。</p>
+<div class="oc-links">
+<a href="/tutorials/help/">帮助中心</a>
+<a href="/tutorials/help/faq">常见问题 FAQ</a>
+<a href="/tutorials/help/troubleshooting">故障排查</a>
+<a href="/tutorials/help/debugging">调试指南</a>
+<a href="/tutorials/help/environment">环境变量</a>
+</div>
+</section>
+
 </div>
 </div>
 
@@ -126,4 +163,4 @@ OpenClaw 把这些变成可能——它在你的电脑上持续运行，连接�
 
 > **遇到看不懂的词？** 去[系统架构说明](/tutorials/concepts/architecture)页面，里面有通俗的解释。
 >
-> **遇到问题解决不了？** 先跑 `openclaw doctor` 自动诊断，或在 [GitHub Issues](https://github.com/openclaw/openclaw/issues) 提问，附上诊断输出内容。
+> **遇到问题解决不了？** 先跑 `openclaw doctor` 自动诊断，或查看[故障排查指南](/tutorials/help/troubleshooting)，也可以在 [GitHub Issues](https://github.com/openclaw/openclaw/issues) 提问，附上诊断输出内容。

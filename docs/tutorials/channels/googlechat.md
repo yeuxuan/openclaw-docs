@@ -216,7 +216,7 @@ your-domain.com {
 
 如果 Google Cloud Logs Explorer 显示如下错误：
 
-```
+```text
 status code: 405, reason phrase: HTTP error response: HTTP/1.1 405 Method Not Allowed
 ```
 

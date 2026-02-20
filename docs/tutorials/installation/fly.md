@@ -139,7 +139,7 @@ fly logs
 
 你应该看到：
 
-```
+```text
 [gateway] listening on ws://0.0.0.0:3000 (PID xxx)
 [discord] logged in to discord as xxx
 ```
@@ -417,7 +417,7 @@ fly ips allocate-v6 --private -a my-openclaw
 
 之后，`fly ips list` 应该只显示 `private` 类型的 IP：
 
-```
+```text
 VERSION  IP                   TYPE             REGION
 v6       fdaa:x:x:x:x::x      private          global
 ```
