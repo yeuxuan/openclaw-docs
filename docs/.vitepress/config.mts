@@ -97,9 +97,9 @@ const jsonLd = JSON.stringify({
       '@type': 'WebSite',
       '@id': `${SITE_URL}/#website`,
       url: `${SITE_URL}/`,
-      name: 'OpenClaw 源码剖析与指南',
-      alternateName: ['ClawdBot 文档', 'ClawdBot Docs', 'openclaw docs'],
-      description: '面向小白与开发者的 OpenClaw（前身 ClawdBot）实现剖析文档，覆盖 AI 智能体框架、通道适配器、上下文管理与状态机。',
+      name: 'OpenClaw 中文文档',
+      alternateName: ['ClawdBot 文档', 'ClawdBot Docs', 'openclaw docs', 'OpenClaw 源码剖析'],
+      description: 'OpenClaw 中文完整文档，276篇深度教程，覆盖安装部署、源码剖析、Gateway配置、多通道接入与AI模型集成。原名 ClawdBot。',
       inLanguage: 'zh-CN',
       potentialAction: {
         '@type': 'SearchAction',
@@ -114,6 +114,68 @@ const jsonLd = JSON.stringify({
       alternateName: 'ClawdBot',
       url: `${SITE_URL}/`,
       sameAs: ['https://github.com/yeuxuan/openclaw-docs'],
+    },
+    {
+      '@type': 'FAQPage',
+      '@id': `${SITE_URL}/#faq`,
+      mainEntity: [
+        {
+          '@type': 'Question',
+          name: 'OpenClaw 是什么？',
+          acceptedAnswer: {
+            '@type': 'Answer',
+            text: 'OpenClaw（原名 ClawdBot）是一款开源的多通道 AI 智能体框架，支持 WhatsApp、Telegram、Discord、Slack、Signal、iMessage、飞书等平台，可接入 Claude、GPT、DeepSeek、Ollama 等 AI 模型，让你的 AI 助手在任意通讯平台上运行。',
+          },
+        },
+        {
+          '@type': 'Question',
+          name: 'OpenClaw 支持哪些聊天平台？',
+          acceptedAnswer: {
+            '@type': 'Answer',
+            text: 'OpenClaw 支持 WhatsApp、Telegram、Discord、Slack、Signal、iMessage、飞书（Feishu）、Mattermost、Google Chat、MS Teams、Matrix、Zalo、IRC 等主流即时通讯平台。',
+          },
+        },
+        {
+          '@type': 'Question',
+          name: 'OpenClaw 支持哪些 AI 模型？',
+          acceptedAnswer: {
+            '@type': 'Answer',
+            text: 'OpenClaw 支持 Anthropic Claude、OpenAI GPT、DeepSeek、通义千问（Qwen）、Kimi（月之暗面）、智谱 GLM、MiniMax、Ollama 本地大模型，以及通过 OpenRouter、LiteLLM、Cloudflare AI Gateway 接入的其他模型。',
+          },
+        },
+        {
+          '@type': 'Question',
+          name: 'OpenClaw 怎么安装？',
+          acceptedAnswer: {
+            '@type': 'Answer',
+            text: 'OpenClaw 安装只需一行命令：npm install -g openclaw@latest，然后运行 openclaw onboard 按向导完成配置。支持 macOS、Linux、Windows（WSL2）。',
+          },
+        },
+        {
+          '@type': 'Question',
+          name: 'OpenClaw 和 ClawdBot 是什么关系？',
+          acceptedAnswer: {
+            '@type': 'Answer',
+            text: 'OpenClaw 的前身就是 ClawdBot，项目品牌升级后正式更名为 OpenClaw，功能与代码库保持延续，如果你之前使用过 ClawdBot，OpenClaw 就是它的新版本。',
+          },
+        },
+        {
+          '@type': 'Question',
+          name: 'OpenClaw Gateway 是什么？',
+          acceptedAnswer: {
+            '@type': 'Answer',
+            text: 'OpenClaw Gateway 是核心常驻进程，负责统一管理所有通道连接、消息路由、Agent 调度与会话存储。通过 openclaw gateway 命令启动，默认监听 18789 端口。',
+          },
+        },
+        {
+          '@type': 'Question',
+          name: 'OpenClaw 支持本地大模型吗？',
+          acceptedAnswer: {
+            '@type': 'Answer',
+            text: '支持。OpenClaw 可通过 Ollama 接入本地大模型（如 Llama、Qwen、DeepSeek 等），实现完全私有化部署，无需外部 API，数据不出本地。',
+          },
+        },
+      ],
     },
   ],
 })
@@ -145,9 +207,9 @@ export default withMermaid(defineConfig({
     },
   },
   lang: 'zh-CN',
-  title: 'OpenClaw 源码剖析与指南',
-  titleTemplate: ':title | OpenClaw Docs',
-  description: '面向小白与开发者的 OpenClaw 实现剖析文档',
+  title: 'OpenClaw 中文文档 | 源码剖析 · 安装教程 · AI智能体框架',
+  titleTemplate: ':title | OpenClaw 中文文档',
+  description: 'OpenClaw 中文完整文档，276篇深度教程，覆盖安装部署、源码剖析、Gateway配置、WhatsApp/Telegram/Discord/飞书多通道接入，支持 Claude、DeepSeek、Ollama 本地模型。原名 ClawdBot。',
   cleanUrls: true,
   lastUpdated: true,
   ignoreDeadLinks: true,
@@ -162,7 +224,7 @@ export default withMermaid(defineConfig({
     ['meta', { name: 'theme-color', content: '#161412' }],
     ['meta', { property: 'og:type', content: 'website' }],
     ['meta', { property: 'og:locale', content: 'zh_CN' }],
-    ['meta', { property: 'og:site_name', content: 'OpenClaw Docs' }],
+    ['meta', { property: 'og:site_name', content: 'OpenClaw 中文文档' }],
     ['meta', { property: 'og:image', content: `${SITE_URL}/og-image.png` }],
     ['meta', { property: 'og:image:width', content: '1200' }],
     ['meta', { property: 'og:image:height', content: '630' }],
@@ -175,8 +237,8 @@ export default withMermaid(defineConfig({
       .replace(/(^|\/)index\.md$/, '$1')
       .replace(/\.md$/, '')
     const canonical = path ? `${SITE_URL}/${path}` : `${SITE_URL}/`
-    const ogTitle = title || 'OpenClaw 源码剖析与指南'
-    const ogDesc = pageDesc || '面向小白与开发者的 OpenClaw 实现剖析文档，覆盖智能体框架、通道适配器、上下文管理与状态机。'
+    const ogTitle = title || 'OpenClaw 中文文档 | 源码剖析 · 安装教程 · AI智能体框架'
+    const ogDesc = pageDesc || 'OpenClaw 中文完整文档，276篇深度教程，覆盖安装部署、源码剖析、Gateway配置、WhatsApp/Telegram/Discord/飞书多通道接入，支持 Claude、DeepSeek、Ollama 本地模型。原名 ClawdBot。'
     return [
       ['link', { rel: 'canonical', href: canonical }],
       ['meta', { property: 'og:url', content: canonical }],

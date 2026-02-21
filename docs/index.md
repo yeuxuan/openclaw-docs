@@ -1,7 +1,7 @@
 ---
 layout: home
-title: OpenClaw 项目实现拆解
-description: 面向开发者和小白的 OpenClaw 实现型文档，覆盖智能体框架、通道适配器、上下文管理、状态机与 Gateway 控制面。
+title: OpenClaw 中文文档 | 安装教程 · 源码剖析 · AI智能体框架
+description: OpenClaw 中文完整文档，276篇深度教程。安装部署、Gateway配置、WhatsApp/Telegram/Discord/飞书多通道接入，支持 Claude、DeepSeek、Ollama 本地模型，源码剖析与架构分析。原名 ClawdBot。
 head:
   - - meta
     - name: keywords
@@ -139,6 +139,47 @@ hero:
 <li>第三步：看「AI 重点框架专项」，吃透上下文、状态机与工具策略实现原理。</li>
 <li>最后：看函数级剖析章节，按步骤复刻核心能力到你自己的项目中。</li>
 </ol>
+</section>
+
+<!-- ── 常见问题 FAQ ── -->
+<section class="oc-home-faq">
+<h2>常见问题</h2>
+
+<details>
+<summary><strong>OpenClaw 是什么？</strong></summary>
+<p>OpenClaw（原名 <strong>ClawdBot</strong>）是一款开源的多通道 AI 智能体框架，让你的 AI 助手运行在 WhatsApp、Telegram、Discord、Slack、Signal、iMessage、飞书等任意平台上，支持接入 Claude、GPT、DeepSeek、Ollama 等主流 AI 模型。</p>
+</details>
+
+<details>
+<summary><strong>OpenClaw 支持哪些聊天平台？</strong></summary>
+<p>支持 <strong>WhatsApp、Telegram、Discord、Slack、Signal、iMessage、飞书（Feishu）、Mattermost、Google Chat、MS Teams、Matrix、Zalo、IRC</strong> 等主流即时通讯平台。</p>
+</details>
+
+<details>
+<summary><strong>OpenClaw 支持哪些 AI 模型？</strong></summary>
+<p>支持 <strong>Anthropic Claude、OpenAI GPT、DeepSeek、通义千问（Qwen）、Kimi（月之暗面）、智谱 GLM、MiniMax、Ollama 本地大模型</strong>，以及通过 OpenRouter、LiteLLM、Cloudflare AI Gateway 接入的其他模型。</p>
+</details>
+
+<details>
+<summary><strong>OpenClaw 怎么安装？</strong></summary>
+<p>一行命令即可安装：<code>npm install -g openclaw@latest</code>，然后运行 <code>openclaw onboard</code> 按向导完成配置。支持 macOS、Linux、Windows（WSL2）。详见<a href="/tutorials/">安装教程</a>。</p>
+</details>
+
+<details>
+<summary><strong>OpenClaw 和 ClawdBot 是什么关系？</strong></summary>
+<p>OpenClaw 的前身就是 <strong>ClawdBot</strong>，项目品牌升级后正式更名为 OpenClaw，功能与代码库保持延续。如果你之前使用过 ClawdBot，OpenClaw 就是它的新版本。</p>
+</details>
+
+<details>
+<summary><strong>OpenClaw Gateway 是什么？</strong></summary>
+<p>OpenClaw Gateway 是核心常驻进程，负责统一管理所有通道连接、消息路由、Agent 调度与会话存储。通过 <code>openclaw gateway</code> 命令启动，默认监听 18789 端口。</p>
+</details>
+
+<details>
+<summary><strong>OpenClaw 支持本地大模型吗？</strong></summary>
+<p>支持。OpenClaw 可通过 <strong>Ollama</strong> 接入本地大模型（如 Llama、Qwen、DeepSeek 等），实现完全私有化部署，无需外部 API，数据不出本地。</p>
+</details>
+
 </section>
 
 <!-- ── 品牌说明（SEO） ── -->
