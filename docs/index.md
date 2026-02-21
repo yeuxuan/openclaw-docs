@@ -5,7 +5,7 @@ description: 面向开发者和小白的 OpenClaw 实现型文档，覆盖智能
 head:
   - - meta
     - name: keywords
-      content: OpenClaw, AI智能体, 通道适配器, 上下文管理, 状态机, Gateway, 项目拆解, 从0到1
+      content: OpenClaw, ClawdBot, clawdbot, openclaw, AI智能体, AI Agent, 多通道机器人, WhatsApp机器人, Telegram机器人, Discord机器人, Slack机器人, 飞书机器人, Signal机器人, iMessage机器人, 自动回复, 群聊机器人, 智能体框架, 通道适配器, 上下文管理, 状态机, Gateway, 本地大模型, Ollama, DeepSeek, 通义千问, Kimi, OpenRouter, MCP, 私有部署, 本地部署, Node.js, TypeScript, Docker, 源码剖析, 架构分析, 项目拆解, 从0到1, 开源AI助手, 开源AI框架
 hero:
   name: OpenClaw 实现指南
   text: 用工程视角拆解 OpenClaw，快速做出同类项目
@@ -139,6 +139,14 @@ hero:
 <li>第三步：看「AI 重点框架专项」，吃透上下文、状态机与工具策略实现原理。</li>
 <li>最后：看函数级剖析章节，按步骤复刻核心能力到你自己的项目中。</li>
 </ol>
+</section>
+
+<!-- ── 品牌说明（SEO） ── -->
+<section class="oc-home-rebrand">
+<h3>关于 OpenClaw（原 ClawdBot）</h3>
+<p>OpenClaw 前身为 <strong>ClawdBot</strong>，是一款面向开发者的开源多通道 AI 智能体框架，支持 <strong>WhatsApp、Telegram、Discord、Slack、Signal、iMessage、飞书（Feishu）、Mattermost、MS Teams、Google Chat、Matrix</strong> 等主流即时通讯平台。项目于品牌升级后正式更名为 <strong>OpenClaw</strong>，功能持续迭代，文档同步覆盖全部核心模块。</p>
+<p>支持接入 <strong>Anthropic Claude、OpenAI GPT、DeepSeek、通义千问（Qwen）、Kimi（月之暗面）、智谱 GLM、MiniMax、Ollama 本地大模型</strong>等主流 AI 提供商，也可通过 OpenRouter、LiteLLM、Cloudflare AI Gateway 统一代理。</p>
+<p>如果你是从 <strong>ClawdBot</strong> 搜索过来的，这里就是你要找的地方。本文档覆盖安装部署、源码剖析、架构分析与复刻实战。</p>
 </section>
 
 </div>

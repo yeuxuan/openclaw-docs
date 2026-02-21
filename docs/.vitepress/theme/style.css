@@ -680,6 +680,34 @@ body {
   font-weight: 700;
 }
 
+.oc-home-rebrand {
+  margin-top: 16px;
+  border: 1px solid var(--oc-line);
+  border-radius: var(--oc-radius-md);
+  padding: 16px 20px;
+  background: var(--oc-surface);
+  color: var(--oc-ink-soft);
+  font-size: 13px;
+  line-height: 1.8;
+}
+
+.oc-home-rebrand h3 {
+  margin: 0 0 6px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--oc-ink-muted, var(--vp-c-text-2));
+  letter-spacing: 0.01em;
+}
+
+.oc-home-rebrand p {
+  margin: 0 0 4px;
+}
+
+.oc-home-rebrand strong {
+  color: var(--oc-primary);
+  font-weight: 600;
+}
+
 /* ══════════════════════════════
    Section Portal Pages
    ══════════════════════════════ */
