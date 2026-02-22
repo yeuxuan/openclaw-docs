@@ -218,6 +218,8 @@ export default withMermaid(defineConfig({
   },
   head: [
     ['meta', { name: 'google-site-verification', content: '7B8csMYFOdvV0gzceMtR7a35llw1xqWXLeFp3AY4joo' }],
+    ['meta', { name: 'google-adsense-account', content: 'ca-pub-8945138028622018' }],
+    ['script', { async: 'true', src: 'https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8945138028622018', crossorigin: 'anonymous' }],
     ['meta', { name: 'author', content: 'OpenClaw' }],
     ['meta', { name: 'robots', content: 'index, follow, max-image-preview:large' }],
     ['meta', { name: 'keywords', content: 'OpenClaw, ClawdBot, clawdbot, openclaw, AI智能体, AI Agent, 多通道机器人, WhatsApp机器人, Telegram机器人, Discord机器人, Slack机器人, 飞书机器人, Signal机器人, iMessage机器人, Mattermost, MS Teams, 自动回复, 群聊机器人, 智能体框架, 通道适配器, 上下文管理, 状态机, Gateway, 本地大模型, Ollama, DeepSeek, 通义千问, Kimi, 智谱GLM, OpenRouter, MCP, 私有部署, 本地部署, Node.js, TypeScript, Docker, 源码剖析, 项目拆解, 开源AI助手, 开源AI框架' }],
