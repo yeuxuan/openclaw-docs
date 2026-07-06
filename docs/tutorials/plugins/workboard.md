@@ -73,6 +73,8 @@ Dispatch 会：
 
 默认一次最多启动 3 个 worker，并避免同一个 owner/agent 在同一轮里拿到过多工作。
 
+如果你希望每张卡片都在独立 Git checkout 里执行，不要只盯着 dispatch 本身，还要配合看[托管 Worktree](/tutorials/concepts/managed-worktrees)。
+
 入口包括：
 
 - Dashboard dispatch action

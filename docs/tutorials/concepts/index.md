@@ -75,6 +75,7 @@ OpenClaw 的核心结构可以先这样记：
 - [Agent 运行时](/tutorials/concepts/agent-runtimes)：同一个 Gateway 如何接不同工作方式
 - [智能体循环](/tutorials/concepts/agent-loop)：一条消息从进入到回复的完整过程
 - [智能体工作区](/tutorials/concepts/agent-workspace)：Agent 读写文件和执行任务的地方
+- [托管 Worktree](/tutorials/concepts/managed-worktrees)：给 Agent 任务单独开分支和 checkout
 - [多智能体路由](/tutorials/concepts/multi-agent)：多个 Agent 如何分工
 
 如果把 Gateway 看成总机，Agent 就是接到任务后真正去办事的人。

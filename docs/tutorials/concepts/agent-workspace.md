@@ -216,3 +216,4 @@ git push
 
 - 多智能体路由可以为每个智能体使用不同的工作区。参见[通道路由](/tutorials/channels/channel-routing)了解路由配置。
 - 如果启用了 `agents.defaults.sandbox`，非主会话可以在 `agents.defaults.sandbox.workspaceRoot` 下使用每会话的沙箱工作区。
+- 如果你不是只想“同一个工作区里切来切去”，而是希望给每个任务单独分支和 checkout，优先看[托管 Worktree](/tutorials/concepts/managed-worktrees)。

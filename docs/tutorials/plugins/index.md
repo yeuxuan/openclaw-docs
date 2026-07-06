@@ -52,9 +52,11 @@ openclaw plugins disable <plugin>
 - [管理插件](/tutorials/plugins/manage-plugins)
 - [构建插件](/tutorials/plugins/building-plugins)
 - [llama.cpp Provider](/tutorials/plugins/llama-cpp)
+- [Logbook 插件](/tutorials/plugins/logbook)
 
 ## 常见插件入口
 
 - [Workboard 插件](/tutorials/plugins/workboard)：在控制 UI 中启用本地 Kanban 工作板，管理 Agent 工作卡片。
 - [Copilot SDK Harness](/tutorials/plugins/copilot)：通过 `@openclaw/copilot` 使用 GitHub Copilot SDK Harness 运行 Agent 回合。
 - [llama.cpp Provider](/tutorials/plugins/llama-cpp)：给本地 GGUF 记忆嵌入提供原生运行时。
+- [Logbook 插件](/tutorials/plugins/logbook)：把屏幕活动整理成时间线、日报和工作回顾。

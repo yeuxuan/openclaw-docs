@@ -28,4 +28,5 @@ openclaw logs --follow
 - [备份和迁移命令](/tutorials/cli/backup-migrate)
 - [任务和自动化命令](/tutorials/cli/tasks-automation)
 - [安全和密钥命令](/tutorials/cli/security-secrets)
+- [Attach CLI](/tutorials/cli/attach)
 - [Workboard 命令](/tutorials/cli/workboard)
