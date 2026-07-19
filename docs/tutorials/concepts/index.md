@@ -102,6 +102,8 @@ OpenClaw 的核心结构可以先这样记：
 ## 会话与消息
 
 - [会话管理](/tutorials/concepts/session)：会话作用域、隔离和身份绑定
+- [会话搜索](/tutorials/concepts/session-search)：从旧聊天里找回上下文
+- [会话状态](/tutorials/concepts/session-state)：理解会话为什么能继续、为什么会挂起
 - [Sessions](/tutorials/concepts/sessions)：会话生命周期
 - [Channel Docking](/tutorials/concepts/channel-docking)：同一会话换到另一个聊天软件回复
 - [会话工具](/tutorials/concepts/session-tool)：会话里可以用哪些工具

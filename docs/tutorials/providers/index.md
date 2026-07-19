@@ -108,11 +108,14 @@ API Key 不要发到群里，不要写进公开仓库，也不要贴到截图里
 - [OpenRouter](/tutorials/providers/openrouter)：一个入口访问多家模型
 - [ClawRouter](/tutorials/providers/clawrouter)：团队统一模型入口，带策略和预算边界
 - [Cohere](/tutorials/providers/cohere)：兼容 OpenAI 的 Command A 路线
+- [Meta](/tutorials/providers/meta)：Meta API 与 `muse-spark-1.1` 路线
 - [Mistral](/tutorials/providers/mistral)：Mistral 系列模型
 - [Groq](/tutorials/providers/groq)：高速推理
 - [Cerebras](/tutorials/providers/cerebras)：高速推理服务
 - [GMI Cloud](/tutorials/providers/gmi)：一个账号访问多家托管模型路线
 - [NovitaAI](/tutorials/providers/novita)：托管开源和第三方模型路线
+- [Featherless AI](/tutorials/providers/featherless)：托管开源模型的 OpenAI 兼容入口
+- [LongCat](/tutorials/providers/longcat)：大上下文、偏推理和代码任务的托管路线
 
 ---
 

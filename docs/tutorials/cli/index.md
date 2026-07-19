@@ -29,4 +29,6 @@ openclaw logs --follow
 - [任务和自动化命令](/tutorials/cli/tasks-automation)
 - [安全和密钥命令](/tutorials/cli/security-secrets)
 - [Attach CLI](/tutorials/cli/attach)
+- [Audit 审计命令](/tutorials/cli/audit)
+- [Fleet 多租户命令](/tutorials/cli/fleet)
 - [Workboard 命令](/tutorials/cli/workboard)
