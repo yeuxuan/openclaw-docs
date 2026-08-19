@@ -113,4 +113,4 @@ openclaw-docs/
 
 ## ⭐ Star History
 
-[![Star History Chart](https://api.star-history.com/svg?repos=yeuxuan/openclaw-docs&type=Date)](https://star-history.com/#yeuxuan/openclaw-docs&Date)
+[![Star History Chart](https://star-history.dera.page/svg?repos=yeuxuan/openclaw-docs&type=Date)](https://star-history.dera.page/#yeuxuan/openclaw-docs&Date)
