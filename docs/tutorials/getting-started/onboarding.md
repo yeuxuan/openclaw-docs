@@ -1,23 +1,23 @@
 ---
 title: "macOS App 首次启动指南"
 sidebarTitle: "macOS App 首次启动"
-description: "OpenClaw 快速入门：macOS App 首次启动指南。macOS App 是可选伴侣应用，推荐先用 openclaw onboard --install-daemon 跑通 Gateway 和控制 UI。"
+description: "OpenClaw 快速入门：macOS App 首次启动指南。可直接由 App 准备私有运行时，也可先用 CLI Quick start 验证 Gateway。"
 ---
 
 # macOS App 首次启动指南
 
-> macOS App 是可选的伴侣应用。第一次使用时，官方当前更推荐先运行 `openclaw onboard --install-daemon`，把 Gateway 和控制 UI 跑通；如果你已经选择使用 macOS App，这篇再带你完成首次启动。
+> macOS App 可以直接完成首次启动，不要求预先全局安装 CLI。偏好终端时也可先运行
+> `openclaw onboard`，用 Quick start 跑通前台 Gateway 和控制 UI，再按需安装后台服务。
 
-跟着下面的步骤完成首次启动，全程大约 5～10 分钟。
+首次启动分为两段：原生 App 准备 Gateway 与可用模型，随后在 Dashboard 中完成可选设置。界面会随版本变化，以下按当前流程说明。
 
 还没有下载？ 前往 [GitHub Releases](https://github.com/openclaw/openclaw/releases) 页面查看是否有当前版本的 macOS 安装包。若暂时没有适合你的 App 构建，请改用[命令行向导安装指南](./wizard)。
 
-开始之前，请确认你已经有了 AI API 密钥。
-还没有？→ [回到快速开始，先看准备事项](./getting-started#先准备这-3-样东西)
+可以复用 Gateway 主机上已有的 Claude Code / Codex 登录、API Key，或符合条件的已加载本地模型；不是每个人都需要预先申请 API Key。先看[快速开始](./getting-started)。
 
 ---
 
-## 第一步：绕过 macOS 安全警告
+## 第一步：确认下载来源并打开 App
 
 双击打开应用时，可能会弹出这个提示：
 
@@ -25,7 +25,7 @@ description: "OpenClaw 快速入门：macOS App 首次启动指南。macOS App �
 "OpenClaw" 无法打开，因为苹果无法检查其是否包含恶意软件。
 ```
 
-这是正常的！ macOS 对所有没有通过 App Store 的应用都会显示这个警告，不代表软件有问题。
+这通常与签名、公证或下载来源有关，不是所有非 App Store 应用都会出现。先确认下载自官方发布页且文件可信；如果提示已损坏或含恶意软件，不要照搬放行步骤。
 
 处理方法：
 
@@ -44,7 +44,7 @@ description: "OpenClaw 快速入门：macOS App 首次启动指南。macOS App �
 OpenClaw 想要找到和连接本地网络上的设备
 ```
 
-点击 "允许"。这是必须的权限，OpenClaw 需要它来在你的局域网内正常工作。
+需要发现或连接局域网设备时点击“允许”。只连接指定远程 Gateway 时，按实际使用需求授权。
 
 ---
 
@@ -72,25 +72,25 @@ OpenClaw 想要找到和连接本地网络上的设备
 
 ---
 
-## 第五步：填入 AI API 密钥
+## 第五步：准备运行时并验证 AI
 
-这一步决定 OpenClaw 后面调用哪个模型。
+本地模式会复用兼容的 CLI，或由内置安装器在私有托管目录准备 OpenClaw 和 Node；不要求先做全局 npm、pnpm 或 Bun 安装。远程模式的模型发现发生在 Gateway 主机，不是当前 Mac。
 
-1. 选择 AI 提供商，推荐选 Anthropic（Claude）
-2. 在输入框里粘贴你的 API 密钥（`sk-ant-` 开头那串字符）
-3. 点击确认
+如果 Gateway 已配置默认 Agent 模型，App 仍会先发起一次真实请求；通过后直接打开正常 Dashboard。只有模型名存在，不代表验证可以跳过。
 
-::: tip 还没有 API 密钥？
-1. 访问 [console.anthropic.com](https://console.anthropic.com)
-2. 注册并登录
-3. 点击 "API Keys" → "Create Key"，复制密钥（只显示一次！）
-:::
+新安装或配置不完整时，App 会发现已有登录、API Key 或 LM Studio / Ollama 中已加载、支持工具且实测有效上下文至少 16K 的模型。候选经过真实回复验证后才保存；不成功时展示原因并尝试其他选项，也可以手动登录提供商或在遮罩输入框填 key/token。
+
+自动发现不会下载模型。Ollama 使用 `/api/ps` 检查正在加载的模型；只有磁盘文件、尚未加载的模型，需要在 **Choose connection → Local only** 中显式设置。详见 [Ollama](/tutorials/providers/ollama)。
 
 ---
 
-## 第六步：授予系统权限
+## 第六步：在 Dashboard 完成可选设置
 
-应用会请求一些可选权限，按需开启即可：
+新模型通过验证后，原生设置关闭并打开 Dashboard 中的引导，继续配置工作区、通道、记忆等，然后进入正常聊天。已有模型验证通过则直接进入正常 Dashboard。
+
+记忆导入不是独立的原生首次启动页。支持从 Claude Code、Codex、Hermes 导入到工作区 `memory/imports/`，已导入文件会跳过；可以跳过，之后在 **Settings → Import Memory** 按文件选择。
+
+系统权限也不再是交接前的独立向导。在 **Settings → Permissions** 按实际功能开启：
 
 | 权限 | 用途 | 建议 |
 |------|------|------|
@@ -104,23 +104,9 @@ OpenClaw 想要找到和连接本地网络上的设备
 
 ---
 
-## 第七步：安装命令行工具（推荐）
+## 第七步：验证一条真实消息
 
-```text
-是否安装 OpenClaw CLI（命令行工具）？
-● 是（推荐）
-○ 否
-```
-
-推荐选"是"。安装后，你可以用终端命令来管理 OpenClaw，比如查看状态、重启网关等。
-
----
-
-## 第八步：AI 助手自我介绍
-
-配置完成后，应用会自动打开一个对话窗口，你的 AI 助手会主动和你打招呼，介绍它能做什么。
-
-如果 AI 回复了你，说明 OpenClaw 已经成功运行。
+在 Dashboard 发送一条测试消息并确认收到回复，再按需接入通道。原生设置结束不等于所有功能已经配置；只验证了推理可用，通道、系统权限和工作区工具应分别检查。之后仍可从 **Settings → OpenClaw** 继续引导。
 
 ---
 

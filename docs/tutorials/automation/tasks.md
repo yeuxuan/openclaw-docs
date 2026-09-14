@@ -66,6 +66,8 @@ openclaw tasks list --runtime cron
 
 `lost` 不一定代表任务真的没做完，它表示 OpenClaw 已经拿不到可信状态，需要你看日志或任务详情确认。
 
+独立 CLI 的 audit/maintenance 不能凭自己的空运行注册表，就把 Gateway 中仍活跃的 CLI task 标成 lost；只有 Gateway 维护流程拥有这项活性判断。自动化也先查持久运行历史再判断丢失，不能将本机看不到运行等同于远端已经结束。
+
 ---
 
 ## 什么时候看 Tasks
@@ -95,4 +97,3 @@ openclaw logs --follow
 - Tasks 记录后台运行发生了什么。
 
 所以 Tasks 不替代 Cron，也不替代 Heartbeat。它只是让你知道“后台那件事到底怎么样了”。
-

@@ -41,7 +41,7 @@ export MINIMAX_API_KEY="..."
   agents: {
     defaults: {
       imageGenerationModel: {
-        primary: "openai/gpt-image-2",
+        primary: "openai/gpt-image-2.5-flare",
         timeoutMs: 180000
       }
     }
@@ -72,6 +72,16 @@ export MINIMAX_API_KEY="..."
 
 不同提供商支持的参考图数量、透明背景、尺寸和质量参数不同。Agent 会尽量按提供商能力转发，提供商不支持的参数可能会被忽略。
 
+GPT Image 2.5 可显式选择：
+
+| 路线 | 模型 |
+|------|------|
+| OpenAI | `openai/gpt-image-2.5-flare` / `openai/gpt-image-2.5-sunburst` |
+| fal | `fal/openai/gpt-image-2.5/flare/text-to-image` / `fal/openai/gpt-image-2.5/sunburst/text-to-image` |
+
+OpenAI 路线需要显式 API Key，最多使用 5 张参考图；fal 路线需要 `FAL_KEY`，编辑
+最多 16 张参考图。两条路线都可返回最多 4 张图片，并支持透明背景与 WebP。
+
 ---
 
 ## 安全提醒
@@ -87,4 +97,3 @@ export MINIMAX_API_KEY="..."
 - [旧版图像生成页](/tutorials/tools/image-generate)
 - [媒体能力总览](/tutorials/tools/media-overview)
 - [视频生成](/tutorials/tools/video-generation)
-

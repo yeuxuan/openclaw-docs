@@ -25,7 +25,7 @@ iwr -useb https://openclaw.ai/install.ps1 | iex
 ```
 
 ::: info 前提条件
-推荐使用 Node.js 24；如果你已经是 Node.js 22.19+，也可以继续用。
+推荐使用 Node.js 26.1+；也支持 Node 24.16+。Node 22、23、25 不受支持。
 安装脚本通常会帮你处理 Node.js。想手动检查，可以运行 `node -v`，详见[安装 Node.js](/tutorials/installation/node)。
 :::
 
@@ -34,21 +34,26 @@ iwr -useb https://openclaw.ai/install.ps1 | iex
 ## 第二步：运行配置向导
 
 ```bash
-openclaw onboard --install-daemon
+openclaw onboard
 ```
 
-跟着向导走，它会问你：
-1. 选择 AI 服务商（OpenAI、Anthropic、本地模型等都可以）
-2. 填入 API 密钥
-3. 选择聊天软件（推荐先选 Telegram）
-
-整个过程 2~3 分钟，向导会帮你完成所有配置。
+选择 **Quick start**。它会发现已有的 Claude Code、Codex 登录或 Provider Key，
+只把真实请求验证通过的路线写入配置，然后以前台 Gateway 打开 Dashboard。没有
+可复用路线时，再按提示手动选择服务商。要逐项配置通道、远程 Gateway 等高级
+选项，运行 `openclaw onboard --classic`。
 
 ---
 
 ## 第三步：打开控制 UI，开始对话
 
-向导完成后，Gateway 通常已经作为后台服务运行。打开浏览器控制台：
+Quick start 会直接打开浏览器控制台，并让 Gateway 留在当前终端。第一条消息验证
+成功后按 `Ctrl+C` 停止前台进程，再安装后台服务：
+
+```bash
+openclaw gateway install
+```
+
+以后可用下面的命令重新打开控制台：
 
 ```bash
 openclaw dashboard

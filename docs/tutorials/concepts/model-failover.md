@@ -19,9 +19,11 @@ OpenClaw 遇到模型调用失败时，按两个层次处理：
 
 OpenClaw 使用认证配置文件管理 API Key 和 OAuth Token。
 
-- 密钥存储在 `~/.openclaw/agents/<agentId>/agent/auth-profiles.json`（旧版：`~/.openclaw/agent/auth-profiles.json`）。
+- 密钥和运行时认证路由状态存储在
+  `~/.openclaw/agents/<agentId>/agent/openclaw-agent.sqlite`。
 - 配置 `auth.profiles` / `auth.order` 只保存元数据和路由，不保存密钥。
-- 旧版仅导入 OAuth 文件：`~/.openclaw/credentials/oauth.json`（首次使用时导入到 `auth-profiles.json`）。
+- `credentials/oauth.json`、`auth-profiles.json`、`auth-state.json` 和 Agent
+  下的 `auth.json` 只由 `openclaw doctor --fix` 迁移；运行时不会直接读取。
 
 更多详情：[/concepts/oauth](/tutorials/concepts/oauth)
 
@@ -39,7 +41,7 @@ OAuth 登录创建不同的配置文件，以便多个账户可以共存。
 - 默认：当没有可用邮箱时为 `provider:default`。
 - 带邮箱的 OAuth：`provider:<email>`（例如 `google-antigravity:user@gmail.com`）。
 
-配置文件存储在 `~/.openclaw/agents/<agentId>/agent/auth-profiles.json` 的 `profiles` 下。
+profile 存储在每个 Agent 的 `openclaw-agent.sqlite` 认证档案库中。
 
 ---
 
@@ -49,7 +51,7 @@ OAuth 登录创建不同的配置文件，以便多个账户可以共存。
 
 1. 显式配置：`auth.order[provider]`（如果设置了）。
 2. 已配置的配置文件：按提供商过滤的 `auth.profiles`。
-3. 已存储的配置文件：`auth-profiles.json` 中该提供商的条目。
+3. 已存储的配置文件：该 Agent SQLite 认证档案库中对应提供商的条目。
 
 如果没有配置显式顺序，OpenClaw 使用轮询顺序：
 
@@ -89,7 +91,8 @@ OpenClaw 会把选定的认证配置文件固定到当前会话，尽量保持�
 - 25 分钟
 - 1 小时（上限）
 
-状态存储在 `auth-profiles.json` 的 `usageStats` 下：
+状态存储在 SQLite 的 `auth_profile_state` 中。下面的 JSON 只是字段含义示意，
+不要据此直接编辑数据库：
 
 ```json
 {
@@ -109,7 +112,7 @@ OpenClaw 会把选定的认证配置文件固定到当前会话，尽量保持�
 
 账单或额度失败（例如 "insufficient credits"、"credit balance too low"）可以触发故障转移，但通常不是临时问题。OpenClaw 不会只做短冷却，而是把该配置文件标记为禁用，并使用更长退避，再切换到下一个配置文件或提供商。
 
-状态存储在 `auth-profiles.json` 中：
+禁用状态同样存储在 SQLite 的 `auth_profile_state` 中。下面仅为字段示意：
 
 ```json
 {

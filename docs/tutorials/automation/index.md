@@ -89,6 +89,7 @@ GitHub、监控系统、表单系统、内部平台都可以通过 HTTP 请求�
 | “收到外部系统通知再运行” | Webhook |
 | “OpenClaw 内部发生事件后运行” | Hooks |
 | “不支持推送，只能定期去看有没有新内容” | Poll |
+| “收到可信发件人的新邮件后处理” | IMAP 邮件触发 |
 | “后台任务跑了但不知道结果” | Tasks |
 | “多步骤流程要跨重启跟踪” | Task Flow |
 
@@ -104,6 +105,7 @@ GitHub、监控系统、表单系统、内部平台都可以通过 HTTP 请求�
 - [Standing Orders 长期指令](/tutorials/automation/standing-orders)：给 Agent 长期授权和边界
 - [ClawFlow 已更名](/tutorials/automation/clawflow)：旧名称到 Task Flow 的说明
 - [Gmail Pub/Sub](/tutorials/automation/gmail-pubsub)：接收 Gmail 推送
+- [IMAP 邮件触发](/tutorials/automation/imap)：监控现有邮箱，把新邮件交给隔离低权限 Reader Agent
 - [OAuth 认证监控](/tutorials/automation/auth-monitoring)：避免 Token 过期导致服务中断
 - [自动化故障排查](/tutorials/automation/troubleshooting)：任务没有执行时从这里查
 

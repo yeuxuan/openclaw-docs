@@ -9,10 +9,10 @@ running (or attaches to an existing local Gateway if one is already running).
 
 ## Install the CLI (required for local mode)
 
-Node 24 is the default runtime on the Mac. Node 22 LTS, currently `22.19+`, still works for compatibility. Then install `openclaw` globally:
+Node 26 is the recommended runtime on the Mac. Node 24.16+ and 26.1+ remain compatible; Node 22, 23, and 25 are unsupported. Then install `openclaw` globally:
 
 ```bash
-npm install -g openclaw@<version>
+npm install -g openclaw@<version> --allow-scripts=openclaw
 ```
 
 The macOS app’s Install CLI button runs the same global install flow the app

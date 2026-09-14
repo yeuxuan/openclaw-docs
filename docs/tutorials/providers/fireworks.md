@@ -23,3 +23,5 @@ openclaw models list --provider fireworks
 
 Fireworks 的模型 ref 常常很长，例如带 `accounts/.../models/...` 或 `routers/...`。不要手动缩短。
 如果你看到 404 或 model not found，优先检查模型 id 是否完整。
+
+`fireworks/accounts/fireworks/routers/glm-5p2-fast`（GLM 5.2 Fast）当前目录声明为**纯文本输入**，不要按图片模型配置。动态 GLM ID 同样默认为纯文本；其他动态 ID 采用 Fire Pass 模板的文本+图片能力，Kimi 模式会自动关闭 thinking。具体模型能力不同时，应显式配置支持的输入类型。

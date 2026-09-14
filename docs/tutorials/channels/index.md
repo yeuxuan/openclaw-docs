@@ -52,9 +52,13 @@ OpenClaw 里的“通道”就是聊天入口。
 | [WhatsApp](/tutorials/channels/whatsapp) | 中等 | 手机日常聊天 |
 | [SMS / Twilio](/tutorials/channels/sms) | 中等 | 手机短信入口 |
 | [Google Chat](/tutorials/channels/googlechat) | 中等 | Google Workspace |
+| [企业微信 WeCom](/tutorials/channels/wecom) | 中等 | 企业微信组织与机器人 |
+| [Buzz](/tutorials/channels/buzz) | 中等 | 托管或自托管团队房间 |
+| [Reef](/tutorials/channels/reef) | 较复杂 | 不同所有者 Agent 间的加密通信 |
+| [A2A](/tutorials/channels/a2a) | 较复杂 | 让外部 Agent 通过 Agent2Agent 1.0 调用 OpenClaw |
 | [Signal](/tutorials/channels/signal) | 中等 | 隐私优先 |
-| [BlueBubbles iMessage](/tutorials/channels/bluebubbles) | 较复杂 | 更推荐的 iMessage 路线 |
-| [iMessage 旧方案](/tutorials/channels/imessage) | 较复杂 | macOS 原生旧路线 |
+| [iMessage（imsg）](/tutorials/channels/imessage) | 较复杂 | 当前官方 macOS 原生路线 |
+| [BlueBubbles（已移除）](/tutorials/channels/bluebubbles) | 迁移说明 | 旧配置迁移到 `channels.imessage` |
 
 ---
 
@@ -68,10 +72,12 @@ OpenClaw 最新架构里，很多通道通过插件提供。
 常见插件通道包括：
 
 - [飞书 / Lark](/tutorials/channels/feishu)
+- [A2A Agent 通道](/tutorials/channels/a2a)
 - [LINE](/tutorials/channels/line)
 - [Matrix](/tutorials/channels/matrix)
 - [Mattermost](/tutorials/channels/mattermost)
 - [Microsoft Teams](/tutorials/channels/msteams)
+- [Discord Activities](/tutorials/channels/discord-activities)
 - [Nextcloud Talk](/tutorials/channels/nextcloud-talk)
 - [Nostr](/tutorials/channels/nostr)
 - [QQ Bot](/tutorials/channels/qqbot)
@@ -83,6 +89,7 @@ OpenClaw 最新架构里，很多通道通过插件提供。
 - [Synology Chat](/tutorials/channels/synology-chat)
 - [Tlon](/tutorials/channels/tlon)
 - [WeChat](/tutorials/channels/wechat)
+- [企业微信 WeCom](/tutorials/channels/wecom)
 - [Yuanbao 元宝](/tutorials/channels/yuanbao)
 
 如果某篇旧教程写着“必须额外安装插件”，先看你当前安装方式：npm 正式版、安装脚本、源码开发版的插件来源可能不同。最稳妥的检查方式是：

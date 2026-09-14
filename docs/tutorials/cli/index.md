@@ -5,10 +5,12 @@ sidebarTitle: "CLI 命令"
 
 # CLI 命令专题：不会背命令也能用 OpenClaw
 
-OpenClaw 的命令很多。新手不需要全背，只要先记住这 6 个：
+OpenClaw 的命令很多。新手不需要全背：先用 `onboard` 跑通前台 Quick start，
+再用 `gateway install` 切到后台服务。
 
 ```bash
-openclaw onboard --install-daemon
+openclaw onboard
+openclaw gateway install
 openclaw dashboard
 openclaw doctor
 openclaw gateway status
@@ -28,7 +30,12 @@ openclaw logs --follow
 - [备份和迁移命令](/tutorials/cli/backup-migrate)
 - [任务和自动化命令](/tutorials/cli/tasks-automation)
 - [安全和密钥命令](/tutorials/cli/security-secrets)
+- [Docs 文档搜索命令](/tutorials/cli/docs)
+- [Triage 脱敏排障](/tutorials/cli/triage)
 - [Attach CLI](/tutorials/cli/attach)
+- [Connect 机器配对](/tutorials/cli/connect)
+- [Resume 继续现有会话](/tutorials/cli/resume)
 - [Audit 审计命令](/tutorials/cli/audit)
+- [Approvals 执行审批](/tutorials/cli/approvals)
 - [Fleet 多租户命令](/tutorials/cli/fleet)
 - [Workboard 命令](/tutorials/cli/workboard)

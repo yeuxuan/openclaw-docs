@@ -1,19 +1,19 @@
 ---
 title: "Meta"
 sidebarTitle: "Meta"
-description: "OpenClaw 模型接入：Meta API。当前重点是 muse-spark-1.1 的接入方式。"
+description: "OpenClaw 模型接入：Meta API。配置 Muse Spark 1.3 Standard 与 Contributor。"
 ---
 
 # Meta
 
-Meta 这条 provider 线路目前最值得记住的是 `muse-spark-1.1`。
+Meta 这条 provider 线路目前默认使用 `muse-spark-1.3`。
 它不是“随便一个 OpenAI 兼容端点”，而是走 Responses API 语义的一条新接法。
 
 先记住：
 
 - Provider id 是 `meta`
 - 鉴权变量是 `MODEL_API_KEY`
-- 默认模型是 `meta/muse-spark-1.1`
+- 默认模型是 `meta/muse-spark-1.3`
 - 默认地址是 `https://api.meta.ai/v1`
 
 ---
@@ -72,11 +72,11 @@ openclaw models status --json
   agents: {
     defaults: {
       model: {
-        primary: "meta/muse-spark-1.1",
+        primary: "meta/muse-spark-1.3",
       },
       models: {
-        "meta/muse-spark-1.1": {
-          alias: "Muse Spark 1.1",
+        "meta/muse-spark-1.3": {
+          alias: "Muse Spark 1.3",
         },
       },
     },
@@ -91,7 +91,15 @@ openclaw models status --json
 
 ## thinking 要特别注意
 
-`muse-spark-1.1` 支持 reasoning，但有一个容易踩坑的点：
+Muse Spark 1.3 提供两个可选模型：
+
+| 版本 | 模型 ref |
+|------|----------|
+| Standard | `meta/muse-spark-1.3` |
+| Contributor | `meta/muse-spark-1.3-contributor` |
+
+两者都支持文本、图片和 reasoning，标称上下文为 1,048,576 tokens、最大输出
+131,072 tokens，但能否使用仍取决于账号权限。它们有一个容易踩坑的点：
 
 ```text
 它不接受 reasoning.effort: "none"
@@ -152,4 +160,3 @@ openclaw status --usage
 - [模型提供商概念](/tutorials/concepts/model-providers)
 - [Thinking 模式](/tutorials/tools/thinking)
 - [Agent 默认模型配置](/tutorials/gateway/config-agents)
-

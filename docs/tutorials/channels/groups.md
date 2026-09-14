@@ -235,15 +235,14 @@ requireMention? yes -> 被提及？ 否 -> 仅存储为上下文
     },
   },
   agents: {
-    list: [
-      {
-        id: "main",
+    entries: {
+      main: {
         groupChat: {
           mentionPatterns: ["@openclaw", "openclaw", "\\+15555550123"],
           historyLimit: 50,
         },
       },
-    ],
+    },
   },
 }
 ```
@@ -252,7 +251,7 @@ requireMention? yes -> 被提及？ 否 -> 仅存储为上下文
 
 - `mentionPatterns` 是不区分大小写的正则表达式。
 - 提供显式提及的平台仍然通过；模式是回退。
-- 按智能体覆盖：`agents.list[].groupChat.mentionPatterns`（多个智能体共享群组时有用）。
+- 按智能体覆盖：`agents.entries.*.groupChat.mentionPatterns`（多个智能体共享群组时有用）。
 - 提及门控仅在提及检测可用时（原生提及或已配置 `mentionPatterns`）强制执行。
 - Discord 默认值在 `channels.discord.guilds."*"` 中（可按公会/频道覆盖）。
 - 群组历史上下文在通道间统一包装，是 仅待处理 的（由于提及门控跳过的消息）；使用 `messages.groupChat.historyLimit` 作为全局默认值，`channels.<channel>.historyLimit`（或 `channels.<channel>.accounts.*.historyLimit`）进行覆盖。设置 `0` 禁用。
@@ -260,6 +259,10 @@ requireMention? yes -> 被提及？ 否 -> 仅存储为上下文
 ---
 
 ## 群组/频道工具限制（可选）
+
+补充上下文可通过 `channels.defaults.contextVisibility`、通道或账号级 `contextVisibility` 过滤。当前会取历史/引用等上下文的通道包括 Mattermost；这只过滤通道补充内容，不把被引用者的权限交给当前请求者。
+
+LINE 引用 Bot 自己近期发送的消息也算隐式提及。它不读取 `implicitMentions` 开关，且只识别账号当前缓存中的已发消息；旧消息或重启前的引用仍可能需要显式 @，详见 [LINE](/tutorials/channels/line#访问控制)。
 
 某些通道配置支持限制 特定群组/房间/频道内 可用的工具。
 

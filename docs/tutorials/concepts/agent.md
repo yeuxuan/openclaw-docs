@@ -76,11 +76,12 @@ OpenClaw 复用了 pi-mono 代码库的部分内容（模型/工具），但会�
 
 ## 会话（Sessions）
 
-会话记录存储为 JSONL 格式：
+当前会话行与转录存储在每个 Agent 的 SQLite 数据库中：
 
-- `~/.openclaw/agents/<agentId>/sessions/<SessionId>.jsonl`
+- `~/.openclaw/agents/<agentId>/agent/openclaw-agent.sqlite`
 
-会话 ID 是稳定的，由 OpenClaw 选择。
+`sessions/` 下的 JSONL 只作为旧版迁移来源、归档、导入导出和支持材料。
+活动历史不再从这些文件读取。会话 ID 是稳定的，由 OpenClaw 选择。
 旧版 Pi/Tau 会话文件夹不会被读取。
 
 ## 流式传输中的导向

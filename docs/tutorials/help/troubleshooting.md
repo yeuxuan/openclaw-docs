@@ -19,7 +19,7 @@ description: "OpenClaw 帮助：故障排查（Troubleshooting）。大多数问
 | Gateway 启动失败 | 配置文件语法、端口冲突 |
 | 通道断连 | Token 是否过期、重新登录 |
 | Cron 不触发 | 时区设置、cron 表达式 |
-| Node 工具报错 | Node.js 版本（推荐 v24，最低 v22.19） |
+| Node 工具报错 | Node.js 版本（推荐 26.1+；支持 24.16+） |
 | Browser 工具报错 | Chrome/Chromium 是否安装 |
 
 ---
@@ -167,15 +167,15 @@ description: "OpenClaw 帮助：故障排查（Troubleshooting）。大多数问
 
 步骤：
 
-1. 检查 Node.js 版本，OpenClaw 推荐 v24，最低支持 v22.19：
+1. 检查 Node.js 版本。OpenClaw 推荐 v26.1+，也支持 v24.16+；Node 22、23、25 不受支持：
    ```bash
    node --version
    ```
 
 2. 如果版本过低，通过 nvm 升级：
    ```bash
-   nvm install 24
-   nvm use 24
+   nvm install 26
+   nvm use 26
    ```
 
 3. 重新安装 OpenClaw 以同步依赖：

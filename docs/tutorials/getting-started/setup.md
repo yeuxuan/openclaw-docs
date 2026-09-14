@@ -74,6 +74,12 @@ openclaw dashboard         # 打开控制 UI
 
 ## 日常管理命令速查
 
+### 源码开发者的工具链
+
+源码 checkout 使用 `package.json` 固定的 pnpm，不要改用 npm/Bun 安装 workspace 依赖。仓库依赖默认有七天发布冷却期，可信的 `@openai/codex` / `@openai/codex-*` 除外；读取项目 `.npmrc` 的 npm 工具需要 npm 11.19+ 才能执行这些安装/打包规则。Node 22 已不受运行时支持，其自带 npm 10 也会忽略这些规则。全局发布包安装不继承仓库 `.npmrc`。
+
+pnpm 同时管理根目录和插件依赖。旧 checkout 若曾清理插件本地依赖，更新后运行 `pnpm install --frozen-lockfile` 恢复。开发 worker 的 PATH 包含 `node_modules/.bin` 时，`codex` 可能变成 workspace 固定版本；用预期可执行文件的绝对路径验证版本并启动 worker，不要修改 OpenClaw 托管 app-server 的版本固定值来修复 shell 选择问题。
+
 ### 网关管理
 
 ```bash

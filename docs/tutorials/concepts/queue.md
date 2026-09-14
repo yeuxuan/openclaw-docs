@@ -86,6 +86,10 @@ summarize 保留被丢弃消息的简短要点列表，并将其作为合成后�
 
 ## 范围和保证
 
+普通 Control UI 发往已有会话的输入，会先写入 Agent 数据库再确认受理。`collect` 合并成一轮时，追加 transcript 和标记源输入已消费在同一事务提交，重连可以核对漏掉的回执。
+
+这保存的是输入，不是重新执行的授权。Gateway 进程停止前若输入尚未进入 transcript，重启后显示为 interrupted，需要显式重发；不会自动重放内存队列。保留原进程的主机休眠则可以继续原队列。
+
 - 适用于所有使用网关回复管道的入站通道的自动回复智能体运行（WhatsApp web、Telegram、Slack、Discord、Signal、iMessage、webchat 等）。
 - 默认通道（`main`）对入站 + 主心跳是进程范围的；设置 `agents.defaults.maxConcurrent` 以允许多个会话并行。
 - 可能存在额外的通道（如 `cron`、`subagent`），以便后台作业可以与入站回复并行运行而不阻塞。

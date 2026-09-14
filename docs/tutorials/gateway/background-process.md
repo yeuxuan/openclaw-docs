@@ -45,7 +45,7 @@ OpenClaw 通过 `exec` 工具运行 shell 命令，并将长时间运行的任�
 配置（推荐）：
 
 - `tools.exec.backgroundMs`（默认 10000）
-- `tools.exec.timeoutSec`（默认 1800）
+- `tools.exec.timeoutSeconds`（默认 1800）
 - `tools.exec.cleanupMs`（默认 1800000）
 - `tools.exec.notifyOnExit`（默认 true）：后台 exec 退出时，入队一个系统事件并请求心跳。
 - `tools.exec.notifyOnExitEmptySuccess`（默认 false）：设为 true 时，也为没有输出的成功后台运行入队完成事件。

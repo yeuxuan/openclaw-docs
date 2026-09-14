@@ -65,14 +65,17 @@ State lives under the OpenClaw state directory. Default is `~/.openclaw`. If `OP
 To reset everything:
 
 - `openclaw.json` for config
-- `agents/<agentId>/agent/auth-profiles.json` for model auth profiles (API keys + OAuth)
+- `agents/<agentId>/agent/openclaw-agent.sqlite` for current session rows/transcripts, model auth profiles, and other Agent runtime state
 - `credentials/` for provider/channel state that still lives outside the auth profile store
-- `agents/<agentId>/sessions/` for agent session history
-- `agents/<agentId>/sessions/sessions.json` for the session index
+- `agents/<agentId>/sessions/` for archived transcripts and legacy migration sources
+- `agents/<agentId>/sessions/sessions.json` only when a legacy migration source still exists
 - `sessions/` if legacy paths exist
 - `workspace/` if you want a blank workspace
 
-If you only want to reset sessions, delete `agents/<agentId>/sessions/` for that agent. If you want to keep auth, leave `agents/<agentId>/agent/auth-profiles.json` and any provider state under `credentials/` in place.
+不要通过删除旧 `agents/<agentId>/sessions/` 目录来重置当前会话库；当前会话、
+转录和认证资料共存于 `openclaw-agent.sqlite`。使用 `/new`、`/reset` 或
+`openclaw sessions cleanup` 做会话维护。要保留认证，必须保留该 SQLite 数据库
+以及仍在 `credentials/` 下的通道/提供商状态。
 
 ## References
 

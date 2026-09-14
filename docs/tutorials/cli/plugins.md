@@ -17,6 +17,7 @@ openclaw plugins disable <name>
 openclaw plugins install <path-or-spec>
 openclaw plugins update <id-or-spec>
 openclaw plugins update --all
+openclaw plugins reload <id>
 openclaw plugins inspect <id>
 openclaw plugins doctor
 openclaw plugins marketplace entries
@@ -107,3 +108,13 @@ OPENCLAW_PLUGIN_LIFECYCLE_TRACE=1 openclaw plugins install <path-or-spec>
 ```
 
 继续阅读：[插件专题](/tutorials/plugins/)。
+
+## 安装配置和检查结果
+
+安装前配置无效时，`plugins install` 通常会停止，先运行 `openclaw doctor --fix` 并核对修改。Gateway 启动可做安全的旧字段迁移，但迁移后仍无效的插件配置会拒绝加载；热重载也不会接受无效配置。新插件缺少必填配置时可能先以 disabled 状态记录，补好 `plugins.entries.<id>.config` 再启用。
+
+`plugins inspect <id>` 默认只看静态元数据，不导入插件运行时代码；需要已注册工具、服务或命令时再加 `--runtime`。多入口包检查任意子插件都会显示共享安装记录，`inspect --all --json` 也会逐项携带该记录；归属缺失或有歧义时会省略，而不是猜一个不相关安装来源。
+
+受支持的安装、更新、启用和禁用会刷新运行时，不需要例行重启 Gateway。手工修改
+manifest 或源码时使用 `plugins reload <id>`；普通配置编辑在默认 hybrid 模式下也
+可热重载，但插件声明的 restart policy 仍可能要求完整重启。

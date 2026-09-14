@@ -81,6 +81,13 @@ openclaw gateway stop
 - [Gateway 审计总览](/tutorials/gateway/audit)
 - [多租户托管](/tutorials/gateway/multi-tenant-hosting)
 - [重启恢复](/tutorials/gateway/restart-recovery)
+- [稳定的 Tailscale HTTPS 地址](/tutorials/gateway/stable-https-url)
+- [Portals：访问 Agent 启动的开发服务](/tutorials/gateway/portals)
+- [Cloud Sessions：把会话工作放到配对设备或临时云机器](/tutorials/gateway/cloud-sessions)
+- [Cloud Workers：配置临时云机器 Profile](/tutorials/gateway/cloud-workers)
+- [1Password 凭据集成](/tutorials/gateway/1password)
+- [Gateway 限流参考](/tutorials/gateway/security/rate-limiting)
+- [Gateway 对外暴露检查清单](/tutorials/gateway/security/exposure-runbook)
 
 ---
 
@@ -232,9 +239,12 @@ openclaw pairing list
 - [节点入门](/tutorials/nodes/)
 - [认证与远程访问](/tutorials/gateway/authentication)
 - [Gateway 安全说明](/tutorials/gateway/security)
+- [Gateway 对外暴露检查清单](/tutorials/gateway/security/exposure-runbook)
 - [Agent 配置](/tutorials/gateway/config-agents)
 - [Channel 配置](/tutorials/gateway/config-channels)
 - [Tools 配置](/tutorials/gateway/config-tools)
+- [会话权限模式](/tutorials/gateway/permission-modes)
+- [数据库版本与升级恢复](/tutorials/reference/database-schemas)
 - [密钥与 SecretRef](/tutorials/gateway/secrets)
 - [Secrets Apply Plan](/tutorials/gateway/secrets-plan-contract)
 - [Operator 权限范围](/tutorials/gateway/operator-scopes)
@@ -242,4 +252,6 @@ openclaw pairing list
 - [Gateway 诊断包](/tutorials/gateway/diagnostics)
 - [Prometheus 指标](/tutorials/gateway/prometheus)
 - [OpenTelemetry 可观测性](/tutorials/gateway/opentelemetry)
+- [使用统计与更新检查](/tutorials/gateway/telemetry)
 - [Tailscale 远程访问](/tutorials/gateway/tailscale)
+- [Cloudflare Access 保护 Gateway](/tutorials/gateway/cloudflare-access)

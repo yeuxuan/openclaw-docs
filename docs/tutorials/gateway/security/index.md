@@ -9,12 +9,14 @@ title: "安全"
 :::
 
 ::: warning 注意
-这页按“个人助手”信任模型来写：一个 Gateway 对应一个可信操作者边界。OpenClaw 不是用来让多个互不信任的用户共享同一个 Agent 或 Gateway 的强多租户安全边界。如果你要处理混合信任或对抗性用户，请按信任边界拆分 Gateway、凭证，最好也拆分 OS 用户或主机。
+一个 Gateway 对应一个可信边界，可以是个人，也可以是彼此信任的团队。OpenClaw 支持该边界内的群聊和多用户协作，但不是多个互不信任用户共享同一 Agent 或 Gateway 的强多租户安全边界。混合信任或对抗性用户应拆分 Gateway、凭证，最好也拆分 OS 用户或主机。
 :::
 
-## 先明确范围：个人助手安全模型
+如果你准备把 Gateway 从 loopback 开放到 LAN、tailnet、Tailscale Serve、反向代理或公网，先按 [Gateway 对外暴露检查清单](/tutorials/gateway/security/exposure-runbook) 做预检和回滚准备。
 
-OpenClaw 的安全建议默认面向个人助手部署：一个可信操作者边界，可以有多个 Agent。
+## 先明确范围：每个 Gateway 一个信任边界
+
+一个可信操作者或相互信任的团队可以共用 Gateway，并使用多个 Agent；具名 operator 角色是协作权限限制，不是租户隔离。
 
 - 支持的姿态：一个用户或信任边界对应一个 Gateway。最好每个边界都有独立 OS 用户、主机或 VPS。
 - 不支持的姿态：多个互不信任或对抗性用户共享同一个 Gateway 或 Agent。
@@ -184,7 +186,7 @@ Use this baseline first, then selectively re-enable tools per trusted agent:
     profile: "messaging",
     deny: ["group:automation", "group:runtime", "group:fs", "sessions_spawn", "sessions_send"],
     fs: { workspaceOnly: true },
-    exec: { security: "deny", ask: "always" },
+    exec: { mode: "deny" },
     elevated: { enabled: false },
   },
   channels: {
@@ -251,10 +253,11 @@ Use this when auditing access or deciding what to back up:
 - Pairing allowlists:
   - `~/.openclaw/credentials/<channel>-allowFrom.json` (default account)
   - `~/.openclaw/credentials/<channel>-<accountId>-allowFrom.json` (non-default accounts)
-- Model auth profiles: `~/.openclaw/agents/<agentId>/agent/auth-profiles.json`
+- Model auth profiles: `~/.openclaw/agents/<agentId>/agent/openclaw-agent.sqlite`
+  (`auth_profile_store`)
 - Codex runtime state: `~/.openclaw/agents/<agentId>/agent/codex-home/`
 - File-backed secrets payload (optional): `~/.openclaw/secrets.json`
-- Legacy OAuth import: `~/.openclaw/credentials/oauth.json`
+- Legacy OAuth import: `~/.openclaw/credentials/oauth.json`（仅供 Doctor 迁移）
 
 ## Security audit checklist
 
@@ -528,7 +531,9 @@ Plugins run in-process with the Gateway. Treat them as trusted code:
 - Only install plugins from sources you trust.
 - Prefer explicit `plugins.allow` allowlists.
 - Review plugin config before enabling.
-- Restart the Gateway after plugin changes.
+- 安装、更新、启用或禁用插件时，优先让受支持的插件管理流程完成热重载；手工修改
+  manifest 或源码后运行 `openclaw plugins reload <id>`。只有插件声明的 restart
+  policy、启动期加载路径或明确诊断要求时，才重启整个 Gateway。
 - If you install or update plugins (`openclaw plugins install <package>`, `openclaw plugins update <id>`), treat it like running untrusted code:
   - The install path is the per-plugin directory under the active plugin install root.
   - OpenClaw runs a built-in dangerous-code scan before install/update. `critical` findings block by default.
@@ -988,11 +993,12 @@ Assume anything under `~/.openclaw/` (or `$OPENCLAW_STATE_DIR/`) may contain sec
 
 - `openclaw.json`: config may include tokens (gateway, remote gateway), provider settings, and allowlists.
 - `credentials/**`: channel credentials (example: WhatsApp creds), pairing allowlists, legacy OAuth imports.
-- `agents/<agentId>/agent/auth-profiles.json`: API keys, token profiles, OAuth tokens, and optional `keyRef`/`tokenRef`.
+- `state/openclaw.sqlite`: shared auth profiles and Gateway runtime state.
+- `agents/<agentId>/agent/openclaw-agent.sqlite`: Agent-local API keys, token profiles, OAuth tokens, sessions, transcripts, and runtime state.
 - `agents/<agentId>/agent/codex-home/**`: per-agent Codex app-server account, config, skills, plugins, native thread state, and diagnostics.
 - `secrets.json` (optional): file-backed secret payload used by `file` SecretRef providers (`secrets.providers`).
-- `agents/<agentId>/agent/auth.json`: legacy compatibility file. Static `api_key` entries are scrubbed when discovered.
-- `agents/<agentId>/sessions/**`: session transcripts (`*.jsonl`) + routing metadata (`sessions.json`) that can contain private messages and tool output.
+- `agents/<agentId>/agent/auth-profiles.json` and `auth.json`: legacy migration sources; Doctor imports and archives them, and runtime no longer reads them.
+- `agents/<agentId>/sessions/**`: legacy session migration sources and archives that can contain private messages and tool output.
 - bundled plugin packages: installed plugins (plus their `node_modules/`).
 - `sandboxes/**`: tool sandbox workspaces; can accumulate copies of files you read/write inside the sandbox.
 
@@ -1128,7 +1134,7 @@ Also consider agent workspace access inside the sandbox:
 - Extra `sandbox.docker.binds` are validated against normalized and canonicalized source paths. Parent-symlink tricks and canonical home aliases still fail closed if they resolve into blocked roots such as `/etc`, `/var/run`, or credential directories under the OS home.
 
 ::: warning 注意
-`tools.elevated` is the global baseline escape hatch that runs exec outside the sandbox. The effective host is `gateway` by default, or `node` when the exec target is configured to `node`. Keep `tools.elevated.allowFrom` tight and do not enable it for strangers. You can further restrict elevated per agent via `agents.list[].tools.elevated`. See [Elevated mode](/tutorials/tools/elevated).
+`tools.elevated` is the global baseline escape hatch that runs exec outside the sandbox. The effective host is `gateway` by default, or `node` when the exec target is configured to `node`. Keep `tools.elevated.allowFrom` tight and do not enable it for strangers. You can further restrict elevated per agent via `agents.entries.*.tools.elevated`. See [Elevated mode](/tutorials/tools/elevated).
 :::
 
 
@@ -1137,7 +1143,7 @@ Also consider agent workspace access inside the sandbox:
 If you allow session tools, treat delegated sub-agent runs as another boundary decision:
 
 - Deny `sessions_spawn` unless the agent truly needs delegation.
-- Keep `agents.defaults.subagents.allowAgents` and any per-agent `agents.list[].subagents.allowAgents` overrides restricted to known-safe target agents.
+- Keep `agents.defaults.subagents.allowAgents` and any per-agent `agents.entries.*.subagents.allowAgents` overrides restricted to known-safe target agents.
 - For any workflow that must remain sandboxed, call `sessions_spawn` with `sandbox: "require"` (default is `inherit`).
 - `sandbox: "require"` fails fast when the target child runtime is not sandboxed.
 
@@ -1202,13 +1208,12 @@ Common use cases:
 ```json5
 {
   agents: {
-    list: [
-      {
-        id: "personal",
+    entries: {
+      personal: {
         workspace: "~/.openclaw/workspace-personal",
         sandbox: { mode: "off" },
       },
-    ],
+    },
   },
 }
 ```
@@ -1218,9 +1223,8 @@ Common use cases:
 ```json5
 {
   agents: {
-    list: [
-      {
-        id: "family",
+    entries: {
+      family: {
         workspace: "~/.openclaw/workspace-family",
         sandbox: {
           mode: "all",
@@ -1232,7 +1236,7 @@ Common use cases:
           deny: ["write", "edit", "apply_patch", "exec", "process", "browser"],
         },
       },
-    ],
+    },
   },
 }
 ```
@@ -1242,18 +1246,17 @@ Common use cases:
 ```json5
 {
   agents: {
-    list: [
-      {
-        id: "public",
+    entries: {
+      public: {
         workspace: "~/.openclaw/workspace-public",
         sandbox: {
           mode: "all",
           scope: "agent",
           workspaceAccess: "none",
         },
-        // Session tools can reveal sensitive data from transcripts. By default OpenClaw limits these tools
-        // to the current session + spawned subagent sessions, but you can clamp further if needed.
-        // See `tools.sessions.visibility` in the configuration reference.
+        // 默认 agent 范围能读取同 Agent 的其他用户会话。
+        // 显式 tree 收紧普通会话，规范主会话仍有 Agent 范围例外。
+        // 严格限制为当前会话应使用 self；沙箱另有 spawned-only 收紧。
         tools: {
           sessions: { visibility: "tree" }, // self | tree | agent | all
           allow: [
@@ -1283,7 +1286,7 @@ Common use cases:
           ],
         },
       },
-    ],
+    },
   },
 }
 ```
@@ -1302,7 +1305,7 @@ If your AI does something bad:
 
 1. Rotate Gateway auth (`gateway.auth.token` / `OPENCLAW_GATEWAY_PASSWORD`) and restart.
 2. Rotate remote client secrets (`gateway.remote.token` / `.password`) on any machine that can call the Gateway.
-3. Rotate provider/API credentials (WhatsApp creds, Slack/Discord tokens, model/API keys in `auth-profiles.json`, and encrypted secrets payload values when used).
+3. Rotate provider/API credentials (WhatsApp creds, Slack/Discord tokens, model/API keys in the Agent `openclaw-agent.sqlite` auth store, and encrypted secrets payload values when used).
 
 ### Audit
 

@@ -406,6 +406,8 @@ Access token refreshed for user 123456 (expires in 14400s)
 
 ## 安全和运维
 
+当前会话中回复可省略 `to`，使用原会话目标；离开当前会话的消息工具调用和 CLI 发送必须指定目标。只有直接 Gateway `message.action` 调用可省略 `to` 并使用所选账号配置的 `channel`。
+
 - 将 Token 视为密码，不要提交到 git。
 - 长期运行的机器人建议配置自动 Token 刷新。
 - 访问控制使用用户 ID 白名单，不使用用户名。
@@ -419,4 +421,5 @@ Access token refreshed for user 123456 (expires in 14400s)
 
 - 每条消息 500 个字符（在单词边界自动分块）
 - 发送前去除 Markdown
+- 去掉 Markdown 后为空的内容（例如 `---`）会记录为有意不发送，不计作成功送达。
 - 无速率限制（使用 Twitch 内置速率限制）

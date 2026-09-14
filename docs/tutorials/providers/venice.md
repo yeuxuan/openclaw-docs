@@ -215,6 +215,14 @@ Venice 使用积分制。查看 [venice.ai/pricing](https://venice.ai/pricing) �
 
 ---
 
+## 费用估算不是“免费”承诺
+
+OpenClaw 对 bundled 模型优先采用 Venice 插件 manifest 的价格，即使模型来自在线发现。目录中新发现、但 manifest 未覆盖的模型可能显示零估算；这不表示 Provider 免费。
+
+`grok-4-5` 和 `qwen-3-7-plus` 的扩展上下文价格分别在总输入**超过** 200,000 / 256,000 tokens 后适用于整个请求。总输入包括未缓存输入、缓存读取和缓存写入，不以输出量决定；恰好等于阈值仍用基础价格。
+
+显式 `models.providers.venice.models[].cost` 优先，包括手写的零价格；onboarding 不会替你覆盖它们。旧配置若留下过时的零值，先备份再仅更新受影响的费用字段，保留有意设置的定制价格。实际价格以 [Venice 官方定价](https://venice.ai/pricing) 为准。
+
 ## 使用示例
 
 ```bash
@@ -241,11 +249,10 @@ openclaw chat --model venice/qwen3-coder-480b-a35b-instruct
 ### API 密钥未识别
 
 ```bash
-echo $VENICE_API_KEY
-openclaw models list | grep venice
+openclaw models list --provider venice
 ```
 
-确保密钥以 `vapi_` 开头。
+确认密钥已配置且格式以 `vapi_` 开头；不要打印或分享完整密钥。
 
 ### 模型不可用
 

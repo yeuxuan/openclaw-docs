@@ -10,7 +10,7 @@ OpenClaw 支持将 Mistral 用于：
 
 - 文本 / 图像模型路由（`mistral/...`）
 - Voxtral 音频转录
-- 记忆嵌入与检索（`memorySearch.provider = "mistral"`）
+- 记忆嵌入与检索（`memory.search.provider = "mistral"`）
 
 如果你希望同一套 API Key 同时覆盖聊天、媒体理解和记忆检索，Mistral 是一个比较直接的选择。
 
@@ -63,14 +63,16 @@ Mistral 也可以作为记忆检索的嵌入提供商：
 ```json5
 {
   env: { MISTRAL_API_KEY: "sk-..." },
-  memorySearch: {
-    provider: "mistral",
-    model: "mistral-embed",
+  memory: {
+    search: {
+      provider: "mistral",
+      model: "mistral-embed",
+    },
   },
 }
 ```
 
-当 `memorySearch.provider = "mistral"` 时，OpenClaw 会走 Mistral 的 embeddings 路径完成向量化。
+当 `memory.search.provider = "mistral"` 时，OpenClaw 会走 Mistral 的 embeddings 路径完成向量化。
 
 ---
 

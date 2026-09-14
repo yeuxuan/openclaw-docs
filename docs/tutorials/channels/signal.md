@@ -351,6 +351,6 @@ grep -i "signal" "/tmp/openclaw/openclaw-$(date +%Y-%m-%d).log" | tail -20
 
 相关全局选项：
 
-- `agents.list[].groupChat.mentionPatterns`（Signal 不支持原生提及）。
+- `agents.entries.*.groupChat.mentionPatterns`（Signal 不支持原生提及）。
 - `messages.groupChat.mentionPatterns`（全局回退）。
 - `messages.responsePrefix`。

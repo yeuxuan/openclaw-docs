@@ -1,118 +1,69 @@
 ---
-title: "Anthropic (Claude) 配置"
+title: "Anthropic (Claude)"
 sidebarTitle: "Anthropic"
-description: "在 OpenClaw 中配置 Anthropic Claude：API Key、setup-token、模型选择、提示缓存和常见认证问题。"
+description: "通过 Anthropic API Key 或同机 Claude CLI 登录在 OpenClaw 中使用 Claude。"
 ---
 
-# Anthropic (Claude) 配置
+# Anthropic (Claude)
 
-Anthropic 是 Claude 的开发公司。Claude 很适合长上下文、代码理解、写作和复杂分析，也是很多 OpenClaw 用户会优先尝试的模型之一。
+OpenClaw 当前支持两条 Anthropic 路线：
 
----
+- API Key：直接调用 Anthropic API，按量计费，适合共享自动化和生产。
+- Claude CLI：复用 Gateway 同一主机、同一系统用户已经登录的 Claude Code，
+  通过 Anthropic 官方 Agent SDK 运行。
 
-## 新手快速配置
-
-### 第一步：获取 API 密钥
-
-1. 打开浏览器，访问 [console.anthropic.com](https://console.anthropic.com)
-2. 点击右上角注册或登录
-3. 进入左侧菜单 "API Keys"
-4. 点击 "Create Key"，给密钥起个名字，例如 `openclaw`
-5. 立刻复制这个密钥。它以 `sk-ant-` 开头，只显示一次。
-
-::: warning 请妥善保管你的密钥
-密钥就像银行卡密码，不要分享给别人。把它保存在安全的地方。
-:::
-
-### 第二步：把密钥填入 OpenClaw
-
-运行配置向导：
+## 方式 A：API Key
 
 ```bash
-openclaw onboard --install-daemon
-```
-
-向导会问你：`Which AI provider do you want to use?`，选择 `Anthropic (Claude)`，然后粘贴你的密钥。
-
-也可以直接用命令行传入：
-
-```bash
-openclaw onboard --anthropic-api-key "sk-ant-你的密钥"
-```
-
-### 第三步：验证是否成功
-
-```bash
-openclaw models status
-```
-
-如果看到 `anthropic: authenticated`，说明配置成功。
-
----
-
-## 我能用哪个 Claude 模型？
-
-模型名称会随 Anthropic 和 OpenClaw 更新而变化，请以向导和 `openclaw models list` 显示为准。常见选择方式如下：
-
-| 模型名称 | 特点 | 适合什么场景 |
-|---------|------|------------|
-| `claude-opus-*` | 能力最强，费用通常更高 | 复杂任务、源码分析、长文写作 |
-| `claude-sonnet-*` | 能力和费用比较均衡 | 日常使用、代码协作 |
-| `claude-haiku-*` | 更快、更省 | 简单问答、快速分类、轻量任务 |
-
-新手一般从 `sonnet` 级别开始最稳：够聪明，费用也不会一下子太吓人。
-
----
-
-## 高级选项（不用 API 密钥的方式）
-
-如果你已经订阅了 Claude Pro/Max，也可以用订阅来驱动 OpenClaw，不需要单独的 API 密钥：
-
-### 方式 A：Anthropic API 密钥（按量计费，上面已介绍）
-
-适用场景：标准 API 访问和按量计费。
-在 Anthropic 控制台创建你的 API 密钥。
-
-### CLI 设置
-
-```bash
-openclaw onboard --install-daemon
-# 选择：Anthropic API key
-
-# 或非交互式
 openclaw onboard --anthropic-api-key "$ANTHROPIC_API_KEY"
+openclaw models list --provider anthropic
 ```
 
-### 配置示例
+模型名称会变化，应以 `models list` 为准。新配置示例：
 
 ```json5
 {
-  env: { ANTHROPIC_API_KEY: "sk-ant-..." },
-  agents: { defaults: { model: { primary: "anthropic/claude-opus-4-6" } } },
+  env: {
+    vars: {
+      ANTHROPIC_API_KEY: "example-anthropic-key-not-real",
+    },
+  },
+  agents: {
+    defaults: {
+      model: { primary: "anthropic/claude-opus-5" },
+    },
+  },
 }
 ```
 
-## 提示缓存（Anthropic API）
+API Key 路线支持 Anthropic Prompt Cache。`cacheRetention` 常用值为 `none`、
+`short`（5 分钟）和 `long`（1 小时）；订阅/Claude CLI 路线不使用这套 API
+缓存参数。
 
-OpenClaw 支持 Anthropic 的提示缓存功能。它只适用于 API Key 认证；订阅认证不支持缓存设置。
+## 方式 B：复用 Claude CLI 登录
 
-### 配置
+在 Gateway 主机上、以运行 Gateway 的同一用户确认 Claude Code 已安装并登录：
 
-在模型配置中使用 `cacheRetention` 参数：
+```bash
+claude --version
+claude auth status --text
+claude auth login
+```
 
-| 值      | 缓存时长   | 说明                           |
-| ------- | ---------- | ------------------------------ |
-| `none`  | 不缓存     | 禁用提示缓存                   |
-| `short` | 5 分钟     | API 密钥认证的默认值           |
-| `long`  | 1 小时     | 延长缓存（需要 beta 标志）     |
+然后运行 `openclaw onboard` 并选择 Claude CLI。OpenClaw 通过官方 Agent SDK
+调用本机 Claude Code；它不会读取、保存、刷新、选择或转发 Claude CLI 的原生
+登录 Token，登录生命周期仍由 Claude Code 自己管理。
+
+建议保持规范 Anthropic 模型名，把执行后端写到模型运行时策略：
 
 ```json5
 {
   agents: {
     defaults: {
+      model: { primary: "anthropic/claude-opus-5" },
       models: {
-        "anthropic/claude-opus-4-6": {
-          params: { cacheRetention: "long" },
+        "anthropic/claude-opus-5": {
+          agentRuntime: { id: "claude-cli" },
         },
       },
     },
@@ -120,89 +71,52 @@ OpenClaw 支持 Anthropic 的提示缓存功能。它只适用于 API Key 认证
 }
 ```
 
-### 默认值
+旧 `claude-cli/<model>` 引用仍可兼容，但新配置应把 Provider/Model 与 Runtime
+分开。连续 Agent turn 在认证会话和执行策略一致时会复用 warm Agent SDK query；
+Gateway 重启或进程结束后，下轮从已持久化 Claude Code 会话继续。
 
-使用 Anthropic API Key 认证时，OpenClaw 会自动为所有 Anthropic 模型应用 `cacheRetention: "short"`，也就是 5 分钟缓存。你可以在配置中显式设置 `cacheRetention` 覆盖默认值。
+::: warning 宿主必须一致
+Claude CLI 复用依赖 Gateway 用户自己的本机登录。普通容器不会自动挂载宿主的
+`~/.claude`；Docker 需要在持久化容器 home 中单独登录，其他容器路径更适合用
+Anthropic API Key。
+:::
 
-### 旧版参数
+## Claude CLI 的长上下文
 
-旧的 `cacheControlTtl` 参数仍然支持向后兼容：
+Anthropic API 支持某个长窗口，不代表本机 Claude CLI 自动取得同样预算。较早模型（例如 Sonnet 4.6）要结合 CLI 自身元数据和配置上限；合格的 `[1m]` 模型引用或 `params.context1m: true` 才明确选择 1M 预算。最终可用性仍取决于已安装 CLI 和账号权限，不能仅凭 OpenClaw 配置证明已获得扩展上下文。
 
-- `"5m"` 映射到 `short`
-- `"1h"` 映射到 `long`
+## Setup Token 仍可使用
 
-我们建议迁移到新的 `cacheRetention` 参数。
-
-OpenClaw 在 Anthropic API 请求中包含了 `extended-cache-ttl-2025-04-11` beta 标志；如果你覆盖了提供商头部信息，请保留它（参见 [/gateway/configuration](/tutorials/gateway/configuration)）。
-
-## 方式 B：Claude setup-token
-
-适用场景：使用你的 Claude 订阅。
-
-### 获取 setup-token
-
-setup-token 由 Claude Code CLI 创建，不在 Anthropic 控制台里生成。你可以在任何机器上运行：
+如果需要手动导入长期 Token：
 
 ```bash
 claude setup-token
+openclaw models auth login --provider anthropic --method setup-token
 ```
 
-将 Token 粘贴到 OpenClaw。向导中选择 `Anthropic token (paste setup-token)`，或在 Gateway 主机上运行：
+Token 会进入 OpenClaw 的 Agent SQLite 认证档案。不要把 Token 发进聊天，也不要
+复制旧 `auth-profiles.json`。
+
+## 订阅额度与生产选择
+
+Anthropic 当前把 Agent SDK、`claude -p` 和第三方应用用量计入已登录 Claude
+订阅的额度；API Key 则走独立按量账单。政策可能不经 OpenClaw 发版就变化，
+对可预测成本或共享生产环境，API Key 仍是更稳妥的选择。
+
+## 排障
 
 ```bash
-openclaw models auth setup-token --provider anthropic
+openclaw models status --check
+openclaw models status --probe --probe-provider anthropic
+openclaw doctor
 ```
 
-如果你在其他机器上生成了 Token，请粘贴它：
+- Claude CLI 登录过期：运行 `claude auth status --text`，必要时重新
+  `claude auth login`，然后重启 Gateway。
+- `No credentials found`：确认在目标 Agent 上配置，或确认共享认证已经通过
+  `openclaw doctor --fix` 迁移到共享 SQLite。
+- 所有 profile 都在 cooldown：等待恢复或在 `auth.order.anthropic` 中加入备用
+  API Key profile。
 
-```bash
-openclaw models auth paste-token --provider anthropic
-```
-
-### CLI 设置（setup-token）
-
-```bash
-# 在引导过程中粘贴 setup-token
-openclaw onboard --auth-choice setup-token
-```
-
-### 配置示例（setup-token）
-
-```json5
-{
-  agents: { defaults: { model: { primary: "anthropic/claude-opus-4-6" } } },
-}
-```
-
-## 注意事项
-
-- 使用 `claude setup-token` 生成 setup-token 并粘贴，或在网关（Gateway）主机上运行 `openclaw models auth setup-token`。
-- 如果在 Claude 订阅中看到 "OAuth token refresh failed ..." 错误，请使用 setup-token 重新认证。参见 [/gateway/troubleshooting#oauth-token-refresh-failed-anthropic-claude-subscription](/tutorials/gateway/troubleshooting)。
-- 认证详情和复用规则见 [/concepts/oauth](/tutorials/concepts/oauth)。
-
-## 故障排查
-
-401 错误 / Token 突然失效
-
-- Claude 订阅认证可能过期或被撤销。重新运行 `claude setup-token`
-  并将其粘贴到网关（Gateway）主机上。
-- 如果 Claude CLI 登录在其他机器上，请在网关（Gateway）主机上使用
-  `openclaw models auth paste-token --provider anthropic`。
-
-No API key found for provider "anthropic"
-
-- 认证是按智能体（Agent）隔离的。新智能体不会继承主智能体的密钥。
-- 为该智能体重新运行引导流程，或在网关（Gateway）主机上粘贴 setup-token / API 密钥，
-  然后使用 `openclaw models status` 验证。
-
-No credentials found for profile `anthropic:default`
-
-- 运行 `openclaw models status` 查看当前激活的认证配置文件。
-- 重新运行引导流程，或为该配置文件粘贴 setup-token / API 密钥。
-
-No available auth profile (all in cooldown/unavailable)
-
-- 检查 `openclaw models status --json` 中的 `auth.unusableProfiles`。
-- 添加另一个 Anthropic 配置文件或等待冷却期结束。
-
-更多信息：[/gateway/troubleshooting](/tutorials/gateway/troubleshooting) 和 [/help/faq](/tutorials/help/faq)。
+继续阅读：[OAuth](/tutorials/concepts/oauth)、[CLI Backends](/tutorials/gateway/cli-backends)、
+[模型故障转移](/tutorials/concepts/model-failover)。

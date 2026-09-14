@@ -33,6 +33,10 @@ openclaw configure --section channels
 
 ## 新手建议
 
+配置 `gateway` 的 Trusted Proxy 鉴权时，代理地址可填写逗号分隔的 IPv4、IPv6 或 CIDR，例如 `10.0.0.1, ::1, 10.0.0.0/24`。向导会忽略首尾空格，拒绝格式错误或空项。
+
+地址或网段能匹配回环来源时，向导会警告并要求明确同意 `gateway.auth.trustedProxy.allowLoopback`。拒绝会撤销回环授权，运行时将拒绝该来源；不要为了消除提示盲目同意。重新配置会保留 `deviceAutoApprove`，不包含回环来源时也保留原回环设置。完整信任条件见[可信代理鉴权](/tutorials/gateway/trusted-proxy-auth)。
+
 能用 `configure` 就先用它。手写配置适合熟悉以后再做。配置完之后运行：
 
 ```bash

@@ -2,6 +2,10 @@
 title: "Message lifecycle refactor"
 ---
 
+::: warning 历史设计草案
+上游主线已移除此设计页（2026-08-31 检查）。下面保留的是原始架构提案，不是当前可用 API 或安装指南；面向用户的行为请以[消息机制](/tutorials/concepts/messages)、[通道路由](/tutorials/channels/channel-routing)和[流式输出](/tutorials/concepts/streaming)为准。
+:::
+
 This page is the target design for replacing scattered channel turn, reply
 dispatch, preview streaming, and outbound delivery helpers with one durable
 message lifecycle.

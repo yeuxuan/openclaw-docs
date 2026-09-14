@@ -1,106 +1,48 @@
 ---
 title: "循环检测"
 sidebarTitle: "循环检测"
-description: "OpenClaw 工具系统：循环检测（Loop Detection）。防止 Agent 陷入无效的重复工具调用循环。"
+description: "OpenClaw 重复工具调用与压缩后循环保护的启用方式、结果归一化、恢复机会和日志判读。"
 ---
 
-# 循环检测
+# 循环检测：避免重复调用却没有进展
 
-## 为什么 Agent 会"卡住"？
+OpenClaw 在 `tools.loopDetection` 下有两道相关保护：
 
-有时候，Agent 会陷入一种无效的重复行为：它反复调用同一个工具、传入同样的参数，却没有任何实质性进展。这种情况通常发生在：
+- 滚动历史检测默认关闭，观察重复调用、无结果轮询和未知工具重试。
+- 压缩后保护默认保留；上下文压缩重试后仍重复相同工具、参数和结果，会以 `compaction_loop_persisted` 中止运行。
 
-- Agent 等待某个条件成立，但条件始终没有满足
-- Agent 误判了上一步的执行结果，认为需要重试
-- 两个工具之间相互触发，形成"乒乓"式死循环
+`enabled` 未设置与显式 `false` 不一样：显式 false 会同时关闭两道保护。
 
-对于初学者来说，这类问题很难排查：Agent 看起来"在运行"，但实际上什么都没做。任务永远不会结束，资源也在白白消耗。
-
-循环检测（`tools.loopDetection`）就是为了解决这个问题而设计的安全机制。它会监控 Agent 最近的工具调用历史，一旦发现无进展的重复模式，就会介入并停止 Agent，避免无意义的循环继续下去。
-
-最新版里还有一个配套保护：压缩后循环保护（post-compaction guard）。
-当上下文太长触发压缩并重试后，如果 Agent 立刻又用同一个工具、同样参数、同样结果反复打转，OpenClaw 会用 `compaction_loop_persisted` 中止这次运行，避免无限烧 token。
-
-## 启用循环检测
-
-在配置文件中添加以下内容即可启用：
+## 配置
 
 ```json5
 {
   tools: {
-    loopDetection: {
-      enabled: true,
-    },
+    loopDetection: { enabled: true },
   },
 }
 ```
 
-如果你只是想快速开启保护，保持默认值就足够了。下面的章节会介绍如何根据实际需求调整各项参数。
+Control UI 的 Settings → Labs 也可打开滚动历史检测。单个 Agent 的覆盖放在 `agents.entries.<id>.tools.loopDetection`。
 
-## 完整配置示例
+当前公开配置保留 `enabled` 开关；不要再复制旧教程里的 `warningThreshold`、`criticalThreshold`、`unknownToolThreshold`、`globalCircuitBreakerThreshold`、`historySize`、`detectors` 或 `postCompactionGuard.windowSize` 调参示例。
 
-```json5
-{
-  tools: {
-    loopDetection: {
-      enabled: true,
-      warningThreshold: 10,
-      criticalThreshold: 20,
-      unknownToolThreshold: 10,
-      globalCircuitBreakerThreshold: 30,
-      historySize: 30,
-      detectors: {
-        genericRepeat: true,
-        knownPollNoProgress: true,
-        pingPong: true,
-      },
-      postCompactionGuard: {
-        windowSize: 3,
-      },
-    },
-  },
-}
-```
+## 哪些变化不算进展
 
-## 检测器说明
+Exec 比较稳定结果：状态、退出码、是否超时和输出，忽略运行耗时、PID、session ID 等易变元数据。对于有类型的终态失败，还忽略诊断时间戳、明确标注的重试计数和进程号；真正的新错误原因仍会打断重复序列。
 
-循环检测内置了三种检测器，分别针对不同类型的循环模式：
+发送消息时，新 message ID 或时间戳并不使相同发送结果变成进展。具备 runId 时只在本轮比较，新运行或定时 heartbeat 不继承旧循环计数。
 
-| 检测器 | 说明 |
-|---|---|
-| `genericRepeat` | 检测同一工具以完全相同的参数被反复调用，且没有产生新的进展 |
-| `knownPollNoProgress` | 检测已知的轮询模式（例如反复查询某个状态），但状态始终没有变化 |
-| `pingPong` | 检测 Agent 在两个工具或两种状态之间来回切换，陷入无限反复 |
+这些规则只比较结果，不认证内容，也不会改变原工具返回值或授权。
 
-三种检测器默认全部开启。如果某个检测器与你的业务场景冲突，可以将其设为 `false` 单独关闭。
+## 触发后怎么处理
 
-## 阈值说明
+系统先警告，再按严重程度阻断工具批次。第一次关键循环会在整批工具执行前阻断，并给模型一次带正常工具的恢复回复机会；它可以报告结果、提问或改用不同工具/参数。同一运行再次触发关键循环，会阻断批次并结束运行。
 
-循环检测通过三级阈值来逐步介入，而不是直接强制停止：
+压缩后保护仅在压缩重试后启用。可在日志查 `post-compaction guard armed for N attempts`，并结合最终错误确认是否在同一工具、参数与结果上反复失败。
 
-| 参数 | 默认值 | 说明 |
-|---|---|---|
-| `warningThreshold` | `10` | 当检测到循环迹象时，向 Agent 发送警告，提示它调整策略 |
-| `criticalThreshold` | `20` | 强制 Agent 停止当前行为并上报结果 |
-| `unknownToolThreshold` | `10` | 同一个不存在或不可用工具被反复调用多少次后拦截 |
-| `globalCircuitBreakerThreshold` | `30` | 无论 Agent 状态如何，直接硬停止，用作最后保护 |
-| `historySize` | `30` | 分析最近多少次工具调用记录来判断是否存在循环 |
-| `postCompactionGuard.windowSize` | `3` | 压缩重试后观察多少次工具调用；同样调用重复到窗口大小就中止 |
+等待异步结果优先使用系统的完成通知，而不是不停轮询。不要为掩盖重复失败而一律关闭保护；先查命令、权限、依赖或上游状态。
 
-这种分级设计给了 Agent 一次"自我纠正"的机会。只有在 Agent 无法响应警告时，才会触发强制停止。
+继续阅读：[Exec](/tutorials/tools/exec)、[子智能体](/tutorials/tools/subagents)。
 
-## 触发后会发生什么？
-
-- 警告阶段：Agent 收到提示，知道自己可能陷入了循环，可以尝试换一种方式继续任务
-- 强制停止阶段：Agent 被要求中止当前路径，将已有的结果上报给用户
-- 熔断阶段：系统直接终止 Agent 运行，防止资源被无限占用
-
-对于用户来说，最终会看到一条说明 Agent 因循环被终止的消息，而不是让任务永远挂起。
-
-::: tip 建议
-如果你的 Agent 经常处理需要轮询的任务（例如等待某个异步操作完成），可以适当提高 `warningThreshold` 和 `criticalThreshold` 的值，避免误触发。
-:::
-
----
-
-_下一步：[工具系统总览](/tutorials/tools/) | [Exec 工具](/tutorials/tools/exec)_
+上游来源：[Tool-loop detection](https://github.com/openclaw/openclaw/blob/2e3bf941b7848fa9dfcbcfc8c9a89d99e2feeb30/docs/tools/loop-detection.md)。

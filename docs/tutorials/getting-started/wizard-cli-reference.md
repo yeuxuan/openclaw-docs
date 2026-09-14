@@ -66,8 +66,8 @@ description: "OpenClaw 快速入门：CLI 入门引导参考。本页面是  的
     - [Google Chat](/tutorials/channels/googlechat)：服务账号 JSON + webhook 受众
     - [Mattermost](/tutorials/channels/mattermost) 插件：bot token + 基础 URL
     - [Signal](/tutorials/channels/signal)：可选 `signal-cli` 安装 + 账号配置
-    - [BlueBubbles](/tutorials/channels/bluebubbles)：推荐用于 iMessage；服务器 URL + 密码 + webhook
-    - [iMessage](/tutorials/channels/imessage)：旧版 `imsg` CLI 路径 + 数据库访问
+    - [iMessage](/tutorials/channels/imessage)：macOS 当前原生 `imsg` 路线，需要 Messages 数据库访问
+    - BlueBubbles 插件已移除；旧安装按[迁移说明](/tutorials/channels/imessage-from-bluebubbles)切换
     - DM 安全：默认为配对模式。首条 DM 发送验证码；通过
       `openclaw pairing approve <channel> <code>` 批准或使用白名单。
 
@@ -78,7 +78,8 @@ description: "OpenClaw 快速入门：CLI 入门引导参考。本页面是  的
     - Linux 和 Windows（通过 WSL2）：systemd 用户单元
       - 向导尝试 `loginctl enable-linger <user>` 以使网关在注销后保持运行。
       - 可能需要 sudo 提示（写入 `/var/lib/systemd/linger`）；它会先尝试不使用 sudo。
-    - 运行时选择：Node（推荐；WhatsApp 和 Telegram 必需）。不推荐 Bun。
+    - 运行时选择：Node 是默认且推荐的运行时。Bun 1.4+ 在提供 WAL-reset-safe
+      `node:sqlite` 时可显式选择；使用 `--daemon-runtime bun` 安装 Bun Gateway。
 
   ### 步骤 7：健康检查
 
@@ -136,12 +137,11 @@ description: "OpenClaw 快速入门：CLI 入门引导参考。本页面是  的
 
 :::
 
-::: details Anthropic OAuth (Claude Code CLI)
+::: details Anthropic Claude CLI
 
-    - macOS：检查 Keychain 项 "Claude Code-credentials"
-    - Linux 和 Windows：如果存在则复用 `~/.claude/.credentials.json`
-
-    在 macOS 上，选择"始终允许"以便 launchd 启动时不会阻塞。
+    交互式引导会优先检测同一 Gateway 主机、同一系统用户已经登录的 Claude CLI。
+    OpenClaw 通过 Anthropic 官方 Agent SDK 运行，不读取、复制或刷新 Claude CLI
+    的原生登录 Token。先用 `claude auth status --text` 验证登录。
 
 
 
@@ -149,26 +149,20 @@ description: "OpenClaw 快速入门：CLI 入门引导参考。本页面是  的
 
 ::: details Anthropic token（setup-token 粘贴）
 
-    在任何机器上运行 `claude setup-token`，然后粘贴 Token。
-    可以命名；留空使用默认名称。
+    在任何机器上运行 `claude setup-token`，然后通过
+    `openclaw models auth login --provider anthropic --method setup-token`
+    粘贴 Token。可以命名；留空使用默认名称。
 
 
 :::
 
-::: details OpenAI Code 订阅（Codex CLI 复用）
-
-    新版 OpenClaw 不再把 `~/.codex/auth.json` 当作主要导入来源。
-    推荐直接走 OpenClaw 自己的 Codex OAuth 登录，让凭据进入 OpenClaw 的认证存储。
-
-
-:::
-
-::: details OpenAI Code 订阅 (OAuth)
+::: details OpenAI ChatGPT/Codex 订阅 (OAuth)
 
     浏览器流程；粘贴 `code#state`。
 
-    当模型未设置或需要修正时，将 `agents.defaults.model` 设置为 `openai/gpt-5.5`。
-    `openai-codex` 仍然是登录资料/旧配置命名，但新模型引用不要写成 `openai-codex/gpt-*`。
+    当前统一使用 `openclaw models auth login --provider openai` 和 `openai:*`
+    profile ID。新安装在账号可用时使用 `openai/gpt-6-astra`；无权限时显式选择
+    `openai/gpt-5.5`。`openai-codex/*` 和 `openai-codex:*` 只作为旧迁移来源。
 
 
 
@@ -179,7 +173,8 @@ description: "OpenClaw 快速入门：CLI 入门引导参考。本页面是  的
     如果存在 `OPENAI_API_KEY` 则使用该值，否则提示输入密钥，然后保存到
     `~/.openclaw/.env` 以便 launchd 读取。
 
-    当模型未设置、为 `openai/*` 或旧的 `openai-codex/*` 时，将 `agents.defaults.model` 设置为 `openai/gpt-5.5`。
+    新安装且尚未配置 primary 时，优先设置 `openai/gpt-6-astra`。刷新认证不会
+    覆盖现有显式 primary；需要改默认模型时运行 `openclaw models set`。
 
 
 
@@ -278,13 +273,19 @@ description: "OpenClaw 快速入门：CLI 入门引导参考。本页面是  的
 
 凭证和档案路径：
 
-- OAuth 凭证：`~/.openclaw/credentials/oauth.json`
-- 认证档案（API 密钥 + OAuth）：`~/.openclaw/agents/<agentId>/agent/auth-profiles.json`
+- Agent 本地认证档案：`~/.openclaw/agents/<agentId>/agent/openclaw-agent.sqlite`
+  中的 `auth_profile_store`。
+- 共享认证档案：`~/.openclaw/state/openclaw.sqlite`；Agent 本地档案优先。
+- `auth-profiles.json`、单 Agent `auth.json` 和
+  `~/.openclaw/credentials/oauth.json` 只作为旧版迁移来源。运行
+  `openclaw doctor --fix` 导入；新登录不会再写这些 JSON 文件。
 
-::: info 说明
-无头和服务器提示：在有浏览器的机器上完成 OAuth，然后将
-`~/.openclaw/credentials/oauth.json`（或 `$OPENCLAW_STATE_DIR/credentials/oauth.json`）
-复制到网关主机。
+::: info 无头和服务器
+在 Gateway 主机上、以运行 Gateway 的同一系统用户执行
+`openclaw configure --section model`。浏览器 OAuth 可以在本机浏览器打开链接，
+再把重定向 URL 或授权码粘贴回 SSH 终端。不要复制 `auth-profiles.json`，也
+不要为迁移登录而替换整份 SQLite 数据库。完成后用
+`openclaw models status --agent <agentId>` 验证。
 :::
 
 ---
@@ -305,7 +306,7 @@ description: "OpenClaw 快速入门：CLI 入门引导参考。本页面是  的
 - `wizard.lastRunCommand`
 - `wizard.lastRunMode`
 
-`openclaw agents add` 写入 `agents.list[]` 和可选的 `bindings`。
+`openclaw agents add` 写入 `agents.entries.*` 和可选的 `bindings`。
 
 WhatsApp 凭证存放在 `~/.openclaw/credentials/whatsapp/<accountId>/` 下。
 会话（Session）存储在 `~/.openclaw/agents/<agentId>/sessions/` 下。
@@ -324,6 +325,10 @@ WhatsApp 凭证存放在 `~/.openclaw/credentials/whatsapp/<accountId>/` 下。
 - `wizard.status`
 
 客户端（macOS 应用和控制面板 UI）可以渲染步骤，无需重新实现入门引导逻辑。
+
+setup 被另一个操作占用时，`wizard.start` 和模型设置启动/激活方法返回 `UNAVAILABLE`，其中 `details.code` 为 `SETUP_ADMISSION_BUSY`。它明确表示这次操作没有开始，可以等竞争操作结束后由用户重新发起。
+
+向导终态 `error` 表示本次操作已结束，但不代表之前的写入回滚。普通请求失败、超时、断线或找不到向导，都不能证明 setup 没有执行；客户端应保留“结果未知”，不要自动重试激活或显示成功。
 
 Signal 设置行为：
 

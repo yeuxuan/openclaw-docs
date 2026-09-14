@@ -1,56 +1,50 @@
 ---
 title: "Qwen"
 sidebarTitle: "Qwen"
-description: "OpenClaw 模型接入：Qwen。Qwen 提供免费层的 OAuth 流程，支持 Qwen Coder 和 Qwen Vision 模型（每天 2,000 次请求，受 Qwen 速率限制约束）。"
+description: "通过官方外部 Qwen Provider 插件接入 Coding Plan、标准按量付费或 Token Plan。"
 ---
 
 # Qwen
 
-Qwen 提供免费层的 OAuth 流程，支持 Qwen Coder 和 Qwen Vision 模型（每天 2,000 次请求，受 Qwen 速率限制约束）。
+Qwen 已迁移为官方外部 Provider 插件，规范 ID 是 `qwen`。它覆盖 Qwen Cloud / Alibaba DashScope 的 Coding Plan 与标准按量付费端点；团队 Token Plan 使用 `qwen-token-plan`。
 
----
+::: warning 旧 Portal/OAuth 路线已退出主路径
+不要再启用 `qwen-portal-auth` 或使用 `qwen-portal/...`、`qwen-oauth/...` 模型引用。新配置安装 `@openclaw/qwen-provider`，使用 `qwen/...` 或 `qwen-token-plan/...`。
+:::
 
-## 启用插件
-
-```bash
-openclaw plugins enable qwen-portal-auth
-```
-
-启用后请重启网关（Gateway）。
-
----
-
-## 认证
+## 安装插件
 
 ```bash
-openclaw models auth login --provider qwen-portal --set-default
+openclaw plugins install @openclaw/qwen-provider
+openclaw gateway restart
 ```
 
-这将运行 Qwen 设备码 OAuth 流程，并将提供商条目写入你的 `models.json`（以及用于快速切换的 `qwen` 别名）。
+## 选择套餐并完成 onboarding
 
----
+| 套餐 | 中国区 | 国际区 |
+|------|--------|--------|
+| Coding Plan | `qwen-api-key-cn` | `qwen-api-key` |
+| 标准按量付费 | `qwen-standard-api-key-cn` | `qwen-standard-api-key` |
+| Token Plan | `qwen-token-plan-cn` | `qwen-token-plan` |
 
-## 模型 ID
-
-- `qwen-portal/coder-model`
-- `qwen-portal/vision-model`
-
-切换模型：
+例如国际区标准按量付费：
 
 ```bash
-openclaw models set qwen-portal/coder-model
+openclaw onboard --auth-choice qwen-standard-api-key
+openclaw models list --provider qwen
+openclaw models set qwen/qwen3.5-plus
 ```
 
----
+推荐环境变量是 `QWEN_API_KEY`；兼容 `MODELSTUDIO_API_KEY` 和 `DASHSCOPE_API_KEY`。Token Plan 使用独立的 `QWEN_TOKEN_PLAN_API_KEY`，与 Coding Plan、标准按量付费 Key 不可混用。
 
-## 复用 Qwen Code CLI 登录
+## 端点和模型注意事项
 
-如果你已经使用 Qwen Code CLI 登录，OpenClaw 在加载认证存储时会从 `~/.qwen/oauth_creds.json` 同步凭证。你仍然需要一个 `models.providers.qwen-portal` 条目（使用上面的登录命令创建）。
+- `qwen3.7-plus`、`qwen3.6-plus` 可用于 Coding Plan 和标准端点。
+- `qwen3.7-max`、`qwen3.6-flash` 只适用于标准按量付费端点。
+- `modelstudio/...` 仍是兼容别名，但新配置应使用 `qwen/...`。
+- 图像理解和 Wan 视频生成只在标准 DashScope 端点提供，不适用于 Coding Plan。
+- Alibaba 规定 Token Plan 只用于交互式 OpenClaw 会话，不要用于 Cron、无人值守脚本或应用后端。
 
----
+如果提示模型不支持，先确认套餐、区域、API Key 类型和模型是否属于同一个端点，不要只改模型名反复重试。
 
-## 注意事项
-
-- Token 自动刷新；如果刷新失败或访问被撤销，请重新运行登录命令。
-- 默认基础 URL：`https://portal.qwen.ai/v1`（如果 Qwen 提供了不同的端点，使用 `models.providers.qwen-portal.baseUrl` 覆盖）。
-- 提供商范围的规则请参见[模型提供商](/tutorials/concepts/model-providers)。
+上游来源：[`docs/providers/qwen.md`](https://github.com/openclaw/openclaw/blob/main/docs/providers/qwen.md)。

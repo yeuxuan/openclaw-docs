@@ -87,6 +87,31 @@ deny 优先级更高。
 
 ---
 
+## 会话工具的可见范围
+
+`tools.sessions.visibility` 当前默认是 `agent`：非沙箱会话可以访问同一 Agent 的其他会话，包括其他用户的对话和保留的 Cron 会话。按发送者拆分 `session.dmScope` 只隔离上下文，不会收紧会话工具的召回权限。
+
+| 值 | 范围 |
+|---|---|
+| `self` | 仅当前会话，主会话也不例外 |
+| `tree` | 当前及其派生会话；规范主会话仍能访问同 Agent 全部会话 |
+| `agent` | 同 Agent 全部会话，当前默认 |
+| `all` | 全部会话；跨 Agent 还须通过 `tools.agentToAgent` 策略 |
+
+例如，需要严格限制跨会话读取时显式配置：
+
+```json5
+{
+  tools: { sessions: { visibility: "self" } },
+}
+```
+
+沙箱默认的 `sessionToolsVisibility: "spawned"` 仍会把范围收紧到派生子树；Incognito 会话不会因设置 `all` 而暴露。`tree` 允许访问自己拥有的跨 Agent 原生/ACP 子会话，`agent` 没有这一例外；依赖该工作流的配置应保留显式 `tree`。多人共用 Agent 时，先确认召回边界，必要时使用独立 Agent。
+
+## Code Mode 默认值
+
+`tools.codeMode.enabled` 默认为 `false`，即使同一对象已经设置其他 Code Mode 参数也不会自动启用。希望按模型目录的 `compat.codeMode: "preferred"` 激活时，须显式设置 `enabled: "auto"`。
+
 ## 新手建议
 
 1. 先用默认 profile。

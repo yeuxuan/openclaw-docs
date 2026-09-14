@@ -131,7 +131,7 @@ imsg send <handle> "test"
 
 iMessage 没有原生提及元数据，因此提及门控依赖正则模式：
 
-- `agents.list[].groupChat.mentionPatterns`
+- `agents.entries.*.groupChat.mentionPatterns`
 - `messages.groupChat.mentionPatterns`（回退）
 
 如果没有配置模式，就无法强制提及门控。来自授权发送者的控制命令可以在群组中绕过提及门控。
@@ -234,11 +234,21 @@ iMessage 支持在 `channels.imessage.accounts` 下按账户配置。每个账�
 - `chat_guid:...`
 - `chat_identifier:...`
 
-也可以使用 handle 目标：
+也可以使用直接 handle：
 
+- `+1555...`
+- `tel:+1555...`
 - `imessage:+1555...`
 - `sms:+1555...`
 - `user@example.com`
+
+联系人名称或混合字母数字别名必须带服务前缀：
+
+- `auto:<contact>`：让 Messages 选择 iMessage 或 SMS
+- `imessage:<contact>`：必须走 iMessage
+- `sms:<contact>`：必须走 SMS
+
+裸联系人名称和混合别名现在会被拒绝，不再尝试当成电话号码。已有自动化如果用了这类目标，需要补上 `auto:`、`imessage:` 或 `sms:` 明确投递意图。
 
 ```bash
 imsg chats --limit 20
@@ -298,7 +308,7 @@ openclaw channels status --probe
 - `channels.imessage.groupPolicy`
 - `channels.imessage.groupAllowFrom`
 - `channels.imessage.groups` 白名单行为
-- 提及模式配置（`agents.list[].groupChat.mentionPatterns`）
+- 提及模式配置（`agents.entries.*.groupChat.mentionPatterns`）
 
 :::
 

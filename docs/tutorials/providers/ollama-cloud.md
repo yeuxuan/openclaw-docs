@@ -8,7 +8,7 @@ description: "OpenClaw 模型接入：直接使用 Ollama Cloud 托管模型，�
 
 Ollama Cloud 是 Ollama 的托管模型 API。它让 OpenClaw 可以直接调用云端 Ollama 模型，不需要在本机安装或运行 `ollama serve`。
 
-这个 Provider 使用 `ollama-cloud`，模型引用形如 `ollama-cloud/kimi-k2.6`。它走 Ollama 原生 `/api/chat` 风格，不是 OpenAI 兼容 `/v1` 路线。
+这个 Provider 使用 `ollama-cloud`，模型引用形如 `ollama-cloud/kimi-k3`。它走 Ollama 原生 `/api/chat` 风格，不是 OpenAI 兼容 `/v1` 路线。
 
 如果你要使用本地 Ollama、混合本地加云端、embedding 或自定义 host，请看 [Ollama](/tutorials/providers/ollama)。
 
@@ -38,7 +38,7 @@ export OLLAMA_API_KEY="<your-ollama-cloud-api-key>"
 | Base URL | `https://ollama.com` |
 | 环境变量 | `OLLAMA_API_KEY` |
 | API 风格 | Ollama 原生 `/api/chat` |
-| 示例模型 | `ollama-cloud/kimi-k2.6` |
+| 示例模型 | `ollama-cloud/kimi-k3` |
 
 ---
 
@@ -58,17 +58,19 @@ export OLLAMA_API_KEY="<your-ollama-cloud-api-key>"
 OpenClaw 会从云端目录发现模型。常见 hosted id 包括：
 
 - `ollama-cloud/gpt-oss:20b`
-- `ollama-cloud/kimi-k2.6`
+- `ollama-cloud/kimi-k3`
 - `ollama-cloud/deepseek-v4-flash`
-- `ollama-cloud/minimax-m2.7`
-- `ollama-cloud/glm-5`
+- `ollama-cloud/minimax-m3`
+- `ollama-cloud/glm-5.2`
 
 使用前先查当前账号可用模型：
 
 ```bash
 openclaw models list --provider ollama-cloud
-openclaw models set ollama-cloud/kimi-k2.6
+openclaw models set ollama-cloud/kimi-k3
 ```
+
+实时发现为空时，OpenClaw 会回退到内置的 `minimax-m2.7`、`minimax-m3`、`kimi-k3`、`glm-5.1` 和 `glm-5.2`。旧的 `kimi-k2.5` 只为已有精确引用保留 deprecated 标记，不应再作为当前托管模型推荐。
 
 ---
 

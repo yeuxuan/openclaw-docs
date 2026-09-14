@@ -8,7 +8,7 @@ description: "OpenClaw 工具系统：用 /goal 为当前会话设置一个持�
 
 Goal 是绑定在当前 OpenClaw 会话上的一个持久目标。它适合长任务：让用户、Agent 和 TUI 都能看到“这一轮到底要完成什么”。
 
-Goal 不是后台任务、提醒、Cron 或 Standing Order。它不会自动调度工作，只是把当前会话的目标固定下来，防止长对话中跑偏。
+Goal 不是后台任务、提醒、Cron 或 Standing Order。它把当前会话的目标固定下来；Control UI 的开始和恢复还会接纳一轮运行，但不等于创建定时调度。
 
 ---
 
@@ -67,6 +67,7 @@ Goal 不是后台任务、提醒、Cron 或 Standing Order。它不会自动调�
 
 - `/goal` 或 `/goal status`：查看当前目标。
 - `/goal start <objective>`：创建新目标。
+- `/goal edit <objective>`：只改目标文本，保留状态和 token 计量。
 - `/goal set <objective>`、`/goal create <objective>`：`start` 的别名。
 - `/goal pause [note]`：暂停目标。
 - `/goal resume [note]`：恢复暂停、阻塞或预算受限的目标。
@@ -76,7 +77,7 @@ Goal 不是后台任务、提醒、Cron 或 Standing Order。它不会自动调�
 - `/goal blocked [note]`：`block` 的别名。
 - `/goal clear`：从会话清除目标。
 
-一个会话同一时间只能有一个 Goal。要换目标，先完成或清除旧目标。
+一个会话同一时间只能有一个 Goal。即使旧目标已完成，开始新目标前也要先 `/goal clear`。`/goal start` 没有 token-budget flag；预算由 `create_goal` 工具设置。
 
 ---
 
@@ -86,7 +87,7 @@ Goal 不是后台任务、提醒、Cron 或 Standing Order。它不会自动调�
 - `paused`：用户暂停了目标。
 - `blocked`：目标被真实阻塞。
 - `budget_limited`：达到 token 预算。
-- `usage_limited`：触发使用限制。
+- `usage_limited`：为后续使用量限制预留的状态。
 - `complete`：目标完成。
 
 `/new` 和 `/reset` 会清除当前会话 Goal，因为它们表示开始新的会话上下文。
@@ -110,3 +111,13 @@ OpenClaw 暴露了三个目标工具给 Agent Harness：
 - `update_goal`：把目标标记为 `complete` 或 `blocked`。
 
 模型不能悄悄暂停、恢复、清除或替换目标。这些动作需要通过 `/goal` 这类会话控制完成。
+
+## Control UI 的 Goal 输入模式
+
+从命令选择器选 **Goal**，输入目标并发送。该模式下 `clear` 或 `/stop` 都是目标的字面文本，不会变成命令；取消则把内容留为普通聊天草稿。
+
+开始会一起保存目标、用户输入和运行接纳；接纳失败则保留草稿，不留下空转目标。Start/Resume 要求空闲、本地且历史可恢复的会话，不会排队或 steer 到另一轮运行。
+
+输入框上方的目标条可编辑、暂停/恢复、清除和展开。Edit/Pause/Clear 不发送斜杠命令、不新增聊天轮次；Resume 会通过正常聊天接纳继续工作，但内部续跑输入不显示成人类消息。断开连接或有待处理 Goal 操作时不可再次修改，展开查看仍可用。
+
+集成方重试结构化 Goal 请求时，应保留原 `operationId`、`issuedAtMs`、目标与 payload。操作回执有效期 24 小时；同 ID 不同请求会拒绝。`replayed: true` 是原操作结果，不是当前目标快照，需刷新会话；幂等保护不保证外部工具副作用恰好发生一次。

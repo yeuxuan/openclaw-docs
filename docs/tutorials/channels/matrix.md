@@ -184,6 +184,12 @@ E2EE 配置（启用端到端加密）：
 - 回复总是返回到 Matrix。
 - 私聊共享智能体（Agent）的主会话（Session）；房间映射到群组会话。
 
+线程会话使用 `/session unbind` 解除绑定（不关闭会话），用 `/agents` 查看状态。`/acp spawn --thread auto` 可创建新线程，已有线程内用 `/acp spawn --thread here` 原地绑定；不要再使用旧 `/focus`、`/unfocus`。
+
+同一 Agent 的多个 Matrix 私聊房间相互串话时，检查 `dm.sessionScope`，可设为 `"per-room"` 隔离房间。`threadBindings.spawnSessions: false` 会禁止原生子 Agent 和 ACP 创建/绑定线程。
+
+Token 和密码 SecretRef，包括命名账号里的引用，都遵循[密钥来源配置](/tutorials/gateway/secrets)。显式 `env` Provider 的变量白名单仍生效，空白名单会拒绝全部变量；不要把它误当成不限制。
+
 ---
 
 ## 访问控制（私聊）
@@ -201,7 +207,7 @@ E2EE 配置（启用端到端加密）：
 ## 房间（群组）
 
 - 默认：`channels.matrix.groupPolicy = "allowlist"`（需提及门控）。使用 `channels.defaults.groupPolicy` 在未设置时覆盖默认值。
-- 使用 `channels.matrix.groups` 添加房间白名单（房间 ID 或别名；当目录搜索找到唯一精确匹配时，名称会被解析为 ID）：
+- 使用 `channels.matrix.groups` 添加房间白名单（房间 ID 或别名；Matrix room version 12+ 也接受没有 `:server` 后缀的 `!roomId`；当目录搜索找到唯一精确匹配时，名称会被解析为 ID）：
 
 ```json5
 {
@@ -225,6 +231,7 @@ E2EE 配置（启用端到端加密）：
 - 配置向导提示房间允许列表（房间 ID、别名或名称），仅在精确唯一匹配时解析名称。
 - 启动时，OpenClaw 将允许列表中的房间/用户名称解析为 ID 并记录映射；未解析的条目将被允许列表匹配忽略。
 - 默认自动加入邀请；通过 `channels.matrix.autoJoin` 和 `channels.matrix.autoJoinAllowlist` 控制。
+- `autoJoinAllowlist` 接受 `!roomId:server`、room version 12+ 的 `!roomId`、`#alias:server` 或 `*`；裸房间名称始终拒绝。
 - 要不允许任何房间，设置 `channels.matrix.groupPolicy: "disabled"`（或保持空的允许列表）。
 - 旧版键名：`channels.matrix.rooms`（与 `groups` 相同结构）。
 

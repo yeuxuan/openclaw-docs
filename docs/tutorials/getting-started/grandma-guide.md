@@ -77,7 +77,7 @@ curl -fsSL https://openclaw.ai/install.sh | bash
 iwr -useb https://openclaw.ai/install.ps1 | iex
 ```
 
-安装脚本会尽量帮你准备运行环境。最新版推荐 Node.js 24；如果你已经是 Node.js 22.19 或更新版本，也可以继续用。
+安装脚本会尽量帮你准备运行环境。最新版推荐 Node.js 26.1+；也支持 Node 24.16+。Node 22、23、25 不再受支持。
 
 ---
 
@@ -86,7 +86,7 @@ iwr -useb https://openclaw.ai/install.ps1 | iex
 安装完成后，继续复制这一行：
 
 ```bash
-openclaw onboard --install-daemon
+openclaw onboard
 ```
 
 这一步像手机第一次开机设置。它会问你一些问题。

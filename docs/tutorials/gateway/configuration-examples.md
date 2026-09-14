@@ -32,16 +32,14 @@ description: "OpenClaw Gateway 配置示例，覆盖最小配置、入门配置�
       workspace: "~/.openclaw/workspace",
       model: { primary: "anthropic/claude-sonnet-4-5" },
     },
-    list: [
-      {
-        id: "main",
-        default: true,
+    entries: {
+      main: {
         identity: {
           name: "Clawd",
           theme: "helpful assistant",
         },
       },
-    ],
+    },
   },
   channels: {
     whatsapp: {
@@ -72,7 +70,7 @@ description: "OpenClaw Gateway 配置示例，覆盖最小配置、入门配置�
     },
   },
 
-  // 认证 profile 元数据（密钥存储在 auth-profiles.json 中）
+  // 认证 profile 元数据（密钥存储在 Agent 的 openclaw-agent.sqlite 中）
   auth: {
     profiles: {
       "anthropic:me@example.com": {
@@ -226,6 +224,18 @@ description: "OpenClaw Gateway 配置示例，覆盖最小配置、入门配置�
     },
   },
 
+  // 记忆搜索
+  memory: {
+    search: {
+      provider: "gemini",
+      model: "gemini-embedding-001",
+      remote: {
+        apiKey: "${GEMINI_API_KEY}",
+      },
+      extraPaths: ["../team-docs", "/srv/shared-notes"],
+    },
+  },
+
   // 智能体（Agent）运行时
   agents: {
     defaults: {
@@ -271,14 +281,6 @@ description: "OpenClaw Gateway 配置示例，覆盖最小配置、入门配置�
         prompt: "HEARTBEAT",
         ackMaxChars: 300,
       },
-      memorySearch: {
-        provider: "gemini",
-        model: "gemini-embedding-001",
-        remote: {
-          apiKey: "${GEMINI_API_KEY}",
-        },
-        extraPaths: ["../team-docs", "/srv/shared-notes"],
-      },
       sandbox: {
         mode: "non-main",
         scope: "session",
@@ -296,16 +298,14 @@ description: "OpenClaw Gateway 配置示例，覆盖最小配置、入门配置�
         },
       },
     },
-    list: [
-      {
-        id: "main",
-        default: true,
+    entries: {
+      main: {
         identity: {
           name: "Samantha",
           theme: "helpful assistant",
         },
       },
-    ],
+    },
   },
 
   tools: {
@@ -313,7 +313,7 @@ description: "OpenClaw Gateway 配置示例，覆盖最小配置、入门配置�
     deny: ["browser", "canvas"],
     exec: {
       backgroundMs: 10000,
-      timeoutSec: 1800,
+      timeoutSeconds: 1800,
       cleanupMs: 1800000,
     },
     elevated: {
@@ -574,16 +574,14 @@ description: "OpenClaw Gateway 配置示例，覆盖最小配置、入门配置�
 {
   agents: {
     defaults: { workspace: "~/work-openclaw" },
-    list: [
-      {
-        id: "work",
-        default: true,
+    entries: {
+      work: {
         identity: {
           name: "WorkBot",
           theme: "professional assistant",
         },
       },
-    ],
+    },
   },
   tools: {
     elevated: { enabled: false },

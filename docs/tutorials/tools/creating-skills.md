@@ -219,10 +219,10 @@ Subject 要求：
 openclaw skills list
 
 # 查看特定技能的内容
-openclaw skills show code-review
+openclaw skills info code-review
 
-# 验证技能文件格式
-openclaw skills validate ~/.openclaw/skills/my-skill/
+# 检查格式、前置依赖与 Agent 可见性
+openclaw skills check --agent <id>
 ```
 
 ---

@@ -442,8 +442,12 @@ openclaw pairing list feishu
 
 ### 消息限制
 
-- `textChunkLimit`：出站文本分块大小（默认：2000 字符）
+- `textChunkLimit`：出站文本分块大小（默认：4000 字符）
 - `mediaMaxMb`：媒体上传/下载限制（默认：30MB）
+
+Markdown 卡片和富文本消息还受飞书 30 KB 序列化上限约束。标题、提示、@提及、
+JSON 转义和 UTF-8 正文都计入限制，因此实际分块可能短于 `textChunkLimit`；
+很长的媒体说明会先作为文本/卡片分块发送，再发送附件。
 
 ### 流式传输
 
@@ -469,19 +473,18 @@ Feishu 支持通过互动卡片进行流式回复。启用后，机器人在生�
 ```json5
 {
   agents: {
-    list: [
-      { id: "main" },
-      {
-        id: "clawd-fan",
+    ownership: "explicit",
+    entries: {
+      main: {},
+      "clawd-fan": {
         workspace: "/home/user/clawd-fan",
         agentDir: "/home/user/.openclaw/agents/clawd-fan/agent",
       },
-      {
-        id: "clawd-xi",
+      "clawd-xi": {
         workspace: "/home/user/clawd-xi",
         agentDir: "/home/user/.openclaw/agents/clawd-xi/agent",
       },
-    ],
+    },
   },
   bindings: [
     {
@@ -538,7 +541,7 @@ Feishu 支持通过互动卡片进行流式回复。启用后，机器人在生�
 | `channels.feishu.groupAllowFrom`                  | 群组允许列表                  | -         |
 | `channels.feishu.groups.<chat_id>.requireMention` | 需要 @提及                   | `true`    |
 | `channels.feishu.groups.<chat_id>.enabled`        | 启用群组                     | `true`    |
-| `channels.feishu.textChunkLimit`                  | 消息分块大小                  | `2000`    |
+| `channels.feishu.textChunkLimit`                  | 消息分块大小                  | `4000`    |
 | `channels.feishu.mediaMaxMb`                      | 媒体大小限制                  | `30`      |
 | `channels.feishu.streaming`                       | 启用流式卡片输出              | `true`    |
 | `channels.feishu.blockStreaming`                   | 启用分块流式传输              | `true`    |

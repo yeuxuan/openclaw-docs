@@ -77,6 +77,7 @@ OpenClaw 的核心结构可以先这样记：
 - [智能体工作区](/tutorials/concepts/agent-workspace)：Agent 读写文件和执行任务的地方
 - [托管 Worktree](/tutorials/concepts/managed-worktrees)：给 Agent 任务单独开分支和 checkout
 - [多智能体路由](/tutorials/concepts/multi-agent)：多个 Agent 如何分工
+- [多用户模式](/tutorials/concepts/multi-user)：多个可信操作者共享一个 Agent 时的协作边界
 
 如果把 Gateway 看成总机，Agent 就是接到任务后真正去办事的人。
 
@@ -90,6 +91,7 @@ OpenClaw 的核心结构可以先这样记：
 - [内置记忆引擎](/tutorials/concepts/memory-builtin)：默认本地记忆怎么存和怎么搜
 - [QMD 记忆后端](/tutorials/concepts/memory-qmd)：本地资料柜式的增强记忆
 - [记忆搜索](/tutorials/concepts/memory-search)：如何把过去相关内容翻出来
+- [记忆架构](/tutorials/concepts/memory-architecture)：分层、来源、写入门控和召回的整体设计
 - [主动记忆 Active Memory](/tutorials/concepts/active-memory)：回复前主动检索相关记忆
 - [上下文压缩 Compaction](/tutorials/concepts/compaction)：对话太长时怎么变短
 - [系统提示词](/tutorials/concepts/system-prompt)：如何规定 Agent 的行为边界
@@ -104,8 +106,9 @@ OpenClaw 的核心结构可以先这样记：
 - [会话管理](/tutorials/concepts/session)：会话作用域、隔离和身份绑定
 - [会话搜索](/tutorials/concepts/session-search)：从旧聊天里找回上下文
 - [会话状态](/tutorials/concepts/session-state)：理解会话为什么能继续、为什么会挂起
+- [会话同步与附加](/tutorials/concepts/session-attachment)：在控制 UI、TUI 与编码 Harness 间继续同一会话
 - [Sessions](/tutorials/concepts/sessions)：会话生命周期
-- [Channel Docking](/tutorials/concepts/channel-docking)：同一会话换到另一个聊天软件回复
+- [Channel Docking（历史）](/tutorials/concepts/channel-docking)：旧版方案存档，不作为新版配置指引
 - [会话工具](/tutorials/concepts/session-tool)：会话里可以用哪些工具
 - [会话修剪](/tutorials/concepts/session-pruning)：过期会话如何清理
 - [消息 Messages](/tutorials/concepts/messages)：消息结构和分发机制

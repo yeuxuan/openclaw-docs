@@ -137,6 +137,7 @@ macOS 菜单栏应用可以端到端驱动相同的设置（远程状态检查�
 - 非 loopback 绑定（`lan`、`tailnet`、`custom`，或 loopback 不可用时的 `auto`）必须使用认证 Token 或密码。
 - `gateway.remote.token` 只用于远程 CLI 调用，不会启用本地认证。
 - `gateway.remote.tlsFingerprint` 在使用 `wss://` 时固定远程 TLS 证书。
+- onboarding 和 configure 的就绪探测仅对相同已保存 endpoint 使用该 TLS 指纹；换一个 URL 不会继承原目标的证书固定设置。
 - Tailscale Serve 在 `gateway.auth.allowTailscale: true` 时可以通过身份头认证。如果你想改用 Token 或密码，把它设为 `false`。
 - 将浏览器控制视为 operator 访问：仅 tailnet + 有意的节点配对。
 

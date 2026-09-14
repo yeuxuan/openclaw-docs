@@ -1,14 +1,17 @@
 ---
 title: "安装 Node.js"
 sidebarTitle: "安装 Node.js"
-description: "OpenClaw 安装部署：安装 Node.js。OpenClaw 推荐 Node.js 24，也支持 Node.js 22.19+。这篇文章教你怎么安装它。"
+description: "OpenClaw 安装部署：安装 Node.js。OpenClaw 推荐 Node.js 26.1+，并说明 Node 24.16+ 兼容线与自动恢复机制。"
 ---
 
 # 安装 Node.js
 
-OpenClaw 推荐 Node.js 24，也支持 Node.js 22.19+。这篇文章教你怎么安装它。
+OpenClaw 推荐 Node.js 26.1+，也兼容 Node 24.16+。Node 22、23、25，以及低于
+24.16 / 26.1 的版本均不受支持。
+官网安装脚本在 macOS 缺少 Node 时准备 Node 26，在 Linux 缺少 Node 时准备
+Node 24 LTS；所以 Linux 自动安装后看到 Node 24 是正常结果，不代表降级失败。
 
-> 已经装好了？ 先用 `node -v` 确认版本。看到 `v24.x.x` 最好；看到 `v22.19.x` 或更高也可以使用。
+> 已经装好了？先用 `node -v` 确认版本。不要只看主版本，还要核对 24.16 / 26.1 这两个最低小版本。
 
 ---
 
@@ -20,10 +23,18 @@ OpenClaw 推荐 Node.js 24，也支持 Node.js 22.19+。这篇文章教你怎么
 node -v
 ```
 
-- 看到 `v24.x.x` : 最佳，推荐版本
-- 看到 `v22.19.x` 或更大 : 可以使用
-- 看到 `v22.x.x`（低于 22.19）或更小版本 : 需要升级
+- 看到 `v26.1.0` 或更高的 26.x：推荐版本
+- 看到 `v24.16.0` 或更高的 24.x：可以使用
+- 看到 Node 22、23、25，或低于上述最低小版本：需要升级
 - 提示"找不到命令" : 没有安装，按下面步骤安装
+
+::: tip CLI 现在可以提供私有 Node 恢复
+如果 OpenClaw 因 Node 版本不兼容而无法启动，交互式终端会先查找 PATH、受管
+Gateway 服务、nvm/fnm/Volta/Homebrew 中已有的兼容运行时；仍未找到时，可经你
+确认把校验过的 Node 下载到 `~/.openclaw/tools/cli-node`，然后重试原命令。它不会
+替换系统 Node，也不会自动修复或重启 Gateway 服务。CI、`--json`、`--yes` 和非交互
+调用不会弹出安装提示；Alpine/musl 仍需手动安装。
+:::
 
 ---
 
@@ -35,10 +46,10 @@ node -v
 
 方式一：Homebrew（推荐）
 
-如果你已经安装了 Homebrew，在终端运行：
+如果你已经安装了 Homebrew，在终端运行（Homebrew 当前稳定 Node 即可）：
 
 ```bash
-brew install node@24
+brew install node
 ```
 
 方式二：直接下载
@@ -115,9 +126,9 @@ fnm（推荐，速度最快）：
 # 安装 fnm
 curl -fsSL https://fnm.vercel.app/install | bash
 
-# 安装并使用 Node 24
-fnm install 24
-fnm use 24
+# 安装并使用 Node 26
+fnm install 26
+fnm use 26
 ```
 
 nvm（macOS/Linux 经典选项）：
@@ -126,9 +137,9 @@ nvm（macOS/Linux 经典选项）：
 # 安装 nvm
 curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.0/install.sh | bash
 
-# 重新打开终端，然后安装 Node 24
-nvm install 24
-nvm use 24
+# 重新打开终端，然后安装 Node 26
+nvm install 26
+nvm use 26
 ```
 
 ::: warning 注意

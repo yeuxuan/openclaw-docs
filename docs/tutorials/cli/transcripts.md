@@ -54,10 +54,23 @@ openclaw transcripts path <session> --json
 - `path <session> --transcript`: print `transcript.jsonl`.
 - `--json`: print machine-readable output.
 
-When a human session id repeats across days, use the date-qualified selector
-from `list`, for example `openclaw transcripts show 2026-05-22/standup`.
-Default session ids include a timestamp and random suffix; configure fixed
-session ids only when they are unique within the day.
+优先复制 `list` 返回的规范 `selector` 来定位一次精确捕获。已存在的规范 selector 优先于同文本的原始 ID；否则 `show`、`path` 接受 `YYYY-MM-DD/<raw-session-id>`，日期后的标点、空格和斜杠按原样保留：
+
+```bash
+openclaw transcripts show '2026-05-22/notes: room/one'
+```
+
+若两种带日期形式都未命中，CLI 才将完整输入作为区分大小写的原始 ID 或导出 slug 查找；多个匹配需带日期消歧，不会清洗原始 ID 后随意选一个。固定 ID 应至少在同一天内唯一。
+
+## 工具调用中的 selector
+
+`transcripts` 工具的 start/import/stop/summarize 返回原始 `sessionId` 与规范 `selector`。后续 stop 或 summarize 应优先传 `selector`，且两者必须且只能选一个：
+
+```json
+{ "action": "summarize", "selector": "2026-05-22/notes-room-one" }
+```
+
+其他 action 不接受 `selector`。显式 selector 不会回退成整个原始 ID；旧 `sessionId` 用法若在带日期含义与原始 ID/slug 之间发生碰撞，会报歧义。使用 start/import 或有权查看的 status/list 返回值，不要自行构造猜测；指定旧捕获的 selector 不会停止同 ID 的新捕获。
 
 ## Output
 

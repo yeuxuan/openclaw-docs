@@ -6,7 +6,8 @@ description: "OpenClaw 核心概念：OAuth。OpenClaw 通过 OAuth 支持\"订�
 
 # OAuth
 
-OpenClaw 通过 OAuth 支持"订阅认证"，适用于提供此功能的提供商（特别是 OpenAI Codex (ChatGPT OAuth)）。对于 Anthropic 订阅，使用 setup-token 流程。本页解释：
+OpenClaw 通过 OAuth 支持订阅认证，特别是 OpenAI ChatGPT/Codex OAuth。
+Anthropic 可以复用同机 Claude CLI 登录，也可以显式导入 setup-token。本页解释：
 
 - OAuth Token 交换 如何工作（PKCE）
 - Token 存储在 哪里（以及为什么）
@@ -28,7 +29,7 @@ OAuth 提供商通常在登录/刷新流程中生成 新的刷新 Token。一些
 
 - 你通过 OpenClaw _和_ Claude Code / Codex CLI 登录 : 其中一个后来随机"登出"
 
-为了减少这种情况，OpenClaw 将 `auth-profiles.json` 视为 Token 汇聚点：
+为了减少这种情况，OpenClaw 将每个 Agent 的 SQLite 认证档案库视为 Token 汇聚点：
 
 - 运行时从 一个地方 读取凭证
 - 我们可以保留多个配置文件并确定性地路由它们
@@ -37,31 +38,37 @@ OAuth 提供商通常在登录/刷新流程中生成 新的刷新 Token。一些
 
 ## 存储（Token 存储位置）
 
-密钥存储是 每智能体的：
+密钥与认证路由状态存储在每个 Agent 的规范 SQLite 数据库中：
 
-- 认证配置文件（OAuth + API 密钥）：`~/.openclaw/agents/<agentId>/agent/auth-profiles.json`
-- 运行时缓存（自动管理；不要编辑）：`~/.openclaw/agents/<agentId>/agent/auth.json`
+- 数据库：`~/.openclaw/agents/<agentId>/agent/openclaw-agent.sqlite`
+- 凭据表：`auth_profile_store`
+- 顺序、last-good、冷却与用量状态：`auth_profile_state`
 
-旧版仅导入文件（仍然支持，但不是主存储）：
-
-- `~/.openclaw/credentials/oauth.json`（首次使用时导入到 `auth-profiles.json`）
+新登录不会再写认证 JSON。旧安装可能仍有 `auth-profiles.json`、
+`auth-state.json`、Agent 下的 `auth.json` 或共享的
+`~/.openclaw/credentials/oauth.json`；运行 `openclaw doctor --fix` 导入并归档。
+运行时不会回退读取这些退役文件；如果 SQLite 仍为空，会以
+`AUTH_PROFILE_MIGRATION_REQUIRED` 失败关闭，而不是静默使用旧 Token。
 
 以上所有路径也遵循 `$OPENCLAW_STATE_DIR`（状态目录覆盖）。完整参考：[/gateway/configuration](/tutorials/gateway/configuration)
 
 ---
 
-## Anthropic setup-token（订阅认证）
+## Anthropic Claude CLI 与 setup-token
+
+优先在 Gateway 主机上确认 Claude CLI 登录：
+
+```bash
+claude auth status --text
+```
+
+OpenClaw 通过 Anthropic 官方 Agent SDK 使用该登录，不会把 Claude CLI Token
+导入自己的 SQLite。需要 OpenClaw 自己保存 setup-token 时运行：
 
 在任何机器上运行 `claude setup-token`，然后粘贴到 OpenClaw：
 
 ```bash
-openclaw models auth setup-token --provider anthropic
-```
-
-如果你在其他地方生成了 Token，手动粘贴：
-
-```bash
-openclaw models auth paste-token --provider anthropic
+openclaw models auth login --provider anthropic --method setup-token
 ```
 
 验证：
@@ -84,7 +91,7 @@ OpenClaw 的交互式登录流程在 `@mariozechner/pi-ai` 中实现，并连接
 2. 将 Token 粘贴到 OpenClaw
 3. 存储为 Token 认证配置文件（无刷新）
 
-向导路径是 `openclaw onboard` : 认证选择 `setup-token`（Anthropic）。
+向导路径是 `openclaw onboard`：选择 Claude CLI 或 Anthropic setup-token。
 
 ### OpenAI Codex (ChatGPT OAuth)
 
@@ -97,7 +104,8 @@ OpenClaw 的交互式登录流程在 `@mariozechner/pi-ai` 中实现，并连接
 5. 在 `https://auth.openai.com/oauth/token` 交换
 6. 从访问 Token 提取 `accountId` 并存储 `{ access, refresh, expires, accountId }`
 
-向导路径是 `openclaw onboard` : 认证选择 `openai-codex`。
+向导路径是 `openclaw onboard --auth-choice openai`。当前认证 profile ID 使用
+`openai:*`；旧 `openai-codex:*` 由 `openclaw doctor --fix` 迁移。
 
 ---
 
@@ -131,7 +139,7 @@ openclaw agents add personal
 
 ### 2）高级：单个智能体中的多个配置文件
 
-`auth-profiles.json` 支持同一提供商的多个配置文件 ID。
+SQLite 认证档案库支持同一提供商的多个 profile ID。
 
 选择使用哪个配置文件：
 

@@ -57,7 +57,7 @@ iwr -useb https://openclaw.ai/install.ps1 | iex
 
 ---
 
-## install.sh
+## install.sh {#installsh}
 
 ::: tip 提示
 推荐用于 macOS/Linux/WSL 上的大多数交互式安装。
@@ -75,9 +75,12 @@ iwr -useb https://openclaw.ai/install.ps1 | iex
 
 在 Linux（包括 WSL）上，安装 Node.js 之前，脚本会自动预装原生编译工具链（`make`、`g++`、`cmake`、`python3`），避免后续 npm 原生模块安装失败。macOS 会跳过这一步。
 
-### 步骤 3：确保 Node.js 24（或兼容的 22.19+）
+### 步骤 3：确保兼容 Node.js
 
-检查 Node 版本，如需安装会优先准备 Node 24（macOS 上使用 Homebrew，Linux 上使用 NodeSource 设置脚本，适用于 apt/dnf/yum）。
+检查 Node 版本；缺失时，macOS 通过 Homebrew 准备 Node 26，Linux 通过
+NodeSource 准备 Node 24 LTS。兼容范围是 Node 24.16+ 或 26.1+；Node 22、23、25
+不受支持。安装器还会核对实际链接的 SQLite 是否满足 WAL reset 安全要求；
+Alpine/musl 仍可能需要手动准备兼容运行时。
 
 ### 步骤 4：确保 Git
 
@@ -90,12 +93,21 @@ iwr -useb https://openclaw.ai/install.ps1 | iex
 
 ### 步骤 6：安装后任务
 
-- 在升级和 git 安装时运行 `openclaw doctor --non-interactive`（尽力而为）
-- 在适当时尝试引导（TTY 可用、引导未被禁用、且引导/配置检查通过）
+- 未配置的新安装先启动引导；使用 `--no-onboard` 或没有 TTY 时，会打印稍后继续设置的命令
+- 已配置的升级会尽力刷新并重启已加载的 Gateway 服务，然后运行 `openclaw doctor --fix`；修复失败会以非零状态退出
+- 使用 `--verify` 时，会核对已安装版本，并在已有配置后检查 Gateway 健康状态
 - 默认设置 `SHARP_IGNORE_GLOBAL_LIBVIPS=1`
+
+服务刷新被拒绝时，安装器可能报告代码安装成功，同时保持服务不变并提示人工检查；这不能当作新版本 Gateway 已在运行。先执行 `openclaw gateway status --deep`，确认归属后再由维护者重启。
 
 
 ### 源码 checkout 检测
+
+源码安装会先选择 checkout ref，再通过 Corepack 的临时 shim 读取目标 `package.json` 固定的 pnpm 版本；嵌套安装和构建也使用同一入口。不能用环境中旧的 `pnpm --version` 代替安全探测，因为旧 launcher 的自动版本切换可能改动目标 lockfile。
+
+Corepack 缺失或无法准备固定版本时，安装器会用已选 npm 在临时 prefix 安装精确 pnpm 版本，并遵守 npm 对生命周期脚本的批准要求。这个过程不会启用全局 Corepack shim，也不会替换终端里的全局 pnpm；之后手工构建仍需按[源码安装说明](/tutorials/installation/#从源码手工构建)准备正确工具链。
+
+`install.sh` 和 `install-cli.sh` 使用 `--install-method git` 时，`--version` 支持完整 40 位 commit SHA。安装器检查或从 origin 获取该精确提交、detached checkout 并使用 frozen lockfile；`--no-git-update` 仅跳过分支 rebase，不阻止获取缺失的指定提交。
 
 如果在 OpenClaw checkout 内运行（`package.json` + `pnpm-workspace.yaml`），脚本会提供选择：
 
@@ -180,7 +192,7 @@ curl -fsSL --proto '=https' --tlsv1.2 https://openclaw.ai/install.sh | bash -s -
 
 ---
 
-## install-cli.sh
+## install-cli.sh {#install-clish}
 
 ::: info
 设计用于希望将所有内容放在本地前缀（默认 `~/.openclaw`）下且不依赖系统 Node 的环境。
@@ -192,7 +204,9 @@ curl -fsSL --proto '=https' --tlsv1.2 https://openclaw.ai/install.sh | bash -s -
 
   ### 步骤 7：安装本地 Node 运行时
 
-    下载 Node 压缩包（默认 `22.22.0`）到 `<prefix>/tools/node-v<version>` 并验证 SHA-256。
+    下载固定的 Node LTS（默认 `24.19.0`）到 `<prefix>/tools/node-v<version>` 并验证 SHA-256。
+    Linux ARMv7 因没有官方 Node 24+ 二进制，使用 `22.23.2`；Alpine/musl 则通过 apk
+    安装并核对 Node 与实际链接的 SQLite 版本。
 
   ### 步骤 8：确保 Git
 
@@ -200,7 +214,9 @@ curl -fsSL --proto '=https' --tlsv1.2 https://openclaw.ai/install.sh | bash -s -
 
   ### 步骤 9：在前缀下安装 OpenClaw
 
-    使用 npm 的 `--prefix <prefix>` 安装，然后将包装器写入 `<prefix>/bin/openclaw`。
+    默认使用 npm 的 `--prefix <prefix>` 安装；也可以选择 git checkout。两种方式都会将
+    包装器写入 `<prefix>/bin/openclaw`，随后运行版本验证；同一前缀已有 Gateway 服务时，
+    安装器会强制刷新服务并尽力探测健康状态。
 
 
 ### 示例（install-cli.sh）
@@ -216,6 +232,12 @@ curl -fsSL --proto '=https' --tlsv1.2 https://openclaw.ai/install-cli.sh | bash
 
 ```bash
 curl -fsSL --proto '=https' --tlsv1.2 https://openclaw.ai/install-cli.sh | bash -s -- --prefix /opt/openclaw --version latest
+```
+
+  Git 安装：
+
+```bash
+curl -fsSL --proto '=https' --tlsv1.2 https://openclaw.ai/install-cli.sh | bash -s -- --install-method git --git-dir ~/openclaw
 ```
 
   自动化 JSON 输出：
@@ -236,8 +258,13 @@ curl -fsSL --proto '=https' --tlsv1.2 https://openclaw.ai/install-cli.sh | bash 
 | 标志                   | 描述                                                                        |
 | ---------------------- | --------------------------------------------------------------------------- |
 | `--prefix <path>`      | 安装前缀（默认：`~/.openclaw`）                                              |
+| `--install-method npm\|git` | 安装方式（默认：`npm`）；别名：`--method`                               |
+| `--npm` / `--git`      | npm 或 git 方式的快捷参数；`--git` 别名为 `--github`                         |
+| `--git-dir <path>`     | git checkout 目录（默认：`~/openclaw`）；别名：`--dir`                       |
+| `--no-git-update`      | 现有 git checkout 不执行 `git pull`                                          |
 | `--version <ver>`      | OpenClaw 版本或 dist-tag（默认：`latest`）                                    |
-| `--node-version <ver>` | Node 版本（默认：`22.22.0`）                                                 |
+| `--compatible-with <ver>` | 拒绝安装无法修改指定版本配置的 CLI                                        |
+| `--node-version <ver>` | Node 版本（默认：`24.19.0`；Linux ARMv7 为 `22.23.2`）                        |
 | `--json`               | 输出 NDJSON 事件                                                             |
 | `--onboard`            | 安装后运行 `openclaw onboard`                                                |
 | `--no-onboard`         | 跳过引导（默认）                                                             |
@@ -254,11 +281,14 @@ curl -fsSL --proto '=https' --tlsv1.2 https://openclaw.ai/install-cli.sh | bash 
 | 变量                                        | 描述                                                                            |
 | ------------------------------------------- | ------------------------------------------------------------------------------- |
 | `OPENCLAW_PREFIX=<path>`                    | 安装前缀                                                                        |
+| `OPENCLAW_INSTALL_METHOD=git\|npm`          | 安装方法                                                                        |
 | `OPENCLAW_VERSION=<ver>`                    | OpenClaw 版本或 dist-tag                                                         |
 | `OPENCLAW_NODE_VERSION=<ver>`               | Node 版本                                                                        |
+| `OPENCLAW_HOME=<path>`                      | 状态目录和默认 git / 引导路径的基础目录                                          |
 | `OPENCLAW_NO_ONBOARD=1`                     | 跳过引导                                                                        |
 | `OPENCLAW_NPM_LOGLEVEL=error\|warn\|notice` | npm 日志级别                                                                     |
-| `OPENCLAW_GIT_DIR=<path>`                   | 旧版清理查找路径（用于移除旧的 `Peekaboo` 子模块 checkout）                        |
+| `OPENCLAW_GIT_DIR=<path>`                   | git checkout 目录                                                               |
+| `OPENCLAW_GIT_UPDATE=0\|1`                 | 是否更新现有 git checkout                                                       |
 | `SHARP_IGNORE_GLOBAL_LIBVIPS=0\|1`          | 控制 sharp/libvips 行为（默认：`1`）                                              |
 
 
@@ -268,7 +298,7 @@ curl -fsSL --proto '=https' --tlsv1.2 https://openclaw.ai/install-cli.sh | bash 
 
 ---
 
-## install.ps1
+## install.ps1 {#installps1}
 
 ### 流程（install.ps1）
 
@@ -277,9 +307,9 @@ curl -fsSL --proto '=https' --tlsv1.2 https://openclaw.ai/install-cli.sh | bash 
 
     需要 PowerShell 5+。
 
-  ### 步骤 11：确保 Node.js 24（或兼容的 22.19+）
+  ### 步骤 11：确保兼容 Node.js
 
-    如果缺失，依次尝试通过 winget、Chocolatey、Scoop 安装。
+    支持 Node 24.16+ 或 26.1+；缺失时依次尝试通过 winget、Chocolatey、Scoop 安装受支持版本，便携回退使用 Node 26。
 
   ### 步骤 12：安装 OpenClaw
 

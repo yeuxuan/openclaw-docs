@@ -19,7 +19,7 @@ sidebarTitle: "Agent 配置"
 | `agents.defaults.repoRoot` | 项目根目录提示 |
 | `agents.defaults.skills` | 默认允许的技能 |
 | `agents.defaults.contextInjection` | 是否注入工作区说明文件 |
-| `agents.list` | 配多个 Agent |
+| `agents.entries` | 按 Agent ID 配置多个 Agent |
 | `multiAgent` | 多 Agent 路由 |
 | `session` | 会话生命周期和绑定 |
 | `messages` | 消息投递和格式 |
@@ -64,10 +64,10 @@ sidebarTitle: "Agent 配置"
     defaults: {
       skills: ["github", "weather"]
     },
-    list: [
-      { id: "writer" },
-      { id: "locked-down", skills: [] }
-    ]
+    entries: {
+      writer: {},
+      "locked-down": { skills: [] }
+    }
   }
 }
 ```
@@ -101,26 +101,21 @@ sidebarTitle: "Agent 配置"
   agents: {
     defaults: {
       contextInjection: "continuation-skip",
-      bootstrapMaxChars: 12000,
+      bootstrapMaxChars: 20000,
       bootstrapTotalMaxChars: 60000,
-      bootstrapPromptTruncationWarning: "always"
     },
-    list: [
-      {
-        id: "docs",
+    entries: {
+      docs: {
         contextInjection: "always",
         bootstrapMaxChars: 50000,
         bootstrapTotalMaxChars: 300000
       }
-    ]
+    }
   }
 }
 ```
 
-这里最容易误会的是 `bootstrapPromptTruncationWarning`。
-新版默认是 `"always"`：只要工作区说明文件被截断，就每次在系统提示词里放一个简短提醒。
-
-如果 AGENTS.md 太长，OpenClaw 会提醒 Agent：说明文件被截断了，必要时应再读原文件。
+工作区说明文件被截断时，OpenClaw 会内置注入一个简短提醒，让 Agent 必要时再读原文件。这个提醒现在不可配置；旧的 `bootstrapPromptTruncationWarning` 不应继续写进新配置。
 
 工具结果也有自己的上限。`toolResultMaxChars` 不写时，OpenClaw 会按模型上下文自动计算：
 
@@ -133,6 +128,31 @@ sidebarTitle: "Agent 配置"
 ```bash
 openclaw doctor --deep
 ```
+
+## `/model` 默认写到哪里
+
+`agents.defaults.modelSelectionScope` 控制没有显式范围参数的模型切换：
+
+```json5
+{
+  agents: {
+    defaults: {
+      modelSelectionScope: "session",
+    },
+  },
+}
+```
+
+| 值 | 行为 |
+|----|------|
+| `session` | 只改当前会话 |
+| `agent` | 同时更新当前 Agent 的显式 primary |
+| `global` | 同时更新共享的 `agents.defaults.model` fallback |
+| 未设置 | 保留各界面原有行为 |
+
+显式 `/model <model> -s`、`-a`、`-g` 优先于该设置。`-a` 和 `-g` 需要
+owner/admin 权限；普通用户的裸命令仍只改会话。Telegram 回调选择器和本地 TUI
+始终保持 session-only。
 
 ---
 
@@ -173,6 +193,55 @@ openclaw doctor --deep
 
 多 Agent 很强，但配置也更复杂。基础通道和模型没跑稳前，不建议一开始就拆很多 Agent。
 
+当前配置使用对象形式的 `agents.entries`，对象键就是 Agent ID：
+
+```json5
+{
+  agents: {
+    ownership: "explicit",
+    entries: {
+      main: { workspace: "~/.openclaw/workspace" },
+      docs: { workspace: "~/.openclaw/workspace-docs" }
+    }
+  },
+  bindings: [
+    { agentId: "main", match: { channel: "telegram", accountId: "*" } },
+  ],
+}
+```
+
+旧的 `agents.list` 数组仍会被 Doctor 识别并迁移，但新配置和教程不应继续写旧格式：
+
+```bash
+openclaw doctor --fix
+```
+
+当 OpenClaw 创建多 Agent fleet 时，会写入 `agents.ownership: "explicit"`。`default`
+字段已经退役；这种 fleet 没有默认 Agent。通道和环境服务要通过 `bindings` 或明确的
+`agentId` 指向目标，避免消息或后台任务意外落到另一个 Agent。只有一个 Agent 的配置
+不需要 `ownership` 标记，并会把唯一 Agent 作为隐式 owner。
+
+### 指定 system Agent
+
+显式多 Agent fleet 通常还应指定环境级工作的所有者：
+
+```json5
+{
+  agents: {
+    ownership: "explicit",
+    defaults: {
+      systemAgent: { agentId: "main" },
+    },
+    entries: {
+      main: { workspace: "~/.openclaw/workspace" },
+      docs: { workspace: "~/.openclaw/workspace-docs" },
+    },
+  },
+}
+```
+
+它用于没有显式 `agentId` 的环境级工作，例如模型/认证状态、Doctor 的记忆检查、出站通道初始化、队列恢复、无作用域主会话和首次 onboarding。显式 `agentId` 始终优先。`openclaw sessions`、Hooks 状态、完整模型视图和 TUI 启动仍要求明确选择，因为自动采用 system Agent 会隐藏其他 Agent 的数据。
+
 ---
 
 ## Runtime 策略放在哪里
@@ -192,7 +261,7 @@ openclaw doctor --deep
   },
   agents: {
     defaults: {
-      model: "openai/gpt-5.5",
+      model: "openai/gpt-5.6-sol",
       models: {
         "vllm/*": {
           agentRuntime: { id: "openclaw" }
@@ -215,7 +284,7 @@ openclaw doctor --deep
 }
 ```
 
-`agents.defaults.agentRuntime`、`agents.list[].agentRuntime`、会话里的 runtime pin、
+`agents.defaults.agentRuntime`、`agents.entries.*.agentRuntime`、会话里的 runtime pin、
 `OPENCLAW_AGENT_RUNTIME` 都属于旧路线。新版 runtime 选择会忽略这些 whole-agent key。
 
 如果你以前写过这些字段，运行：
@@ -236,11 +305,15 @@ openclaw doctor --fix
 
 `pi` 只是旧版兼容别名。新配置请写 `openclaw`。
 
-OpenAI Agent 模型现在默认会选择 Codex harness，所以普通 `openai/gpt-5.5` 配置不需要手动写 runtime。
+`openai/*` 前缀本身不保证 Codex harness。精确官方 HTTPS native route、无自定义
+请求覆盖且 runtime unset/auto 时才可能隐式选择；自定义端点和 authored
+Completions route 会使用 OpenClaw runtime。
 
 ---
 
 ## provider 通配模型和本地服务
+
+精确的 `agents.defaults.models["provider/model"]` 可设置 `codeMode: true` 或 `false`，省略则继承全局 `tools.codeMode`（包括显式 `"auto"`）；Agent 专用激活配置优先。它不改变 runtime 选择，也不控制原生 Codex Code Mode。Control UI 模型编辑器提供 Default / On / Off 三态。
 
 `agents.defaults.models` 可以写 provider 通配项：
 
@@ -250,7 +323,7 @@ OpenAI Agent 模型现在默认会选择 Codex harness，所以普通 `openai/gp
     defaults: {
       models: {
         "vllm/*": {},
-        "openai/gpt-5.5": { alias: "gpt" }
+        "openai/gpt-5.6-sol": { alias: "gpt" }
       }
     }
   }

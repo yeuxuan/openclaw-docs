@@ -75,7 +75,7 @@ description: "OpenClaw 工具系统：子智能体（Sub-Agents）。子智能�
           汇总并回复用户
 ```
 
-子 Agent 完成任务后，其输出会以工具调用结果的形式返回给主 Agent，主 Agent 负责整合最终答案。
+`sessions_spawn` 在启动被接纳后返回 runId，不等待子任务完成；云 worker 创建子任务时可能先等待资源供应和节点注册，不能把它理解成永远即时返回。完成结果通过推送交回父会话，主 Agent 负责整合最终答案。
 
 你平时不需要记住内部格式。
 只要知道：子 Agent 不直接替你做最终决定，最后仍由主 Agent 汇总和回复。
@@ -107,42 +107,27 @@ description: "OpenClaw 工具系统：子智能体（Sub-Agents）。子智能�
 
 ## 在聊天里管理子智能体
 
-当前官方推荐用斜杠命令查看和控制当前会话的子智能体：
+当前可用的斜杠入口只负责观察。停止、继续指令和创建任务应使用当前 Agent 获准的原生控制工具，不要再套用旧的聊天子命令：
 
 ```text
 /subagents list
-/subagents kill <id|#|all>
 /subagents log <id|#> [limit] [tools]
 /subagents info <id|#>
-/subagents send <id|#> <message>
-/subagents steer <id|#> <message>
-/subagents spawn <agentId> <task> [--model <model>] [--thinking <level>]
 ```
 
-最常用的是前三个：
+常用入口：
 
 | 命令 | 人话解释 |
 |------|----------|
 | `/subagents list` | 看当前有哪些子智能体 |
-| `/subagents kill <id|#|all>` | 停止一个或全部子智能体 |
+| `/subagents info <id|#>` | 查看指定子智能体详情 |
 | `/subagents log <id|#>` | 看某个子智能体做了什么 |
 
 不要为了等待结果反复刷 `/subagents list`。子智能体完成后会把结果宣布回主会话。
 
 ## 宣布流程（Announce）
 
-子 Agent 启动时会向主 Agent 发出声明（Announce），告知自己的能力和任务范围。这个机制确保主 Agent 了解每个子 Agent 的状态：
-
-Announce 可以理解成“帮手报到”：
-我是谁、会做什么、现在准备好了。
-
-::: details 宣布机制详情
-1. 主 Agent 创建子 Agent 请求
-2. 子 Agent 初始化，加载分配的工具和技能
-3. 子 Agent 向主 Agent 宣布就绪，附带能力描述
-4. 主 Agent 确认接收，开始分配任务
-5. 任务完成后，子 Agent 返回结果并关闭
-:::
+Announce 指完成结果向请求者交接，不是启动时再次询问要做什么。任务通过子会话的 `[Subagent Task]` 消息传入；fork 历史中的旧任务只是上下文，不是当前子任务。需要等待结果的父 Agent 应调用 `sessions_yield`，让完成事件成为下一次模型可见消息，而不是轮询状态。
 
 ---
 
@@ -178,20 +163,19 @@ Announce 可以理解成“帮手报到”：
 
 ## 认证继承
 
-子 Agent 默认继承主 Agent 的认证信息（API Key、OAuth Token 等），无需单独配置：
+原生子 Agent 使用目标 Agent 身份解析认证，不是无条件复制父运行里的全部凭据：
 
 ::: details 认证继承说明
-- 子 Agent 使用与主 Agent 相同的 AI 模型 API Key
-- 子 Agent 访问外部服务时使用主 Agent 的凭证
-- 如果需要子 Agent 使用不同凭证，可以在子 Agent 配置中单独指定
+- 先读取目标 Agent 的 agentDir 本地认证 overlay。
+- 共享 auth profiles 作为 fallback 合并，冲突时 Agent 配置优先。
+- 共享 fallback 仍然可用，因此这不是完全隔离的每 Agent 认证边界。
 :::
 
 ---
 
 ## 上下文传递
 
-默认情况下，原生子智能体是隔离的：它不会自动拿到主会话的完整聊天记录。
-只有任务确实依赖当前对话细节时，才让它使用 `context: "fork"`。
+非线程绑定的原生子智能体默认 `isolated`，不自动拿主会话完整记录；线程绑定 spawn 遵循 `threadBindings.defaultSpawnContext`，默认 `fork`。需要独立审阅时显式设置 `context: "isolated"`。返回的 `context` 才是实际初始化方式，fork 超过父上下文上限时可能落到 isolated。
 
 ```json5
 {
@@ -208,7 +192,7 @@ Announce 可以理解成“帮手报到”：
 
 ::: warning
 传递过多上下文会增加 Token 消耗。
-默认隔离模式通常更省，也更不容易把无关信息带进去。
+显式隔离通常更省，也更不容易把无关信息带进去。
 :::
 
 简单理解：给帮手看的材料越多，成本越高，也越容易把无关信息带进去。
@@ -218,11 +202,15 @@ Announce 可以理解成“帮手报到”：
 
 ## 停止子 Agent
 
-有时你需要手动停止运行中的子 Agent：
+在请求者聊天发送 `/stop` 会停止会话工作、清队列并取消活跃子树。线程解绑则使用 `/session unbind`，只解绑、不关闭底层 Agent 会话。
 
 ```text
-/subagents kill <id|#|all>
+/stop
 ```
+
+Gateway 的 `chat.abort` 携带 runId 时按指定父运行取消其子树；不带 runId 的普通 chat.abort 不级联。会话级 `sessions.abort` 会请求取消后代，但清理排队 follow-up 还需 `clearQueued: true`。取消不完整会报告错误和失败数量，应检查剩余[后台任务](/tutorials/automation/tasks)后重试，不能把接纳请求当成全部已停止。
+
+父任务正常完成、yield 或超时不会自动取消已接纳的子任务。非沙箱下会话工具默认 `agent` 可见范围；需要当前及派生会话范围时显式设 `tree`，更严用 `self`，详见[会话工具](/tutorials/concepts/session-tool)。
 
 ---
 

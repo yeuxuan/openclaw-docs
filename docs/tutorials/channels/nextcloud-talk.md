@@ -68,7 +68,8 @@ OpenClaw 会自动提供本地安装路径。
 ## 说明
 
 - 机器人无法主动发起私信。用户必须先向机器人发送消息。
-- Webhook URL 必须可被网关访问；如在代理后面，请设置 `webhookPublicUrl`。
+- Webhook URL 必须能被 Nextcloud 服务器访问；Gateway 在代理后面时，设置 `webhookPublicUrl`。请求使用 Bot secret 做 HMAC-SHA256 签名。
+- 消息事件持久化后才返回带 `x-openclaw-delivery-accepted: durable` 的 HTTP `200`；存储失败返回 `500`。不支持的非消息事件会记录为忽略并返回不带标记的 `200`，不能把它当作消息已入队。
 - 机器人 API 不支持媒体上传；媒体以 URL 形式发送。
 - Webhook 载荷不区分私信和房间；设置 `apiUser` + `apiPassword` 以启用房间类型查找（否则私信会被当作房间处理）。
 
@@ -148,4 +149,3 @@ OpenClaw 会自动提供本地安装路径。
 - `channels.nextcloud-talk.chunkMode`：`length`（默认）或 `newline`，在段落边界（空行）处分割后再按长度分块。
 - `channels.nextcloud-talk.blockStreaming`：禁用此通道的块流式传输。
 - `channels.nextcloud-talk.blockStreamingCoalesce`：块流式传输合并调优。
-- `channels.nextcloud-talk.mediaMaxMb`：入站媒体上限（MB）。

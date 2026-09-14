@@ -265,4 +265,14 @@ Gateway 协议现在提供两个只读环境方法：
 
 ## 范围
 
+### 客户端兼容和重试
+
+- 仅当 `hello-ok.features.capabilities` 包含 `session-scoped-chat-metadata` 时，才给 `chat.metadata` 传 `sessionKey`。旧 Gateway 返回的是 Agent 范围能力，方法名存在不代表支持会话级元数据。
+- `sessions.changed` 删除通知若带 `sessionId`，只能删除缓存中同代次的会话；相同 key 已指向新 ID 时不要删除新会话。只有 key 或无行的全局通知用于失效并重读列表，不足以证明当前代次已删除。
+- `sessions.groups.put` 只替换分组名与顺序，不能省略仍有成员的分组来隐式删除；先显式 delete。改成员关系使用会话 patch。
+- `openclaw.setup.verify` 在保存配置尚未应用、重启未完成或探测中运行态变化时返回 `ok: false, status: "unavailable"`。保留所选模型，等应用/重启完成再重试，不要把它当成模型凭据失败。
+- 节点只有尚未执行 handler、尚未发出进度且因生命周期清理阻止执行时才能返回 `NODE_NOT_READY`，Gateway 在原始 deadline 内最多重试四次并复查授权。一般断线、超时、`UNAVAILABLE` 或已有进度的失败不会自动重放。
+
+新客户端不要写旧 `execSecurity` / `execAsk` 字段；即使为 `null` 也会被拒绝，改用[会话权限模式](/tutorials/gateway/permission-modes)。
+
 此协议暴露完整的网关（Gateway）API（状态、通道（Channel）、模型、聊天、智能体（Agent）、会话（Session）、节点、审批、环境发现等）。确切的接口由 `src/gateway/protocol/schema.ts` 中的 TypeBox schema 定义。

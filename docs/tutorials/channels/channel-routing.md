@@ -53,7 +53,8 @@ OpenClaw 将回复路由回消息来源的通道。模型不会选择通道；�
 5. 团队匹配（Slack）通过 `teamId`。
 6. 账户匹配（通道上的 `accountId`）。
 7. 通道匹配（该通道上的任意账户，`accountId: "*"`）。
-8. 默认智能体（`agents.list[].default`，否则为列表第一个条目，回退到 `main`）。
+8. 单 Agent 配置回退到唯一 owner；`agents.ownership: "explicit"` 的多 Agent fleet
+   不设默认目标，未匹配消息必须补 `bindings` 或对应 surface 的 `agentId`。
 
 当一个绑定包含多个匹配字段（`peer`、`guildId`、`teamId`、`roles`）时，所有提供的字段必须都匹配该绑定才会生效。
 
@@ -83,7 +84,7 @@ OpenClaw 将回复路由回消息来源的通道。模型不会选择通道；�
 
 ## 配置概览
 
-- `agents.list`：命名的智能体定义（工作区、模型等）。
+- `agents.entries`：以 ID 为键的智能体定义（工作区、模型等）。
 - `bindings`：将入站通道/账户/对等方映射到智能体。
 
 示例：
@@ -91,7 +92,9 @@ OpenClaw 将回复路由回消息来源的通道。模型不会选择通道；�
 ```json5
 {
   agents: {
-    list: [{ id: "support", name: "Support", workspace: "~/.openclaw/workspace-support" }],
+    entries: {
+      support: { name: "Support", workspace: "~/.openclaw/workspace-support" },
+    },
   },
   bindings: [
     { match: { channel: "slack", teamId: "T123" }, agentId: "support" },
@@ -104,12 +107,11 @@ OpenClaw 将回复路由回消息来源的通道。模型不会选择通道；�
 
 ## 会话存储
 
-会话存储位于状态目录下（默认 `~/.openclaw`）：
-
-- `~/.openclaw/agents/<agentId>/sessions/sessions.json`
-- JSONL 日志文件与存储在同一目录
-
-你可以通过 `session.store` 和 `{agentId}` 模板覆盖存储路径。
+运行时会话存储在状态目录下每个 Agent 的 SQLite 数据库中（默认
+`~/.openclaw/agents/<agentId>/agent/openclaw-agent.sqlite`）。旧版
+`sessions/sessions.json` 与 JSONL 只作为迁移或归档材料；Gateway 启动和
+`openclaw doctor --fix` 会导入仍在使用的旧数据。离线迁移场景仍可通过
+`session.store` 和 `{agentId}` 模板选择旧存储路径。
 
 ---
 

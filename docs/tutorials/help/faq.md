@@ -25,7 +25,11 @@ Claude 是 Anthropic 开发的 AI 语言模型，是 OpenClaw 支持的众多 AI
 openclaw update
 ```
 
-更新完成后，Gateway 会自动重启（如果正在运行）。建议定期更新以获取最新功能和安全修复。
+更新通常会重启受管 Gateway，但 `--no-restart`、服务定义保护或激活失败时不会。运行 `openclaw gateway status --deep` 核对实际版本和状态，见[更新故障排查](/tutorials/installation/update-troubleshooting)。
+:::
+
+::: details 团队可以共用一个 OpenClaw 吗？
+可以。可信团队可共用 Gateway、群聊与 Control UI 会话，并用逐人身份和角色管理操作范围。一个 Gateway 仍是一个信任域；互不信任的客户/组织必须分开部署，不能把 owner 或角色当成恶意租户隔离。按[团队设置](/tutorials/getting-started/teams)操作。
 :::
 
 ::: details 支持哪些操作系统？
@@ -33,20 +37,20 @@ OpenClaw 官方支持：
 
 - macOS（Apple Silicon 和 Intel 均支持）
 - Linux（Ubuntu 20.04+、Debian 11+ 等主流发行版）
-- Windows WSL（Windows Subsystem for Linux）
+- Windows 原生 PowerShell，或 Windows WSL2（Windows Subsystem for Linux）
 
-原生 Windows（非 WSL）目前不在官方支持范围内。如果你在 Windows 上使用，推荐通过 WSL 2 安装。
+原生 Windows 可以开始安装和使用；需要更完整的本地开发与工具环境时，WSL2 通常更方便。见 [Windows](/tutorials/platforms/windows)。
 :::
 
 ::: details 如何重置配置？
 如果配置出错或想从头开始，运行：
 
 ```bash
-openclaw reset
+openclaw reset --dry-run
 ```
 
 ::: warning 注意
-`openclaw reset` 会清除所有本地配置，包括已配对的 Gateway 信息和通道凭证。执行前请确认你有备份或记录了重要配置。
+先备份并核对范围，再运行交互式 `openclaw reset`。`config` 只重置配置；`config+creds+sessions` 还移除凭据和会话；`full` 包括整个状态目录及工作区。它不是日常修复命令，保留数据的排障应先使用 `openclaw doctor`。
 :::
 :::
 
@@ -57,7 +61,7 @@ Agent 不回复通常有以下几个原因，按顺序逐一检查：
 
 1. API Key 无效或过期
    ```bash
-   openclaw config show
+   openclaw models status
    ```
    确认对应模型提供商的 API Key 已正确设置。
 
@@ -81,11 +85,11 @@ Agent 不回复通常有以下几个原因，按顺序逐一检查：
 # 查看所有日志
 openclaw logs
 
-# 只看 Gateway 相关日志
-openclaw logs --filter gateway
+# 跟随 Gateway 日志
+openclaw logs --follow
 
 # 查看最近 100 条
-openclaw logs --tail 100
+openclaw logs --limit 100
 ```
 
 更多调试选项请参考 [调试指南](./debugging)。
@@ -96,14 +100,15 @@ openclaw logs --tail 100
 openclaw uninstall
 ```
 
-这会移除 OpenClaw 的可执行文件和相关系统服务。如果你想同时清除所有数据和配置，加上 `--purge` 参数：
+这会交互选择要移除的服务、状态或工作区；CLI 包本身不会移除，需要按原包管理器单独卸载。先备份，再预览作用范围，不使用旧文案中的 `--purge`：
 
 ```bash
-openclaw uninstall --purge
+openclaw backup create --verify
+openclaw uninstall --dry-run
 ```
 
 ::: warning 不可逆操作
-`--purge` 会删除 `~/.openclaw/` 目录下的所有内容，包括日志、配置和缓存，且无法恢复。
+`--state` 移除状态与配置，`--workspace` 移除工作区，`--all` 还包含服务与 macOS App。只有确认备份可恢复并确实要删除时才选择这些范围。详见[卸载](/tutorials/installation/uninstall)。
 :::
 :::
 
@@ -120,13 +125,13 @@ OpenClaw 的所有数据默认存储在：
 
 ```text
 ~/.openclaw/
-├── config.json5      # 主配置文件
-├── logs/             # 日志文件
-├── scripts/          # 自定义脚本
-└── workspaces/       # Agent 工作区
+├── openclaw.json     # 主配置文件
+├── state/openclaw.sqlite # 共享运行状态
+├── agents/           # 各 Agent 的数据库和状态
+└── workspace/        # 默认工作区，可另行配置
 ```
 
-你可以通过环境变量 `OPENCLAW_HOME` 修改默认路径，详见 [环境变量](./environment)。
+状态根目录可通过 `OPENCLAW_STATE_DIR` 修改；配置文件、工作区和日志也可能单独指定。用 `openclaw config file` 核对配置位置，详见 [环境变量](./environment)。
 :::
 
 ::: details 支持哪些 AI 模型？
@@ -134,25 +139,22 @@ OpenClaw 支持多种 AI 模型后端：
 
 | 提供商 | 代表模型 |
 |--------|----------|
-| Anthropic | Claude 3.5 Sonnet、Claude 3 Opus 等 |
-| OpenAI | GPT-4o、GPT-4 Turbo 等 |
-| Ollama | Llama 3、Mistral 等本地模型 |
+| Anthropic | 当前可用的 Claude 模型 |
+| OpenAI | 当前账号可用的 OpenAI 模型 |
+| Ollama | 本机部署且满足功能要求的模型 |
 | 其他 | 兼容 OpenAI API 格式的任意模型 |
 
-切换模型只需在配置中更改 `model` 字段，无需修改其他设置。
+用 `openclaw configure --section model` 选择模型并配置鉴权，不要把旧的顶层 `model` 字段写回配置。当前支持方式见[模型提供商](/tutorials/providers/)。
 :::
 
 ::: details 如何在多台设备间同步？
 通过 Gateway 远程连接实现多设备访问：
 
-1. 在主机上启动 Gateway 并对外暴露
-2. 在其他设备上通过配对（Pairing）连接到主机 Gateway
+1. 在主机上启动 Gateway，通过 SSH 隧道、Tailscale 或有身份认证的代理提供入口，不直接公开裸端口
+2. 在其他设备的 Control UI 中登录，并按提示批准设备配对
 3. 所有设备共享同一个 Gateway 实例，配置和会话状态保持一致
 
-```bash
-# 在其他设备上配对到远程 Gateway
-openclaw pairing --gateway https://your-gateway-host:18789
-```
+聊天通道的 `openclaw pairing approve <channel> <code>` 与 Control UI 设备配对不是同一件事。命令行远程连接请按 [`onboard` 远程模式](/tutorials/cli/onboard)配置 URL 和鉴权。
 
 更多内容请参考 [Gateway 配置指南](../gateway/index)。
 :::

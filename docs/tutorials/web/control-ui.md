@@ -44,6 +44,13 @@ Control UI 的聊天仍然通过 Gateway WebSocket 调用：
 Chat history 刷新现在会请求一个有上限的最近窗口，并给单条消息文本设置上限。
 人话说：很大的会话不会再逼浏览器一次性渲染完整 transcript，聊天页应该先变得可用，再慢慢补状态。
 
+被截断的可见助手消息现在会通过 `chat.message.get` 自动补全，加载期间保留预览。修改聊天设置后立即发送时，界面会显示 **Applying chat settings**，等待设置保存和这次会话刷新完成，不必重复点击发送。
+
+如果 Gateway 明确报告“缺少模型凭证”或认证失败，Chat 与 New Session 会阻止发送：
+缺凭证时进入 Model Setup，认证失败时检查对应凭证或重新登录。临时冷却、限流或
+无法确认模型可用性不会被误判成认证失败，实际运行错误仍会留在 transcript 中；模型
+选择器里已确认不可用的选项会保持禁用。
+
 Talk 走新的 Talk session 合同。
 
 浏览器实时语音分两类：
@@ -109,3 +116,21 @@ Control UI 的通道探测、审计、状态刷新可能遇到很慢的 provider
 - 浏览器 long animation frame 或 long task（浏览器支持时）。
 
 这些信息可以帮助你判断：是 Gateway 慢、provider 慢，还是浏览器渲染大历史太慢。
+
+## 断线、草稿和附件恢复
+
+断线后看到 **Delivery unconfirmed**，先查看会话是否已收到消息，再使用 **Retry**；**Discard** 只移除本浏览器的待发副本，不撤销 Gateway 已受理的工作。未确认的早期消息会阻塞后续队列，解决或丢弃后才继续。
+
+普通会话的附件队列使用浏览器 IndexedDB 保存二进制数据，单条消息上限 25 MiB、同 origin 合计 250 MiB，同时受浏览器配额限制。需要 HTTPS 或 localhost 的存储和 Web Locks 支持。全部附件保存成功才入队，发送前也必须全部可读；缺失附件不会被静默跳过后只发送剩余部分。Incognito 仍使用更小的标签页内存储，不把排队附件写入 IndexedDB。
+
+草稿和队列保留创建时的 Agent 与目标会话，切换 Agent、分屏或刷新不会迁移目标。复制标签页带来的待发消息会标记投递未确认；先核对已投递情况再重试，避免重复执行。
+
+旧存储无法可靠识别目标时，显示 **Saved messages need a destination**。打开期望的非 Incognito 会话，确保输入框和队列为空，再选择 **Restore here for review** 并核对会话键和 Agent。恢复的队列保持暂停，附件草稿只回到输入框，不会自动发送。
+
+有待恢复内容时不要清除站点数据。清理会删除本地草稿、队列附件及登录状态；若配额在发送/丢弃队列后仍满，先保存需要的内容再清理。
+
+## 浏览器推送的授权边界
+
+待处理执行/插件审批可以触发 Web Push，但只发往当前仍具备设备、Token、profile 角色和审批可见权限的已绑定订阅。推送只包含通用提示和需认证的审批链接，不携带审批详情；旧未绑定订阅在浏览器重新连接前仅用于测试。
+
+同一个已安装 PWA 在一个 Service Worker scope 中切换多个 Gateway 时，只能使用一套应用服务器 VAPID key。互相信任的 Gateway 可配置相同 key pair 和各自的 `gateway.publicOrigin`；这会形成共享推送签名信任域，不适合彼此隔离的实例。不同 HTTPS origin 或 base-path scope 的 PWA 不必共享密钥。

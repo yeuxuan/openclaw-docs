@@ -36,6 +36,7 @@ OpenClaw 把这些变成可能::它在你的电脑或服务器上继续运行一
 
 - [Web 控制 UI](/tutorials/web/)
 - [网关使用指南](/tutorials/gateway/)
+- [团队部署：身份、角色与共享边界](/tutorials/getting-started/teams)
 
 ### 第三步：连接你的聊天软件
 
@@ -71,6 +72,7 @@ OpenClaw 把这些变成可能::它在你的电脑或服务器上继续运行一
 <a href="/tutorials/getting-started/wizard-cli-automation">向导自动化配置</a>
 <a href="/tutorials/getting-started/hubs">Hubs 多节点管理</a>
 <a href="/tutorials/getting-started/openclaw">关于 OpenClaw</a>
+<a href="/tutorials/getting-started/teams">团队部署与用户权限</a>
 </div>
 </section>
 
@@ -82,6 +84,8 @@ OpenClaw 把这些变成可能::它在你的电脑或服务器上继续运行一
 <a href="/tutorials/installation/node">安装 Node.js</a>
 <a href="/tutorials/installation/docker">Docker 部署</a>
 <a href="/tutorials/installation/updating">如何更新</a>
+<a href="/tutorials/installation/backups">备份与恢复</a>
+<a href="/tutorials/installation/daytona">Daytona 云沙箱</a>
 </div>
 </section>
 
@@ -157,6 +161,8 @@ OpenClaw 把这些变成可能::它在你的电脑或服务器上继续运行一
 <a href="/tutorials/tools/skills">技能系统</a>
 <a href="/tutorials/tools/subagents">子智能体</a>
 <a href="/tutorials/tools/web">网络搜索</a>
+<a href="/tutorials/tools/mcp">连接 MCP Server</a>
+<a href="/tutorials/tools/show-widget">Show Widget</a>
 </div>
 </section>
 
@@ -168,6 +174,7 @@ OpenClaw 把这些变成可能::它在你的电脑或服务器上继续运行一
 <a href="/tutorials/plugins/architecture">插件架构</a>
 <a href="/tutorials/plugins/manifest">插件 Manifest</a>
 <a href="/tutorials/plugins/building-plugins">构建插件</a>
+<a href="/tutorials/plugins/reference/visitor-access">访客访问插件</a>
 <a href="/tutorials/plugins/sdk-overview">SDK 总览</a>
 </div>
 </section>
@@ -202,6 +209,7 @@ OpenClaw 把这些变成可能::它在你的电脑或服务器上继续运行一
 <a href="/tutorials/platforms/macos">macOS</a>
 <a href="/tutorials/platforms/windows">Windows</a>
 <a href="/tutorials/platforms/linux">Linux</a>
+<a href="/tutorials/platforms/chromeos">ChromeOS</a>
 <a href="/tutorials/platforms/raspberry-pi">Raspberry Pi</a>
 </div>
 </section>

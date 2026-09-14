@@ -23,6 +23,7 @@ description: "OpenClaw 中文文档站精选索引：按新手、部署、频道
 - [安装 OpenClaw](/tutorials/installation/)
 - [安装向导](/tutorials/getting-started/wizard)
 - [基础设置](/tutorials/getting-started/setup)
+- [团队共享 Gateway](/tutorials/getting-started/teams)
 - [Web 控制 UI](/tutorials/web/)
 - [帮助中心](/tutorials/help/)
 

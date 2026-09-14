@@ -24,7 +24,7 @@ OpenClaw 内置了对主流 AI 服务商的支持，但很多第三方 API 并�
 如果你已经装好 OpenClaw，最简单的方式是直接走引导：
 
 ```bash
-openclaw onboard --install-daemon
+openclaw onboard
 ```
 
 然后在模型 / 认证选择里选择：

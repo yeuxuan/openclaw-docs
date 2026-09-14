@@ -81,10 +81,13 @@ description: "理解 OpenClaw 会话的运行状态、可继续性和为什么�
 
 ---
 
+## 外部线程采用后的状态监测
+
+采用外部原生线程后，上游状态监测使用解析出的 Agent 和带 Agent 前缀的会话键。不同键可以监测同一个原生线程；若完全相同的键同时被多个 Agent 认领，监测会因歧义跳过。排查“外部状态没同步”时，应先核对所有者和完整键，不能再假设所有采用的线程都归默认 Agent。
+
 ## 相关页面
 
 - [会话管理](/tutorials/concepts/session)
 - [Sessions 生命周期](/tutorials/concepts/sessions)
 - [会话工具](/tutorials/concepts/session-tool)
 - [重启恢复](/tutorials/gateway/restart-recovery)
-

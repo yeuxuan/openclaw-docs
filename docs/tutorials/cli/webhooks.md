@@ -19,6 +19,8 @@ openclaw security audit
 
 安全重点是 token、签名、来源限制和重放防护。不要把无鉴权 webhook 暴露到公网。
 
+`POST /hooks/wake` 的 HTTP 200 只表示已接纳或合并唤醒事件：`eventOutcome` 为 `queued` 或 `coalesced`。`mode: "now"` 两种情况都会请求唤醒，不表示 heartbeat 已完成；延后唤醒用 `next-heartbeat`。
+
 继续阅读：[Webhooks](/tutorials/plugins/webhooks) 和 [Webhook 自动化](/tutorials/automation/webhook)。
 
 ## 新手提醒

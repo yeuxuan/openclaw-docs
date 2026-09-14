@@ -247,7 +247,7 @@ description: "OpenClaw 工具系统：技能配置参考（Skills Config Referen
 openclaw skills list
 
 # 检查某个技能的配置详情
-openclaw skills show my-skill
+openclaw skills info my-skill
 
 # 验证配置文件格式
 openclaw config validate

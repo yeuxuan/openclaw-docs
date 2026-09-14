@@ -73,6 +73,10 @@ openclaw/<name>
 
 在支持的客户端里，新建聊天时可以选择在 worktree 中开启新会话。
 
+Control UI 只有确认目录是可用且至少有一个 commit 的 Git checkout，或选中正在等待 clone 的远程 Git 仓库时，才提供 **Worktree**。仅存在 `.git` 或保存过 project 都不够；普通目录、尚无提交的新仓库，以及 Git 检查失败但仍可访问的目录，可继续直接在 Gateway 运行。
+
+如果已经选择 Worktree 后的复查失败，界面保留该选择并阻止启动，不会静默改成直接执行。清除 Worktree 选项可直接运行，或重新选择目录再次检查。选择配对设备或云 profile 时，仍必须从 Gateway 来源目录走 managed worktree 路径，不能借此浏览或绑定节点任意目录。
+
 适合场景：
 
 - 想让这一整段对话都在独立分支里进行

@@ -25,7 +25,8 @@ OpenClaw 是一个运行在你自己电脑上的 AI 助手。它有一个常驻�
    macOS、Linux、Windows 都可以。Windows 可以直接用，但完整体验更推荐 WSL2。
 
 2. Node.js
-   推荐 Node 24。如果你已经是 Node 22.19+，也可以继续用。
+   推荐 Node 26.1+；也支持 Node 24.16+。Node 22、23、25 不受支持。
+   官网脚本在 Linux 缺少 Node 时会安装 Node 24 LTS，这是当前预期行为。
 
 3. 一个 AI 模型账号或 API key
    新手可以先用你已经有账号的提供商。OpenClaw 支持 OpenAI、Anthropic、Google、Ollama、本地或兼容 OpenAI API 的服务。
@@ -38,8 +39,7 @@ API key 可以先理解成“AI 服务的门钥匙”。OpenClaw 需要拿着这
 node --version
 ```
 
-如果显示 `v24.x.x`，很好。
-如果显示 `v22.19.0` 或更高，也可以。
+如果显示 `v26.1.0` 或更高，很好；使用 Node 24 时至少需要 `v24.16.0`。
 如果提示找不到 `node`，先看[安装 Node.js](/tutorials/installation/node)。
 
 ---
@@ -65,8 +65,11 @@ iwr -useb https://openclaw.ai/install.ps1 | iex
 如果你更喜欢 npm，也可以这样装：
 
 ```bash
-npm install -g openclaw@latest
+npm install -g openclaw@latest --allow-scripts=openclaw
 ```
+
+`--allow-scripts=openclaw` 适用于 npm 12 和 npm 11.16+。如果仍在使用 npm 11.15
+或更早版本，该参数尚不可用，请去掉参数执行安装；更推荐先升级 npm。
 
 ---
 
@@ -75,7 +78,7 @@ npm install -g openclaw@latest
 安装完后，运行：
 
 ```bash
-openclaw onboard --install-daemon
+openclaw onboard
 ```
 
 这一步会帮你做 4 件事：
@@ -83,11 +86,13 @@ openclaw onboard --install-daemon
 1. 选择 AI 模型提供商。
 2. 保存 API key 或登录信息。
 3. 配置 Gateway 网关。
-4. 把 Gateway 安装成后台服务，让它开机后也能一直运行。
+4. 启动前台 Gateway 并打开已认证 Dashboard。
 
 你可以把它理解成“第一次开机设置”。跟着提示填就行，不需要提前懂所有选项。
 
-如果向导问到你不确定的内容，优先选默认值。默认值通常是给大多数人准备的安全路线。
+如果本机已有可用的 Claude Code、Codex 登录或 Provider Key，选 **Quick start** 即可。
+它只保存真实请求验证通过的路线。前台跑通后按 `Ctrl+C` 停止，再执行
+`openclaw gateway install` 安装后台服务；配置不会丢失。
 
 ---
 
@@ -111,6 +116,14 @@ openclaw doctor
 ```
 
 `doctor` 就像体检，会检查配置、服务、权限和常见风险。
+
+如果希望把只读诊断整理成可交给编码 Agent 的脱敏排障提示，运行：
+
+```bash
+openclaw triage
+```
+
+它不会自动修复或上传原始日志；详见 [`openclaw triage`](/tutorials/cli/triage)。
 
 ---
 

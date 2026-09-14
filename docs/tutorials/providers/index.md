@@ -53,7 +53,7 @@ OpenClaw 支持以后再换模型，不需要第一天就做“终身选择”�
 最推荐从向导开始：
 
 ```bash
-openclaw onboard --install-daemon
+openclaw onboard
 ```
 
 向导会带你完成几件事：
@@ -108,7 +108,7 @@ API Key 不要发到群里，不要写进公开仓库，也不要贴到截图里
 - [OpenRouter](/tutorials/providers/openrouter)：一个入口访问多家模型
 - [ClawRouter](/tutorials/providers/clawrouter)：团队统一模型入口，带策略和预算边界
 - [Cohere](/tutorials/providers/cohere)：兼容 OpenAI 的 Command A 路线
-- [Meta](/tutorials/providers/meta)：Meta API 与 `muse-spark-1.1` 路线
+- [Meta](/tutorials/providers/meta)：Meta API 与 Muse Spark 1.3 路线
 - [Mistral](/tutorials/providers/mistral)：Mistral 系列模型
 - [Groq](/tutorials/providers/groq)：高速推理
 - [Cerebras](/tutorials/providers/cerebras)：高速推理服务
@@ -123,7 +123,6 @@ API Key 不要发到群里，不要写进公开仓库，也不要贴到截图里
 
 - [Moonshot / Kimi](/tutorials/providers/moonshot)
 - [通义千问 Qwen](/tutorials/providers/qwen)
-- [Qwen OAuth / Portal](/tutorials/providers/qwen-oauth)：旧版 Portal/OAuth 凭证迁移入口
 - [GLM 智谱](/tutorials/providers/glm)
 - [DeepSeek](/tutorials/providers/deepseek)
 - [MiniMax](/tutorials/providers/minimax)
@@ -156,7 +155,6 @@ API Key 不要发到群里，不要写进公开仓库，也不要贴到截图里
 - [DeepInfra](/tutorials/providers/deepinfra)
 - [Fireworks](/tutorials/providers/fireworks)
 - [Chutes](/tutorials/providers/chutes)
-- [Inferrs](/tutorials/providers/inferrs)
 
 自托管的好处是可控，代价是你要自己照顾机器、显卡、模型文件和服务稳定性。
 
@@ -182,6 +180,7 @@ API Key 不要发到群里，不要写进公开仓库，也不要贴到截图里
 - [ElevenLabs](/tutorials/providers/elevenlabs)
 - [Gradium](/tutorials/providers/gradium)
 - [SenseAudio](/tutorials/providers/senseaudio)
+- [Fish Audio](/tutorials/providers/fish-audio)
 - [ComfyUI](/tutorials/providers/comfy)
 - [fal](/tutorials/providers/fal)
 - [Runway](/tutorials/providers/runway)

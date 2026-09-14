@@ -9,6 +9,8 @@ description: "OpenClaw 快速入门：使用 OpenClaw 构建个人助手。用 G
 OpenClaw 可以把 Telegram、WhatsApp、Discord、Slack、Signal、BlueBubbles/WebChat 等入口连接到同一个 AI 助手。
 本指南讲的是“个人助手”方案：先跑通 Gateway 和 Web 控制 UI，再选一个你常用的频道，让它变成你的全天候 AI 助手。
 
+准备让多位可信成员共用 Gateway？请看[团队设置](/tutorials/getting-started/teams)，先处理逐人身份、共享会话和角色边界。
+
 ---
 
 ## ⚠️ 安全第一
@@ -81,7 +83,7 @@ openclaw channels login --channel whatsapp
 
 OpenClaw 从其工作区（Workspace）目录读取操作指令和"记忆"。
 
-默认情况下，OpenClaw 使用 `~/.openclaw/workspace` 作为智能体工作区，并会在设置/首次运行时自动创建它（以及初始的 `AGENTS.md`、`SOUL.md`、`TOOLS.md`、`IDENTITY.md`、`USER.md`、`HEARTBEAT.md`）。`BOOTSTRAP.md` 仅在工作区全新时创建（删除后不会再出现）。`MEMORY.md` 是可选的（不会自动创建）；存在时会为普通会话加载。子智能体会话仅注入 `AGENTS.md` 和 `TOOLS.md`。
+默认情况下，OpenClaw 使用 `~/.openclaw/workspace` 作为智能体工作区，并会在设置/首次运行时自动创建它（以及初始的 `AGENTS.md`、`SOUL.md`、`IDENTITY.md`、`USER.md`）。环境相关工具说明写入 `AGENTS.md` 的 `## Tools`。`BOOTSTRAP.md` 仅在工作区全新时创建（删除后不会再出现）。`MEMORY.md` 是可选的（不会自动创建）；存在时会为普通会话加载。子智能体会话只注入 `AGENTS.md`。
 
 提示：将此文件夹视为 OpenClaw 的"记忆"，并将其作为 git 仓库（最好是私有的），这样你的 `AGENTS.md` + 记忆文件就有了备份。如果安装了 git，全新的工作区会自动初始化。
 
@@ -162,8 +164,9 @@ OpenClaw 默认就是一个不错的助手设置，但你通常需要调整：
 
 ## 会话（Session）与记忆
 
-- 会话文件：`~/.openclaw/agents/<agentId>/sessions/\{\{SessionId\}\}.jsonl`
-- 会话元数据（Token 用量、上次路由等）：`~/.openclaw/agents/<agentId>/sessions/sessions.json`（旧版：`~/.openclaw/sessions/sessions.json`）
+- 当前会话行与转录：`~/.openclaw/agents/<agentId>/agent/openclaw-agent.sqlite`
+- `~/.openclaw/agents/<agentId>/sessions/` 下的 `sessions.json` / JSONL 仅用于旧版迁移或归档；
+  升级时先停止 Gateway、备份，再运行 `openclaw doctor --fix`
 - `/new` 或 `/reset` 为该聊天启动新会话（可通过 `resetTriggers` 配置）。如果单独发送，智能体会回复一个简短的问候以确认重置。
 - `/compact [instructions]` 压缩会话上下文并报告剩余的上下文预算。
 
@@ -172,12 +175,12 @@ OpenClaw 默认就是一个不错的助手设置，但你通常需要调整：
 ## 心跳（主动模式）
 
 默认情况下，OpenClaw 每 30 分钟运行一次心跳，提示词为：
-`Read HEARTBEAT.md if it exists (workspace context). Follow it strictly. Do not infer or repeat old tasks from prior chats. If nothing needs attention, reply HEARTBEAT_OK.`
-设置 `agents.defaults.heartbeat.every: "0m"` 可禁用。
+`Follow the heartbeat monitor scratch context when provided. Recurring tasks are automations; create or change their schedules with the automations tool, not heartbeat scratch. Do not infer or repeat old tasks from prior chats. If nothing needs attention, reply NO_REPLY.`
+设置 `agents.defaults.heartbeat.every: "0m"` 只禁用周期节拍；后台 exec 完成等定向事件仍可唤醒一次。
 
-- 如果 `HEARTBEAT.md` 存在但实际上为空（仅有空行和 Markdown 标题如 `# Heading`），OpenClaw 会跳过心跳运行以节省 API 调用。
-- 如果文件缺失，心跳仍会运行，由模型决定做什么。
-- 如果智能体回复 `HEARTBEAT_OK`（可选择带有短填充；参见 `agents.defaults.heartbeat.ackMaxChars`），OpenClaw 会抑制该次心跳的出站消息投递。
+- 心跳清单保存在系统 monitor 的 cron scratch；`openclaw doctor --fix` 会迁移旧工作区 `HEARTBEAT.md`。
+- scratch 实际为空时会跳过心跳以节省调用；缺少 scratch 时仍会运行。
+- 没有需要投递的内容时回复 `NO_REPLY`；旧 `HEARTBEAT_OK` 仅作兼容。
 - 心跳运行完整的智能体回合 : 更短的间隔会消耗更多 Token。
 
 ```json5

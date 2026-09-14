@@ -34,10 +34,13 @@ Windows 可以直接用 PowerShell 安装；如果你后面要做更完整的开
 
 ### Node.js 版本
 
-官方当前推荐：
+官方当前推荐 Node 26.1+。安装脚本在 macOS 缺少 Node 时安装 Node 26，在 Linux
+缺少 Node 时通过 NodeSource 安装 Node 24 LTS。兼容版本必须满足下面任一条件：
 
-- Node 24：推荐版本
-- Node 22.19+：兼容版本
+- Node 24.16+
+- Node 26.1+（推荐默认）
+
+Node 22、23、25 不受支持。最省心的做法仍是一键安装脚本：缺少 Node 或版本不兼容时，脚本会准备合适的运行时。
 
 检查命令：
 
@@ -77,17 +80,42 @@ iwr -useb https://openclaw.ai/install.ps1 | iex
 如果你不知道 npm 是什么，请回到“一键安装脚本”。
 
 ```bash
-npm install -g openclaw@latest
-openclaw onboard --install-daemon
+npm install -g openclaw@latest --allow-scripts=openclaw
+openclaw onboard
 ```
 
-第二行很重要。它会启动新手向导，并把 Gateway 装成后台服务。
+第二行会启动新的 Quick start：复用并真实验证可用的 AI 登录或 API Key，保存配置，
+再以前台 Gateway 打开 Dashboard。确认聊天正常后按 `Ctrl+C` 停止前台进程，需要
+长期后台运行时再执行 `openclaw gateway install`。
 
 ::: warning 手动 npm 安装会遵守你自己的 npm 策略
 如果公司电脑、CI 或旧环境里配置过 npm 镜像、代理、缓存策略、`min-release-age`，
 手动 npm 安装可能会比官网脚本更容易遇到“装的不是最新版本”或“包暂时不可见”。
 遇到这种情况，不要反复删配置，先改用上面的一键安装脚本。
 :::
+
+::: warning 新版 npm / pnpm 要显式允许构建脚本
+npm 12 和 npm 11.16+ 使用：
+
+```bash
+npm install -g openclaw@latest --allow-scripts=openclaw
+```
+
+npm 11.15 及更早版本不支持 `--allow-scripts`，请去掉该参数，或先升级 npm。
+使用 pnpm 全局安装时则运行：
+
+```bash
+pnpm add -g --allow-build=openclaw openclaw@latest
+```
+:::
+
+### 不想依赖系统级 Node？
+
+macOS、Linux 和 WSL2 可以把 Node 与 OpenClaw 安装到 `~/.openclaw`：
+
+```bash
+curl -fsSL https://openclaw.ai/install-cli.sh | bash
+```
 
 ### 想直接安装 GitHub main？
 
@@ -99,6 +127,23 @@ curl -fsSL --proto '=https' --tlsv1.2 https://openclaw.ai/install.sh | bash -s -
 
 这条命令适合测试最新版修复。普通用户仍然建议用默认脚本或 npm 稳定版。
 
+### 从源码手工构建
+
+需要开发或调试时，在仓库内使用 `package.json` 固定的 pnpm 版本：
+
+```bash
+git clone https://github.com/openclaw/openclaw.git
+cd openclaw
+corepack enable
+pnpm install && pnpm build && pnpm ui:build
+pnpm add --global "openclaw@link:$PWD"
+openclaw onboard
+```
+
+全局链接不会修改 checkout 的包文件；若全局 bin 不在 PATH，运行 `pnpm setup`、重新打开终端后重试。不需要全局 CLI 时，直接在仓库内运行 `pnpm openclaw ...`。
+
+Corepack 会选择项目固定的版本，本次上游快照为 pnpm 12.3.4。没有 Corepack 时可显式安装该版本；npm 11.16+ 使用 `npm install -g pnpm@12.3.4 --allow-scripts=pnpm@12.3.4`，更旧 npm 去掉不支持的参数。不要关闭安装脚本或可选依赖，否则 pnpm 的原生执行文件可能无法安装。后续以实际 checkout 的固定版本为准。
+
 ---
 
 ## 方法三：其他安装方式
@@ -109,10 +154,13 @@ curl -fsSL --proto '=https' --tlsv1.2 https://openclaw.ai/install.sh | bash -s -
 | 方式 | 适合谁 |
 |------|--------|
 | [Docker 部署](./docker) | 想把 OpenClaw 放进容器里运行 |
-| [ClawDock](./clawdock) | Docker 用户想用短命令管理容器 |
+| [备份与恢复](./backups) | 升级、迁移或长期运行前保护状态数据 |
+| [Cloudflare Containers](./cloudflare) | 评估实验性的 Worker + Container + R2 部署 |
+| [Daytona](./daytona) | 用带 SSH 和签名预览地址的云沙箱运行 |
+| [ClawDock 迁移](./clawdock) | 已使用旧辅助脚本的用户迁移到 Docker Compose |
 | [Docker VM Runtime](./docker-vm-runtime) | 云 VM + Docker 长期运行 |
 | [Nix 安装](./nix) | 已经在使用 Nix 的用户 |
-| [Bun 安装](./bun) | 想尝试 Bun 的用户 |
+| [Bun 安装](./bun) | 明确要用 Bun 1.4+ 运行 CLI、Gateway 或节点宿主的用户 |
 | [GCP](./gcp)、[Azure](./azure)、[DigitalOcean](./digitalocean)、[Oracle](./oracle)、[Hetzner](./hetzner) | 想把 Gateway 放到云服务器上的用户 |
 | [Northflank](./northflank)、[Railway](./railway)、[Render](./render) | 想用一键云平台模板 |
 | [Hostinger](./hostinger) | 想用托管面板或 VPS |
@@ -200,7 +248,7 @@ openclaw doctor
 openclaw gateway restart
 ```
 
-更完整的说明看[更新](/tutorials/installation/updating)。
+更完整的说明看[更新](/tutorials/installation/updating)；更新后 Gateway 起不来、插件丢失或出现新旧 CLI 冲突时，看[更新故障排查](/tutorials/installation/update-troubleshooting)。
 
 :::
 

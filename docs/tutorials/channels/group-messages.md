@@ -8,7 +8,7 @@ description: "OpenClaw 通道接入：群组消息（WhatsApp Web 通道）。�
 
 目标：让 Clawd 加入 WhatsApp 群组，仅在被提及时唤醒，并将该线程与个人私信会话分开。
 
-注意：`agents.list[].groupChat.mentionPatterns` 现在也被 Telegram/Discord/Slack/iMessage 使用；本文档侧重于 WhatsApp 特定行为。对于多智能体设置，请按智能体设置 `agents.list[].groupChat.mentionPatterns`（或使用 `messages.groupChat.mentionPatterns` 作为全局回退）。
+注意：`agents.entries.*.groupChat.mentionPatterns` 现在也被 Telegram/Discord/Slack/iMessage 使用；本文档侧重于 WhatsApp 特定行为。对于多智能体设置，请按智能体设置 `agents.entries.*.groupChat.mentionPatterns`（或使用 `messages.groupChat.mentionPatterns` 作为全局回退）。
 
 ---
 
@@ -38,15 +38,14 @@ description: "OpenClaw 通道接入：群组消息（WhatsApp Web 通道）。�
     },
   },
   agents: {
-    list: [
-      {
-        id: "main",
+    entries: {
+      main: {
         groupChat: {
           historyLimit: 50,
           mentionPatterns: ["@?openclaw", "\\+?15555550123"],
         },
       },
-    ],
+    },
   },
 }
 ```

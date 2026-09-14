@@ -1,269 +1,117 @@
 ---
 title: "执行审批"
 sidebarTitle: "执行审批"
-description: "OpenClaw 工具系统：执行审批（Exec Approvals）。说明如何控制 Agent 的命令执行权限：自动执行、手动确认或直接拒绝。"
+description: "OpenClaw Exec 审批的宿主策略、精确 allowlist、工作目录绑定和自动化 standing grants。"
 ---
 
 # 执行审批（Exec Approvals）
 
-执行审批（Exec Approvals）系统让你控制 Agent 的命令执行权限：哪些命令可以自动执行，哪些需要你手动确认，哪些直接拒绝。这是 OpenClaw 安全机制的一部分。
+执行审批决定 Agent 的命令是否直接运行、需要人工确认，或被拒绝。它和
+`tools.exec` 的目标宿主、沙箱、会话权限模式与单轮 `/exec` 安全限制共同生效。
 
----
-
-## 快速理解
-
-当 Agent 需要执行命令时，系统会按以下流程决定是否执行：
-
-```text
-Agent 请求执行命令
-        ↓
-检查命令是否在安全 Binaries 列表中
-        ↓
-检查审批规则（策略配置）
-        ↓
-  ┌─────┴─────┐
-auto（自动）  ask（询问）  deny（拒绝）
-  ↓              ↓             ↓
-直接执行    显示确认框       拒绝执行
-              ↓
-          等待用户确认
-              ↓
-        允许：执行 | 拒绝：取消
-```
-
----
-
-## 审批规则存储
-
-审批规则存储在以下位置：
+## 先看当前实际策略
 
 ```bash
-~/.openclaw/approvals.json
+openclaw approvals get
+openclaw exec-policy show
 ```
 
-::: details 示例 approvals.json 格式
-```json
-{
-  "rules": [
-    {
-      "pattern": "git *",
-      "policy": "auto"
-    },
-    {
-      "pattern": "npm install *",
-      "policy": "ask"
-    },
-    {
-      "pattern": "rm -rf *",
-      "policy": "deny"
-    }
-  ]
-}
-```
-:::
+不要再找 `~/.openclaw/approvals.json`：当前本机和 Gateway 的 OpenClaw 审批
+记录存放在共享 SQLite 的 `exec_approvals_config` 行中。节点可能使用 OpenClaw
+策略，也可能由 Windows companion 等宿主提供原生策略。
 
----
+## 三个核心开关
 
-## 策略控制（Policy Knobs）
+| 字段 | 常见值 | 含义 |
+|------|--------|------|
+| `security` | `deny` / `allowlist` / `full` | 哪些命令具备执行资格 |
+| `ask` | `off` / `on-miss` / `always` | 何时弹出审批 |
+| `askFallback` | `deny` / `allowlist` / `full` | 没有可用审批界面时怎么处理 |
 
-每条审批规则支持三种策略：
+请求策略与宿主策略通常按更严格的一侧合并。未配置的 Node 与 Gateway 默认基线均为 `full` / `off`，但派发前仍检查目标策略：调用方 `allowlist` / `off` 不允许未匹配命令，目标 `ask=always` 仍需审批。
 
-### `auto`（自动批准）
+会话 `full` 模式有一个例外：有效 security 保持 `full` 时可跳过宿主审批下限；单轮 `/exec security=deny <任务>` 仍可禁止执行。只收紧 `ask` 会提高询问等级，但不会恢复该下限。需要硬性禁用时用工具策略拒绝 `exec`，完整边界见 [Exec 工具](/tutorials/tools/exec)。调整审批不会改变执行位置或自动逃离沙箱。
 
-命令自动执行，无需确认。适合你完全信任且风险较低的命令：
+## “允许一次”和“总是允许”
 
-```json5
-{
-  rules: [
-    { pattern: "git status", policy: "auto" },
-    { pattern: "git log *",  policy: "auto" },
-    { pattern: "ls *",       policy: "auto" }
-  ]
-}
-```
+- 允许一次：只允许当前请求。
+- 总是允许这里：为精确 argv 和当前工作目录生成规则。
+- 拒绝：不执行当前请求。
 
-### `ask`（每次询问）
-
-每次执行前都会弹出确认框，显示完整命令内容，由你决定是否允许：
-
-```json5
-{
-  rules: [
-    { pattern: "npm install *", policy: "ask" },
-    { pattern: "docker *",      policy: "ask" }
-  ]
-}
-```
-
-### `deny`（拒绝执行）
-
-命令会被直接拒绝，Agent 会收到拒绝通知并据此调整方案：
-
-```json5
-{
-  rules: [
-    { pattern: "sudo *",      policy: "deny" },
-    { pattern: "rm -rf /",   policy: "deny" },  // 危险命令示例：删除根目录
-    { pattern: "chmod 777 *", policy: "deny" }
-  ]
-}
-```
-
----
-
-## 运行列表（Run List）
-
-运行列表是预批准的命令模式集合，匹配运行列表的命令自动执行，不需要逐次确认：
-
-```json5
-{
-  runList: [
-    "git add *",
-    "git commit *",
-    "git push origin *",
-    "npm run build",
-    "npm run test",
-    "python3 *.py"
-  ]
-}
-```
-
-::: tip 使用通配符
-运行列表支持 `*` 通配符匹配任意字符串。例如 `git *` 匹配所有 git 子命令。
-:::
-
----
-
-## 限制参数：`argPattern`
-
-有时你不是想允许整个命令，而是只允许“这个命令带某种参数”。
-
-例如，只允许：
+目录绑定很重要：你在 `/srv/app-a` 批准的 `npm test`，不会自动授权
+`/srv/app-b` 的同名命令。升级前生成的 argv-only 规则会失效，可运行：
 
 ```bash
-python3 safe.py
+openclaw doctor --fix
 ```
 
-但不允许：
+然后在正确目录重新批准。手写 allowlist 不受这次清理影响。
+
+## 自动化任务的 Standing Grants
+
+隔离自动化里的 Gateway-host Exec 可以把审批卡发给已连接的 Control UI、macOS/iOS/Android App，或声明 `approvals` / `exec-approvals` 能力的 API 客户端。TUI 不渲染 Exec 审批卡，聊天通道也不会收到自动化审批；没有可用审批界面时，请求会立即拒绝并给出策略修复建议。
+
+对自动化选择“总是允许”不会写普通 JSON allowlist，而会创建绑定以下内容的
+standing grant：
+
+- Agent 和自动化任务
+- 当前任务配置版本
+- 精确命令、工作目录和请求环境
+
+任一内容变化、任务被编辑/删除、授权被撤销或到期，下一次运行都会重新询问。
+可变文件操作数、heredoc、严格 inline eval 等仍可能要求逐次审批。
 
 ```bash
-python3 other.py
+openclaw approvals grants list
+openclaw approvals grants revoke <grant-id>
 ```
 
-可以在 allowlist 条目里加 `argPattern`：
+默认授权一直有效，直到撤销。托管环境可用 `tools.exec.grantExpiryDays` 为未来新授权设
+默认期限；现有授权不会被配置变更追溯修改。
 
-```json
-{
-  "version": 1,
-  "agents": {
-    "main": {
-      "allowlist": [
-        {
-          "pattern": "python3",
-          "argPattern": "^safe\\.py$"
-        }
-      ]
-    }
-  }
-}
-```
+## Allowlist 不等于通配符放行一切
 
-人话解释：
+精确 allowlist 可以绑定二进制、参数和目录。优先通过 UI 或真实审批流程生成，
+不要手写内部编码的 argv 规则。命令解析失败、参数不匹配或目录不同都会按
+allowlist miss 处理。
 
-- `pattern` 匹配命令本身。
-- `argPattern` 匹配命令后面的参数。
-- 如果同一个命令还有一个不带 `argPattern` 的宽松条目，宽松条目仍可能放行其他参数。
-
-所以，如果你的目标是“只能跑 safe.py”，不要同时保留一个允许整个 `python3` 的条目。
-
----
-
-## 安全 Binaries（Safe Bins）
-
-OpenClaw 内置了一份安全命令白名单（Safe Bins），这些命令被认为风险极低，会根据策略自动处理：
-
-::: details 内置安全命令列表
-以下命令默认归类为安全命令：
-
-文件查看：`ls`、`cat`、`head`、`tail`、`grep`、`find`、`wc`、`sort`、`uniq`
-
-版本控制（只读）：`git status`、`git log`、`git diff`、`git branch`
-
-系统信息：`pwd`、`whoami`、`date`、`echo`、`env`、`which`
-
-包管理（只读）：`npm list`、`pip list`、`pip show`
-
-注意：即使在安全列表中，具体策略仍由规则配置决定。
-:::
-
----
-
-## 审批流程详解
-
-当命令触发 `ask` 策略时，你会看到类似以下的确认界面：
-
-```text
-╔════════════════════════════════════════╗
-║  Agent 请求执行命令                     ║
-╠════════════════════════════════════════╣
-║  命令：npm install lodash --save        ║
-║  工作目录：/Users/you/my-project        ║
-║                                        ║
-║  [允许一次]  [总是允许]  [拒绝]         ║
-╚════════════════════════════════════════╝
-```
-
-- 允许一次：本次执行允许，下次同样命令还会询问
-- 总是允许：将此命令添加到运行列表，后续自动执行
-- 拒绝：本次拒绝，Agent 收到通知
-
----
-
-## 通过 Control UI 管理规则
-
-你可以通过 OpenClaw 的管理界面（Control UI）可视化管理审批规则，无需手动编辑 JSON 文件：
+添加简单的手写路径规则：
 
 ```bash
-# 打开管理界面
-openclaw control
-
-# 或者直接管理审批规则
-openclaw approvals list
-openclaw approvals add "npm run *" --policy auto
-openclaw approvals remove "npm run *"
+openclaw approvals allowlist add "/usr/bin/uptime"
+openclaw approvals allowlist add --agent main "~/Projects/**/bin/rg"
+openclaw approvals allowlist remove "/usr/bin/uptime"
 ```
 
----
+所谓 safe bins 只是在严格校验参数、stdin、重定向和路径后降低审批摩擦；它们
+不是任意参数都安全的万能白名单，也不会绕过显式 deny。
 
-## macOS IPC 通知
+## YOLO / 永不询问
 
-在 macOS 上，当命令需要审批时，OpenClaw 会通过系统通知推送审批请求。你可以在不切换窗口的情况下，直接从通知中心批准或拒绝：
+```bash
+openclaw exec-policy preset yolo
+```
 
-::: details 配置 macOS 通知
-确保系统偏好设置中允许 OpenClaw 发送通知：
+这只适合你完全信任的个人宿主。它放宽审批，不代表命令会逃离沙箱，也不会绕过
+通道、Agent、节点或操作系统自身的权限。生产、多用户和公开聊天环境应保持
+`allowlist` 或逐次审批。
 
-1. 打开 系统设置 > 通知
-2. 找到 OpenClaw，确保通知已启用
-3. 推荐开启"横幅"或"提醒"样式，方便快速响应
-:::
+## 常用排查顺序
 
----
+```bash
+openclaw approvals get --gateway
+openclaw approvals pending
+openclaw approvals grants list
+openclaw doctor
+```
 
-## 审批的安全影响（Implications）
+如果命令仍未执行，再确认：
 
-::: warning 批准操作前请仔细阅读
-- "总是允许"会永久添加到运行列表，后续相同模式的命令将不再询问
-- 通配符范围越广，潜在风险越大（例如 `npm *` 覆盖所有 npm 命令）
-- 定期审查运行列表，删除不再需要的规则
-- 在生产环境中，建议所有命令都走 `ask` 策略，不使用 `auto`
-:::
+1. 实际 `host` 是 sandbox、gateway 还是 node。
+2. 请求策略和宿主策略合并后的 `security` / `ask`。
+3. argv、工作目录和环境是否与已批准内容完全一致。
+4. 自动化 grant 是否因编辑、到期或撤销而失效。
 
----
+交互式 Node 审批会在原工具调用中等待，并在那里返回命令输出。原回合已关闭或取消时，迟到的批准不能重新启动执行；`SYSTEM_RUN_DENIED` 表示节点拒绝执行，不表示命令可能已经跑过。
 
-## 提升模式下的审批
-
-使用 `/elevated` 命令可以临时放宽审批限制，详见[提升模式（Elevated Mode）](/tutorials/tools/elevated)。
-
----
-
-_下一步：[提升模式（Elevated Mode）](/tutorials/tools/elevated) | [执行工具（Exec Tool）](/tutorials/tools/exec)_
+相关命令：[openclaw approvals](/tutorials/cli/approvals)、[Exec 工具](/tutorials/tools/exec)。

@@ -87,14 +87,16 @@ cp ~/.openclaw/openclaw.json ~/.openclaw/openclaw.json.bak
 ## 严格验证
 
 ::: warning 注意
-OpenClaw 仅接受完全匹配 schema 的配置。未知键、格式错误的类型或无效值会导致 Gateway 拒绝启动。唯一的根级例外是 `$schema`（string），供编辑器附加 JSON Schema 元数据。
+OpenClaw 仅接受完全匹配 schema 的配置。Gateway 启动会先尝试对符合条件的单文件配置迁移确定性的旧键；仍有未知键、格式错误的类型或无效值时会拒绝启动。唯一的根级例外是 `$schema`（string），供编辑器附加 JSON Schema 元数据。
 :::
 
 配置文件里多写、写错、写成不该有的类型，Gateway 可能会直接不启动。
 所以改配置以后，先运行 doctor 检查。
 
 
-验证失败时：
+自动迁移必须通过包括插件在内的完整验证，写入前保留 `.bak` 环形备份；`$include`、Nix 管理或更新版本写入的配置不会自动迁移。它不自动恢复 last-known-good，也不导入旧会话库。详情见 [Doctor 旧键迁移](/tutorials/gateway/doctor)。
+
+迁移后仍验证失败时：
 
 - 网关（Gateway）不启动
 - 只有诊断命令可用（`openclaw doctor`、`openclaw logs`、`openclaw health`、`openclaw status`）
@@ -197,14 +199,13 @@ OpenClaw 仅接受完全匹配 schema 的配置。未知键、格式错误的类
 ```json5
 {
   agents: {
-    list: [
-      {
-        id: "main",
+    entries: {
+      main: {
         groupChat: {
           mentionPatterns: ["@openclaw", "openclaw"],
         },
       },
-    ],
+    },
   },
   channels: {
     whatsapp: {
@@ -357,10 +358,11 @@ OpenClaw 仅接受完全匹配 schema 的配置。未知键、格式错误的类
 ```json5
 {
   agents: {
-    list: [
-      { id: "home", default: true, workspace: "~/.openclaw/workspace-home" },
-      { id: "work", workspace: "~/.openclaw/workspace-work" },
-    ],
+    ownership: "explicit",
+    entries: {
+      home: { workspace: "~/.openclaw/workspace-home" },
+      work: { workspace: "~/.openclaw/workspace-work" },
+    },
   },
   bindings: [
     { agentId: "home", match: { channel: "whatsapp", accountId: "personal" } },
@@ -403,7 +405,7 @@ OpenClaw 仅接受完全匹配 schema 的配置。未知键、格式错误的类
 :::
 
 
-## 配置热重载
+## 配置热重载 {#config-hot-reload}
 
 Gateway 会监视 `~/.openclaw/openclaw.json` 并自动应用更改，大多数设置无需手动重启。
 

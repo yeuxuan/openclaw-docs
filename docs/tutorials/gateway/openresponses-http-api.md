@@ -294,6 +294,8 @@ URL 获取默认值：
 - 每个事件行是 `event: <type>` 和 `data: <json>`
 - 流以 `data: [DONE]` 结束
 
+Agent 失败（包括整轮超时）返回失败响应；流式失败以 `response.failed` 后跟 `[DONE]` 结束。客户端可能已收到部分内容，不能只见到正文或 `[DONE]` 就判定请求成功。
+
 当前发出的事件类型：
 
 - `response.created`

@@ -121,10 +121,10 @@ is observed:
 | Policy scope                            | Observed config                                      | Applies to                        | Example result                                                                |
 | --------------------------------------- | ---------------------------------------------------- | --------------------------------- | ----------------------------------------------------------------------------- |
 | Top-level `tools.*`                     | Global `tools.*` and inherited agent tool posture    | All agents using matching posture | Deny `gateway` exec host for every agent unless the global policy allows it.  |
-| Top-level `tools.*`                     | `agents.list[].tools.*` overrides                    | Any agent with an override        | Flag one agent that overrides `tools.exec.host` to an unapproved value.       |
-| `scopes.<scopeName>.tools.*`            | Matching `agents.list[]` entry and inherited posture | Only that named agent             | Let most agents use `node` exec host while one agent must use only `sandbox`. |
+| Top-level `tools.*`                     | `agents.entries.*.tools.*` overrides                    | Any agent with an override        | Flag one agent that overrides `tools.exec.host` to an unapproved value.       |
+| `scopes.<scopeName>.tools.*`            | Matching `agents.entries.*` entry and inherited posture | Only that named agent             | Let most agents use `node` exec host while one agent must use only `sandbox`. |
 | `agents.workspace`                      | Defaults and every listed agent workspace posture    | Defaults and all listed agents    | Require every agent workspace access to be `none` or `ro`.                    |
-| `scopes.<scopeName>.agents.workspace.*` | Matching `agents.list[]` workspace posture           | Only that named agent             | Require one agent to be read-only without requiring the same for `main`.      |
+| `scopes.<scopeName>.agents.workspace.*` | Matching `agents.entries.*` workspace posture           | Only that named agent             | Require one agent to be read-only without requiring the same for `main`.      |
 
 Per-agent overlays are additive. A named-agent rule can be stricter than the
 top-level rule, but it cannot make a global violation acceptable. For allow-list
@@ -141,7 +141,7 @@ with `node`.
 
 Tool posture belongs under `tools` because it describes what tool behavior a
 configuration may expose. The existing `tools.*` policy observes both global
-`tools.*` config and per-agent `agents.list[].tools.*` overrides.
+`tools.*` config and per-agent `agents.entries.*.tools.*` overrides.
 
 Workspace posture belongs under `workspace` because it describes sandbox mode
 and workspace access. The workspace section should not grow into a general tool

@@ -9,9 +9,9 @@ description: "OpenClaw Gateway：沙箱（Sandbox）vs 工具策略 vs 提权。
 
 OpenClaw 有三个相关（但不同）的控制：
 
-1. 沙箱（Sandbox）（`agents.defaults.sandbox.*` / `agents.list[].sandbox.*`）决定工具在哪里运行（Docker vs 宿主机）。
-2. 工具策略（`tools.*`、`tools.sandbox.tools.*`、`agents.list[].tools.*`）决定哪些工具可用/被允许。
-3. 提权（`tools.elevated.*`、`agents.list[].tools.elevated.*`）是一个仅限 exec 的逃生通道，在沙箱（Sandbox）中运行时可在宿主机上执行。
+1. 沙箱（Sandbox）（`agents.defaults.sandbox.*` / `agents.entries.*.sandbox.*`）决定工具在哪里运行（Docker vs 宿主机）。
+2. 工具策略（`tools.*`、`tools.sandbox.tools.*`、`agents.entries.*.tools.*`）决定哪些工具可用/被允许。
+3. 提权（`tools.elevated.*`、`agents.entries.*.tools.elevated.*`）是一个仅限 exec 的逃生通道，在沙箱（Sandbox）中运行时可在宿主机上执行。
 
 ::: tip 先用人话分清楚
 这三个开关管的不是同一件事：
@@ -72,11 +72,11 @@ openclaw sandbox explain --json
 
 两个层级重要：
 
-- 工具 profile：`tools.profile` 和 `agents.list[].tools.profile`（基础白名单）
-- 模型提供商（Provider）工具 profile：`tools.byProvider[provider].profile` 和 `agents.list[].tools.byProvider[provider].profile`
-- 全局/每智能体（Agent）工具策略：`tools.allow`/`tools.deny` 和 `agents.list[].tools.allow`/`agents.list[].tools.deny`
-- 模型提供商（Provider）工具策略：`tools.byProvider[provider].allow/deny` 和 `agents.list[].tools.byProvider[provider].allow/deny`
-- 沙箱（Sandbox）工具策略（仅在沙箱（Sandbox）化时适用）：`tools.sandbox.tools.allow`/`tools.sandbox.tools.deny` 和 `agents.list[].tools.sandbox.tools.*`
+- 工具 profile：`tools.profile` 和 `agents.entries.*.tools.profile`（基础白名单）
+- 模型提供商（Provider）工具 profile：`tools.byProvider[provider].profile` 和 `agents.entries.*.tools.byProvider[provider].profile`
+- 全局/每智能体（Agent）工具策略：`tools.allow`/`tools.deny` 和 `agents.entries.*.tools.allow`/`agents.entries.*.tools.deny`
+- 模型提供商（Provider）工具策略：`tools.byProvider[provider].allow/deny` 和 `agents.entries.*.tools.byProvider[provider].allow/deny`
+- 沙箱（Sandbox）工具策略（仅在沙箱（Sandbox）化时适用）：`tools.sandbox.tools.allow`/`tools.sandbox.tools.deny` 和 `agents.entries.*.tools.sandbox.tools.*`
 
 经验法则：
 
@@ -130,8 +130,8 @@ openclaw sandbox explain --json
 
 门控：
 
-- 启用：`tools.elevated.enabled`（以及可选的 `agents.list[].tools.elevated.enabled`）
-- 发送者白名单：`tools.elevated.allowFrom.<provider>`（以及可选的 `agents.list[].tools.elevated.allowFrom.<provider>`）
+- 启用：`tools.elevated.enabled`（以及可选的 `agents.entries.*.tools.elevated.enabled`）
+- 发送者白名单：`tools.elevated.allowFrom.<provider>`（以及可选的 `agents.entries.*.tools.elevated.allowFrom.<provider>`）
 
 参阅[提权模式](/tutorials/tools/elevated)。
 
@@ -143,9 +143,9 @@ openclaw sandbox explain --json
 
 修复配置键（选择其一）：
 
-- 禁用沙箱（Sandbox）：`agents.defaults.sandbox.mode=off`（或每智能体（Agent）`agents.list[].sandbox.mode=off`）
+- 禁用沙箱（Sandbox）：`agents.defaults.sandbox.mode=off`（或每智能体（Agent）`agents.entries.*.sandbox.mode=off`）
 - 在沙箱（Sandbox）内允许该工具：
-  - 从 `tools.sandbox.tools.deny` 中移除它（或每智能体（Agent）`agents.list[].tools.sandbox.tools.deny`）
+  - 从 `tools.sandbox.tools.deny` 中移除它（或每智能体（Agent）`agents.entries.*.tools.sandbox.tools.deny`）
   - 或将其添加到 `tools.sandbox.tools.allow`（或每智能体（Agent）allow）
 
 ### "我以为这是 main，为什么被沙箱（Sandbox）化了？"

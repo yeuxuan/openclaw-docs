@@ -1,93 +1,51 @@
 ---
-title: "openclaw cron"
-sidebarTitle: "cron"
+title: "openclaw automations"
+sidebarTitle: "automations / cron"
+description: "OpenClaw Automations CLI：创建、查看、运行、编辑和恢复定时任务；openclaw cron 仍作为兼容别名。"
 ---
 
-# `openclaw cron`
+# `openclaw automations`
 
-管理定时任务。
-
-适合“每天早上发简报”“每周跑报告”这类固定时间任务。
+`automations` 是当前推荐的自动化任务命令。旧的 `openclaw cron` 仍是兼容别名，但新脚本和新教程建议使用 `openclaw automations`。
 
 ```bash
-openclaw cron list
-openclaw cron show <jobId>
-openclaw cron create "0 7 * * *" "Summarize overnight updates." --name "Morning brief"
-openclaw cron run <jobId>
+openclaw automations list
+openclaw automations show <jobId>
+openclaw automations create "0 7 * * *" "Summarize overnight updates." --name "Morning brief"
+openclaw automations run <jobId> --wait
 ```
-
-## 什么时候用
-
-- 固定时间自动执行任务。
-- 想查看定时任务是否还在。
-- 某个定时任务失败，需要看最近运行记录。
-
-## 新手提醒
-
-定时任务依赖 Gateway 在线、时间设置正确、模型和通道可用。
-如果没触发，先看：
-
-```bash
-openclaw cron list
-openclaw tasks list
-openclaw logs --follow
-```
-
-继续阅读：[Cron 定时任务](/tutorials/automation/cron-jobs)。
 
 ## 创建任务
 
-`openclaw cron create` 是 `openclaw cron add` 的别名。
-新任务建议用 `create`，把时间放第一位，把 Agent 要做的事放第二位：
+`create` 是 `add` 的别名。第一个位置参数写时间，第二个位置参数写 Agent 要做的事：
 
 ```bash
-openclaw cron create "0 7 * * *" \
+openclaw automations create "0 7 * * *" \
   "Summarize overnight updates." \
   --name "Morning brief" \
-  --agent ops
+  --agent ops \
+  --session isolated
 ```
 
-时间可以是：
+时间可写为：
 
 - cron 表达式：`"0 9 * * 1"`
 - 自然间隔：`"every 1h"`
 - 简短间隔：`"20m"`
-- ISO 时间：`"2026-02-01T16:00:00Z"`
+- ISO 时间：`"2027-02-01T16:00:00Z"`
 
-## Webhook 输出
+需要本地时区时显式加 `--tz "Asia/Shanghai"`。
 
-如果任务结果要给外部系统，不发到聊天，用 `--webhook`：
+创建和编辑都支持 `--at`、`--every`、`--cron`、`--on-exit`、`--stream-command`。例如把已有任务改为命令退出时触发：
 
 ```bash
-openclaw cron create "0 18 * * 1-5" \
-  "Summarize today's deploys as JSON." \
-  --name "Deploy digest" \
-  --webhook "https://example.invalid/openclaw/cron"
+openclaw automations edit <jobId> --on-exit "./watch.sh" --on-exit-cwd /srv/app
 ```
 
-也可以给已有任务设置：
+## 投递到聊天
 
 ```bash
-openclaw cron edit <jobId> --webhook "https://example.invalid/openclaw/cron"
-```
-
-`--webhook` 不要和聊天投递参数混用，例如 `--announce`、`--channel`、`--to`、`--thread-id`、`--account`。
-
-## 会话和投递
-
-`--session` 常用值：
-
-| 值 | 说明 |
-|----|------|
-| `main` | 复用主会话 |
-| `isolated` | 每次任务新建会话 |
-| `current` | 从当前聊天创建提醒时使用当前会话 |
-| `session:<id>` | 指定固定会话 |
-
-聊天投递常用：
-
-```bash
-openclaw cron create "0 7 * * *" \
+openclaw automations create "0 7 * * *" \
   "Summarize overnight updates." \
   --name "Morning brief" \
   --session isolated \
@@ -96,7 +54,32 @@ openclaw cron create "0 7 * * *" \
   --to "channel:C1234567890"
 ```
 
-## 常见误会
+配置了多个通道时，隔离会话的 announce 任务必须明确 `--channel`，除非 `--to` 带 provider 前缀或保留的会话路由能确定通道。`--best-effort-deliver` 不会替你选择通道。
 
-Cron 只负责“到点触发”。触发后能不能成功，还取决于模型、工具、通道和权限。
-所以 cron 失败时，也要同时看 `tasks` 和日志。
+## 投递到 Webhook
+
+```bash
+openclaw automations create "0 18 * * 1-5" \
+  "Summarize today's deploys as JSON." \
+  --name "Deploy digest" \
+  --webhook "https://example.invalid/openclaw/automations"
+```
+
+Webhook 与 `--announce`、`--channel`、`--to`、`--thread-id`、`--account` 互斥。私网、回环和特殊用途地址默认会被 SSRF 策略拒绝；只有明确可信的接收端才应加入 `cron.webhookSsrfPolicy.allowedHostnames`。
+
+## 失败后的恢复
+
+有失败路由或主 announce 目标的任务，默认在连续失败 2 次后告警并冷却 1 小时。可用 `openclaw automations edit` 的 `--failure-alert*` 参数为单个任务调整；`--no-failure-alert` 关闭普通失败告警，但不会关闭连续 10 次执行失败或 3 次计划计算失败后的自动禁用通知。
+
+时间型循环任务连续执行失败 10 次会自动禁用；连续 3 次计算计划失败也会自动禁用。修复原因后运行：
+
+```bash
+openclaw automations list --all
+openclaw automations enable <jobId>
+```
+
+`enable` 会清除自动禁用原因和失败计数。
+
+终态运行历史保留 7 天，`lost` 行保留 24 小时，并受每任务/历史类型最新 2000 行的额外上限约束。
+
+继续阅读：[Automations 自动化任务](/tutorials/automation/cron-jobs)、[自动化故障排查](/tutorials/automation/troubleshooting)。

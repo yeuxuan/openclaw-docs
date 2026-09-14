@@ -15,7 +15,7 @@ title: "macOS dev setup"
 构建应用之前，先确认本机已经安装：
 
 1. Xcode 26.2+：用于 Swift 开发。
-2. Node.js 24 和 pnpm：用于 Gateway、CLI 和打包脚本。Node 22 LTS 仍可用于兼容场景，目前要求 `22.19+`。
+2. Node.js 26 和 pnpm：用于 Gateway、CLI 和打包脚本。兼容版本为 Node 24.16+ 或 26.1+；Node 22、23、25 不受支持。
 
 ## 1. 安装依赖
 

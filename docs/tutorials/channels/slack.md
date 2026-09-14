@@ -200,7 +200,7 @@ openclaw channels status --probe
     提及来源：
 
     - 显式应用提及（`<@botId>`）
-    - 提及正则模式（`agents.list[].groupChat.mentionPatterns`，回退 `messages.groupChat.mentionPatterns`）
+    - 提及正则模式（`agents.entries.*.groupChat.mentionPatterns`，回退 `messages.groupChat.mentionPatterns`）
     - 隐式回复机器人的线程行为
 
     按频道控制（`channels.slack.channels.<id|name>`）：
@@ -300,9 +300,55 @@ openclaw channels status --probe
 
 ---
 
+## 流式进度显示
+
+`channels.slack.streaming.mode: "progress"` 默认优先使用 Slack 原生任务卡，不支持时回退到 Block Kit 会话卡。如果希望只显示一条简洁的纯文本进度草稿，可以设置：
+
+```json5
+{
+  channels: {
+    slack: {
+      streaming: {
+        mode: "progress",
+        progress: {
+          style: "compact",
+          label: false,
+          commentary: true,
+          toolProgress: false,
+        },
+      },
+    },
+  },
+}
+```
+
+符合条件的最终文本会替换同一条 Slack 消息；媒体、错误、超长或拆分内容、自定义出站身份以及编辑失败时，仍走普通最终投递。需要强制使用旧的 Block Kit 卡时，将 `channels.slack.streaming.progress.nativeTaskCards` 设为 `false`。
+
+当前进度卡显示 Agent 写出的计划节点；没有计划时显示一条稳定工作摘要，而不是每次工具调用都新增任务。常规更新按约 1 秒合并，审批、真实错误和完成立即展示。Block Kit 回退也不再显示逐工具行、自动生成的表情或工具/文件/耗时计数。
+
+`streaming.preview.toolProgress` 和 `streaming.preview.commandText` 控制 `partial` / `block` 的工具预览；`progress` 模式的普通命令只参与摘要。确认 Reaction 保持稳定，即使开启 `messages.statusReactions.enabled`，也只对真实错误短暂显示错误反应，不再轮换思考/工具/成功表情。
+
+---
+
 ## 操作和门控
 
 Slack 操作由 `channels.slack.actions.*` 控制。
+
+### 打开私信或多人私信
+
+`message` 工具的 `conversation-open` 操作可以打开或复用指定成员组成的会话：
+
+```json
+{
+  "action": "conversation-open",
+  "channel": "slack",
+  "userIds": ["U12345678", "U23456789"]
+}
+```
+
+传入 1–8 个不重复的人类成员 ID，不含调用账号自身。单人目标需要 `im:write`，多人私信需要 `mpim:write`。操作返回 `channelId` 和可路由的 `target`，随后用 `action: "send"` 向这个精确 `target` 发消息；打开会话本身不会发送消息。
+
+多账号用 `accountId`，明确指定工作区用 `teamId`；脱离当前来源会话的 Enterprise 操作需要 `teamId`。它受 `messages` 操作门控，不会顺带放宽私信策略、读取权限或历史访问。
 
 当前 Slack 工具中的可用操作组：
 

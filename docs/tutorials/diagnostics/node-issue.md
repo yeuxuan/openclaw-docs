@@ -12,9 +12,8 @@ sidebarTitle: "Node tsx 崩溃"
 建议：
 
 - 使用官方安装包或构建产物。
-- 使用 Node 24 推荐版本。
+- 使用 Node 26.1+ 推荐版本，或 Node 24.16+ 兼容版本。
 - 源码开发时先运行类型检查和构建。
 - 遇到 `tsx` loader 问题时，尝试固定 Node/tsx 版本。
 
 继续阅读：[安装 Node.js](/tutorials/installation/node)。
-

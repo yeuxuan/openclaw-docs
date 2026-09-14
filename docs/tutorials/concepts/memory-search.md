@@ -94,20 +94,18 @@ OpenClaw 可以接不同的 embedding provider，例如：
 
 至少要同时注意三件事：
 
-1. `memorySearch.experimental.sessionMemory = true`
-2. `memorySearch.sources` 里要包含 `"sessions"`
+1. `memory.search.experimental.sessionMemory = true`
+2. `memory.search.sources` 里要包含 `"sessions"`
 3. `tools.sessions.visibility` 要允许当前会话看见目标会话
 
 一个实用示例：
 
 ```json5
 {
-  agents: {
-    defaults: {
-      memorySearch: {
-        experimental: { sessionMemory: true },
-        sources: ["memory", "sessions"],
-      },
+  memory: {
+    search: {
+      experimental: { sessionMemory: true },
+      sources: ["memory", "sessions"],
     },
   },
   tools: {
@@ -117,7 +115,7 @@ OpenClaw 可以接不同的 embedding provider，例如：
 ```
 
 这里最容易忽略的是 `visibility`。
-默认的 `tree` 只会暴露当前会话以及它派生出来的子会话；如果你想从一个新的 DM 会话里召回同一 Agent 之前的另一段会话，通常要有意放宽到 `agent`。
+当前默认是 `agent`，非沙箱会话可以召回同 Agent 的其他对话，也可能包括其他用户的内容。按发送者设置 `dmScope` 只分开上下文，不收紧工具召回。需要较窄范围时显式设置 `tree`（主会话仍有同 Agent 全部会话例外）或 `self`（严格当前会话），或拆分 Agent；沙箱限制和 Incognito 排除不变。
 
 如果你使用的是 QMD，还要再额外打开 `memory.qmd.sessions.enabled`，否则会话内容不会被导出进 QMD 索引。
 

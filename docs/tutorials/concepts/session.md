@@ -91,12 +91,18 @@ OpenClaw 将 每个智能体一个直接聊天会话 作为主会话。直接聊
 这一节是给排查和备份用的。普通使用者不用手动改这些文件。
 
 - 在 网关主机 上：
-  - 存储文件：`~/.openclaw/agents/<agentId>/sessions/sessions.json`（每智能体）。
-- 记录：`~/.openclaw/agents/<agentId>/sessions/<SessionId>.jsonl`（Telegram 主题会话使用 `.../<SessionId>-topic-<threadId>.jsonl`）。
-- 存储是一个 `sessionKey -> { sessionId, updatedAt, ... }` 的映射。删除条目是安全的；它们会按需重建。
+  - 当前会话行与转录：`~/.openclaw/agents/<agentId>/agent/openclaw-agent.sqlite`。
+  - 已归档的转录：`~/.openclaw/agents/<agentId>/sessions/`。
+  - 旧版迁移来源：`~/.openclaw/agents/<agentId>/sessions/sessions.json` 及旧 JSONL。
+- SQLite 中的会话行仍按 `sessionKey -> { sessionId, updatedAt, ... }` 组织；不要直接编辑数据库。
 - 群组条目可能包含 `displayName`、`channel`、`subject`、`room` 和 `space` 以在 UI 中标记会话。
 - 会话条目包含 `origin` 元数据（标签 + 路由提示），以便 UI 可以解释会话的来源。
 - OpenClaw 不会 读取旧版 Pi/Tau 会话文件夹。
+
+从旧安装升级时，Gateway 和本地 CLI 不会在启动阶段自动导入旧版会话文件。
+检测到旧存储时，启动会拒绝就绪并提示 Doctor 命令。先停止 Gateway、备份状态，
+运行 `openclaw doctor --fix`，再重启；可用
+`openclaw doctor --session-sqlite inspect --session-sqlite-all-agents` 做只读核对。
 
 ---
 
@@ -144,7 +150,8 @@ OpenClaw 默认在 LLM 调用之前从内存上下文中修剪 旧的工具结�
 - 每类型覆盖（可选）：`resetByType` 让你为 `direct`、`group` 和 `thread` 会话覆盖策略（thread = Slack/Discord 线程、Telegram 主题、连接器提供的 Matrix 线程）。
 - 每通道覆盖（可选）：`resetByChannel` 为通道覆盖重置策略（适用于该通道的所有会话类型，优先于 `reset`/`resetByType`）。
 - 重置触发器：精确 `/new` 或 `/reset`（加上 `resetTriggers` 中的任何额外项）开始新会话 ID 并将消息剩余部分传递。`/new <model>` 接受模型别名、`provider/model` 或提供商名称（模糊匹配）来设置新会话模型。如果单独发送 `/new` 或 `/reset`，OpenClaw 运行一个简短的"hello"问候轮次确认重置。
-- 手动重置：从存储中删除特定键或删除 JSONL 记录；下一条消息重建它们。
+- 手动重置：使用 `/new`、`/reset` 或 `openclaw sessions cleanup`；不要直接删除
+  SQLite 行或旧 JSONL。
 - 隔离的 cron 作业始终为每次运行创建新的 `sessionId`（不重用空闲会话）。
 
 ---
@@ -205,7 +212,6 @@ OpenClaw 默认在 LLM 调用之前从内存上下文中修剪 旧的工具结�
       discord: { mode: "idle", idleMinutes: 10080 },
     },
     resetTriggers: ["/new", "/reset"],
-    store: "~/.openclaw/agents/{agentId}/sessions/sessions.json",
     mainKey: "main",
   },
 }
@@ -222,14 +228,15 @@ OpenClaw 默认在 LLM 调用之前从内存上下文中修剪 旧的工具结�
 - 发送 `/context list` 或 `/context detail` 查看系统提示词和注入的工作区文件中有什么（以及最大的上下文贡献者）。
 - 发送 `/stop` 作为独立消息来中止当前运行，清除该会话的排队后续，并停止从它派生的任何子智能体运行（回复包含已停止的计数）。
 - 发送 `/compact`（可选说明）作为独立消息来摘要化较旧的上下文并释放窗口空间。参见 [/concepts/compaction](/tutorials/concepts/compaction)。
-- JSONL 记录可以直接打开以查看完整轮次。
+- 当前轮次应通过 CLI、Control UI 或会话导出查看；`sessions/` 下的 JSONL 只代表旧版来源
+  或已归档转录，不是运行时事实来源。
 
 ---
 
 ## 提示
 
 - 保持主键专用于 1:1 流量；让群组保持自己的键。
-- 自动化清理时，删除单个键而非整个存储，以保留其他地方的上下文。
+- 自动化清理使用 `openclaw sessions cleanup`，不要直接改 SQLite。
 
 ---
 

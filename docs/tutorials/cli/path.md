@@ -176,6 +176,10 @@ Non-canonical query parameters are ignored except for the first non-empty
 
 ## Addressing by file kind
 
+::: warning 输入大小限制
+路径最多 4096 字节、4 个槽位，每个槽位最多 64 个点分子段，深层 JSON 遍历最多 256 层。任何读取文件的操作都会在解析前拒绝超过 16 MiB 的输入；JSONC/JSON 返回 `OC_JSONC_INPUT_TOO_LARGE`，其他文件类型返回 `OC_PATH_INPUT_TOO_LARGE`。
+:::
+
 | Kind              | Addressing model                                                                                    |
 | ----------------- | --------------------------------------------------------------------------------------------------- |
 | Markdown          | H2 sections by slug, bullet items by slug or `#N`, frontmatter via `[frontmatter]`.                 |

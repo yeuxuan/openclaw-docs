@@ -299,7 +299,7 @@ curl "https://api.telegram.org/bot<bot_token>/getUpdates"
 
     - 原生 `@botusername` 提及，或
     - 提及模式：
-      - `agents.list[].groupChat.mentionPatterns`
+      - `agents.entries.*.groupChat.mentionPatterns`
       - `messages.groupChat.mentionPatterns`
 
     会话级命令开关：

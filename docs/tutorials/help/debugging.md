@@ -147,6 +147,10 @@ openclaw logs --follow
 如果你是在看 OpenClaw 源码，而不是只使用命令行，那么 VS Code 调试很有用。
 新版本构建出来的文件名可能带 hash，所以必须打开 source map，断点才能正确跳回 `src/` 里的 TypeScript 源码。
 
+从 checkout 运行 `pnpm openclaw`、`pnpm dev` 或 Gateway 开发 runner 时，同 ID 插件优先选当前 checkout，而不是全局安装副本。已有构建输出仍优先于源码，修改源码后要重建；这个选择规则与 `--dev` 隔离 profile 是两件事。
+
+直接运行 `node dist/entry.js` 调试时，可将 `OPENCLAW_DEV_SOURCE_ROOT` 指向当前运行 checkout，以获得同样的重复插件选择规则。它不会让任意本地链接自动变成可信内置插件，显式 `plugins.load.paths` 仍优先。用 `pnpm openclaw plugins inspect <id> --json` 核对真正加载的 source/origin。
+
 最省心的方式：
 
 1. 打开 VS Code 左侧的 Run and Debug 面板。

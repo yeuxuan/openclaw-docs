@@ -173,9 +173,9 @@ openclaw agents add work \
 
 它设置的内容：
 
-- `agents.list[].name`
-- `agents.list[].workspace`
-- `agents.list[].agentDir`
+- `agents.entries.*.name`
+- `agents.entries.*.workspace`
+- `agents.entries.*.agentDir`
 
 说明：
 

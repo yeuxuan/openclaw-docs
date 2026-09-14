@@ -1,232 +1,140 @@
 ---
 title: "技能系统"
 sidebarTitle: "技能系统"
-description: "OpenClaw 工具系统：技能系统（Skills）。技能（Skills）是预定义的指令集，以文件形式存在，在 Agent 启动时自动注入到提示词中。通过技能，你可以让 Agent 掌握特定领域的专…"
+description: "理解 OpenClaw Skills 的当前目录优先级、ClawHub 安装、Agent 可见性、刷新方式与 Skill Workshop。"
 ---
 
 # 技能系统（Skills）
 
-技能（Skills）是预定义的指令集，以文件形式存在，在 Agent 启动时自动注入到提示词中。通过技能，你可以让 Agent 掌握特定领域的专业知识、固定工作流程或特殊行为模式::无需每次都重复描述。
+Skill 是一个包含 `SKILL.md` 的目录。它给 Agent 提供专门说明、脚本和参考资料，
+不会因为“装进目录”就自动获得新的工具、凭据或系统权限。
 
----
+## 先用正确的目录
 
-## 快速上手
+当前加载优先级从高到低如下；同名 Skill 由更高优先级来源覆盖：
 
-第一步：创建技能目录
+| 优先级 | 来源 | 目录 |
+|--------|------|------|
+| 1 | 当前 Agent 工作区 | `<workspace>/skills` |
+| 2 | 项目 Agent 技能 | `<workspace>/.agents/skills` |
+| 3 | 默认状态下的个人 Agent 技能 | `~/.agents/skills` |
+| 4 | 共享托管技能 | `<state-dir>/skills` |
+| 5 | Skill Workshop 草拟/应用技能 | `<state-dir>/agents/<agentId>/agent/workshop-skills` |
+| 6 | OpenClaw 内置技能、Custodian 技能 | 随安装包提供 |
+| 7 | `skills.load.extraDirs` 与插件技能 | 配置或插件提供 |
+
+不要继续使用旧教程里的 `<workspace>/.openclaw/skills`。Codex CLI 自己的
+`$CODEX_HOME/skills` 也不是 OpenClaw 技能根目录；需要迁移时先运行：
 
 ```bash
-mkdir -p ~/.openclaw/skills/my-first-skill
+openclaw migrate plan codex
+openclaw migrate codex
 ```
 
-第二步：创建技能定义文件
+每个根目录最多向下发现 6 层。找到 `SKILL.md` 后不会再扫描该技能目录的子层。
+技能名来自 frontmatter 的 `name`，缺失时才使用目录名。
 
-在技能目录下创建 `SKILL.md`：
+## 创建一个最小 Skill
+
+```bash
+mkdir -p ./skills/code-review
+```
+
+创建 `./skills/code-review/SKILL.md`：
 
 ```markdown
-# 代码审查技能
-
-## 描述
-帮助审查代码，关注安全性和可维护性。
-
-## 使用方法
-当用户请求代码审查时使用此技能。
-
-## 指令
-审查代码时，请重点关注：
-1. 潜在的安全漏洞（SQL 注入、XSS 等）
-2. 错误处理是否完善
-3. 代码可读性和命名规范
-4. 性能影响
-
-给出具体、可操作的改进建议。
-```
-
-第三步：重启 OpenClaw
-
-技能文件会在 Agent 启动时自动加载，重启后即可生效。
-
+---
+name: code-review
+description: 审查代码的安全性、正确性和可维护性。
 ---
 
-## 技能文件位置与优先级
+# Code Review
 
-OpenClaw 按以下顺序查找技能，后加载的技能可以覆盖先加载的：
-
-```text
-~/.openclaw/skills/          ← 全局技能（优先级低）
-    ├── code-review/
-    │   └── SKILL.md
-    └── git-workflow/
-        └── SKILL.md
-
-{工作区}/.openclaw/skills/   ← 工作区技能（优先级高，覆盖全局）
-    └── project-specific/
-        └── SKILL.md
+当用户要求审查代码时，先定位可复现证据，再按严重级别报告问题。
 ```
 
-::: tip 工作区技能优先
-工作区级别的技能（放在项目目录下）优先级高于全局技能。这让你可以为不同项目定义不同的工作规范。
-:::
-
----
-
-## 每个 Agent vs 共享技能
-
-### 共享技能（默认）
-
-不指定 `agents` 字段时，技能对所有 Agent 生效：
-
-```json5
-{
-  skills: {
-    "code-review": {
-      enabled: true
-      // 不指定 agents，所有 Agent 都加载此技能
-    }
-  }
-}
-```
-
-### 为特定 Agent 配置技能
-
-```json5
-{
-  skills: {
-    "code-review": {
-      enabled: true,
-      agents: ["dev-assistant", "code-bot"]  // 只有这两个 Agent 加载
-    }
-  }
-}
-```
-
----
-
-## 插件（Plugins）与技能
-
-插件可以打包并提供额外的技能集。安装插件后，其附带的技能会自动可用：
-
-```json5
-{
-  plugins: {
-    "openclaw-devtools": {
-      enabled: true
-      // 此插件内置了 git、npm、docker 等技能
-    }
-  }
-}
-```
-
----
-
-## ClawHub 技能库
-
-你可以从 ClawHub 社区获取他人分享的技能：
+然后检查发现与依赖状态：
 
 ```bash
-# 浏览可用技能
-openclaw skills search "code review"
-
-# 安装技能
-openclaw skills install clawhub/code-review
-
-# 查看已安装技能
-openclaw skills list
+openclaw skills list --verbose
+openclaw skills info code-review
+openclaw skills check
 ```
 
-::: warning 安全注意
-从 ClawHub 或其他第三方来源安装技能前，务必阅读技能定义文件内容。技能会注入到 Agent 提示词中，恶意技能可能改变 Agent 行为。
+默认 watcher 会在下一次 Agent turn 刷新技能快照；关闭 watcher 后需要开启新会话。
+正在运行的会话使用已捕获的快照，不应假定磁盘修改会立刻改写当前 turn。
+
+## 搜索和安装 ClawHub Skill
+
+```bash
+openclaw skills search "calendar"
+openclaw skills install @owner/<slug>
+openclaw skills verify @owner/<slug> --json
+openclaw skills update @owner/<slug>
+```
+
+- 不带查询词的 `search` 浏览 ClawHub Trending。
+- 默认安装到当前 Agent 工作区的 `skills/`；`--agent <id>` 选择另一个 Agent，
+  `--global` 安装到共享托管目录，两者不能同时使用。
+- 也可安装 `git:owner/repo[@ref]` 或根目录含 `SKILL.md` 的本地目录；它们不是
+  ClawHub 原生版本，不能使用 ClawHub `--version`。
+- `update` 默认保护本地改动；`--force` 会覆盖已检测到的修改，应先审阅 diff。
+- 社区 Skill 在下载前经过 ClawHub 信任检查。`--force-install` 只用于仍在等待扫描
+  的 GitHub-backed 条目，不能绕过恶意/阻止结论。
+
+::: warning 安装 Skill 仍然是供应链操作
+先看发布者、扫描结论、`SKILL.md`、脚本和依赖。Skill 内容会进入 Agent 上下文；
+依赖安装还可能执行代码。不要把 API Key 写进 Skill 文本。
 :::
 
----
+## Agent 可见性与共享边界
 
-## Gate 规则（Gate Rules）
-
-Gate 规则让技能只在满足特定条件时触发，避免不必要的 Token 消耗：
+目录优先级和 Agent 可见性是两件事。用 `agents.defaults.skills` 设置共享允许列表，
+用 `agents.entries.<id>.skills` 为某个 Agent 完整替换该列表：
 
 ```json5
 {
-  skills: {
-    "sql-expert": {
-      enabled: true,
-      gate: {
-        // 只有消息中包含 SQL 关键词时才激活此技能
-        keywords: ["SELECT", "INSERT", "database", "查询"],
-        // 或者只在特定渠道激活
-        channels: ["#db-help"]
-      }
+  agents: {
+    defaults: { skills: ["github", "weather"] },
+    entries: {
+      writer: { default: true },
+      docs: { skills: ["docs-search"] }
     }
   }
 }
 ```
 
----
+`openclaw skills check --agent <id>` 会同时报告前置依赖和该 Agent 实际可见性。
+共享 Gateway 上的个人技能库还可在 **Plugins → Skills** 中创建、导入和分享；
+“分享给团队”只改变发现与管理边界，不授予新工具、凭据或主机权限。
 
-## 配置覆盖（Config Override）
+## 从历史工作学习：Skill Workshop
 
-技能可以携带自己的配置，在激活时自动覆盖部分全局配置：
+Skill Workshop 把“从会话中学到的经验”变成可审阅提案，而不是静默改写现有技能。
+你可以在普通聊天里引导学习过程，也可以用 CLI 审核：
 
-::: details 查看配置覆盖示例
-```yaml
-# SKILL.md 中的配置部分
----
-config:
-  model: "claude-opus-4-5"  # 此技能激活时使用更强的模型
-  maxTokens: 8192
----
-
-# 技能正文内容...
-```
-:::
-
----
-
-## 环境注入（Env Injection）
-
-技能可以声明需要访问的环境变量，OpenClaw 会在技能激活时注入：
-
-```json5
-{
-  skills: {
-    "github-helper": {
-      env: {
-        GITHUB_TOKEN: "${GITHUB_TOKEN}",
-        DEFAULT_REPO: "my-org/my-repo"
-      }
-    }
-  }
-}
+```bash
+openclaw skills workshop list
+openclaw skills workshop inspect <proposal-id>
+openclaw skills workshop apply <proposal-id>
+openclaw skills workshop reject <proposal-id> --reason "Not reusable"
 ```
 
----
+提案应用前应核对范围、支持文件和安全影响。某个 Agent 学到的 Workshop Skill
+默认只属于该 Agent；需要多人复用时再发布到共享托管目录或个人技能库。
 
-## Token 影响
+## 排障顺序
 
-每个技能都会增加系统提示词的长度，从而增加每次请求的 Token 消耗。
-
-::: details 控制 Token 消耗的建议
-- 只启用当前任务需要的技能
-- 使用 Gate 规则让技能按需激活
-- 保持技能内容简洁，避免冗长的指令
-- 定期审查已启用的技能列表，移除不再需要的技能
-:::
-
----
-
-## 技能生命周期（Lifecycle）
-
-```text
-启动 OpenClaw
-    ↓
-扫描技能目录
-    ↓
-加载 SKILL.md 文件
-    ↓
-检查 Gate 规则
-    ↓
-满足条件 → 注入提示词 → Agent 开始工作
-不满足条件 → 技能待机，等待下次检查
+```bash
+openclaw skills list --verbose
+openclaw skills info <name> --json
+openclaw skills check --agent <id> --json
 ```
 
----
+重点检查：目录是否正确、frontmatter `name` 是否冲突、所需二进制/环境变量是否
+存在、Agent allowlist 是否排除、远程 Gateway 是否是你真正查询的那一台。显式
+选择远程 Gateway 后，连接失败不会回退到客户端本地技能列表。
 
-_下一步：[创建自定义技能](/tutorials/tools/creating-skills) | [技能配置参考](/tutorials/tools/skills-config)_
+继续阅读：[创建自定义技能](/tutorials/tools/creating-skills)、
+[技能配置参考](/tutorials/tools/skills-config)、[Skills CLI](/tutorials/cli/skills)、
+[Skill Workshop](/tutorials/tools/skill-workshop)。

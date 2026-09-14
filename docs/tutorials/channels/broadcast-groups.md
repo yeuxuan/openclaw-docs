@@ -319,7 +319,7 @@ Result: Agent A and C respond, Agent B logs error
 
 检查：
 
-1. 智能体 ID 存在于 `agents.list` 中
+1. 智能体 ID 存在于 `agents.entries` 中
 2. 对等方 ID 格式正确（例如 `120363403215116621@g.us`）
 3. 智能体不在拒绝列表中
 

@@ -85,7 +85,7 @@ Model output
 
 启用块流式输出后，可以在第一个块之后给后续块加随机暂停。这样多气泡回复不会显得像机器连续刷出来。
 
-- 配置：`agents.defaults.humanDelay`（通过 `agents.list[].humanDelay` 每智能体覆盖）。
+- 配置：`agents.defaults.humanDelay`（通过 `agents.entries.*.humanDelay` 每智能体覆盖）。
 - 模式：`off`（默认）、`natural`（800–2500ms）、`custom`（`minMs`/`maxMs`）。
 - 只适用于块回复，不影响最终回复或工具摘要。
 

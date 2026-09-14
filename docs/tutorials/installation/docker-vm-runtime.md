@@ -24,6 +24,8 @@ description: "OpenClaw 安装部署：云 VM + Docker 长期运行 Gateway 时�
 3. 重新 build。
 4. 重启容器。
 
+在仓库根 `Dockerfile` 上扩展，不要换成单阶段简化文件。构建依赖和生产依赖共享同一份 workspace manifests 与 lockfile，但分别执行 frozen-lockfile 安装；运行时使用新装的生产依赖，同时保留已编译 workspace 和原生 addon。不要对镜像层继承的依赖执行 `pnpm prune`，pnpm 12 在 OverlayFS 上可能报 `EXDEV`。
+
 ---
 
 ## 常见需要进镜像的工具
@@ -79,4 +81,3 @@ docker compose logs -f openclaw-gateway
 - 换大一点的 VM
 - 加 swap
 - 减少并发构建压力
-

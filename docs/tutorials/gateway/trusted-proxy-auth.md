@@ -203,6 +203,18 @@ location / {
 
 ## 安全检查清单
 
+### Loopback 代理与向导
+
+`openclaw configure --section gateway` 的 Trusted Proxy 设置会识别包含 loopback 的整个 CIDR，不仅检查网段起始地址。命中后会询问 `allowLoopback`，新配置默认拒绝；选择 No 会撤销原有允许值。不要用一个宽网段绕开本机身份伪造的风险。
+
+### 单一操作者的独立信任边界
+
+若一个 Gateway 只允许某个人使用，身份代理必须在转发任何 HTTP 请求或 WebSocket 升级之前拒绝其他人，包括插件和节点路由；Gateway 本身也应只对代理可达。`allowUsers` 仅对去空格后的身份头做精确比较，不验证 JWT，也不把邮箱变成不可变身份；`requiredHeaders` 只检查非空。
+
+不要只改 `allowUsers` 就认为已撤销所有访问：已有连接、配对设备和 bootstrap 凭据另有认证路径，须显式撤销或断开。代理专用实例应省略 Gateway token/password 及其环境变量；独立网络代理保持 `allowLoopback: false`。Fleet 托管实例当前使用 token，不要覆盖其托管认证配置。
+
+不同 workspace、模型筛选或同 OS 用户下的另一个 Gateway 进程不构成凭据/文件隔离。需要独立信任边界时，另行部署受隔离的实例；宿主机管理员始终受信任。
+
 在启用可信代理认证之前，请验证：
 
 - [ ] 代理是唯一路径：网关（Gateway）端口已通过防火墙屏蔽除你的代理以外的所有流量

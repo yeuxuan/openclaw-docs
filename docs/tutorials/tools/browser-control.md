@@ -45,7 +45,15 @@ Authorization: Bearer <gateway token>
 
 ---
 
-## Playwright 依赖
+## 标签页身份和路由
+
+后续操作优先沿用 tabs/open 返回的 `suggestedTargetId` 或 `tabId`（如 `t1`），并保存 host/node 和 profile；handle 不是跨所有浏览器通用的 ID。Control UI 的 `browser.request` 可传 `target: "host"`，或 `target: "node"` 配 `node: "<node-id>"`，profile 放在 `query.profile`。显式路由不会回退另一宿主，也不会授予额外权限。
+
+列表中 URL 校验失败时，标签身份和标题仍可保留，但 `url` 为空：`urlUnavailableReason: "navigation_blocked"` 表示策略拒绝，`navigation_check_failed` 表示暂时无法校验（如 DNS 失败）。后者可刷新重查，不能只因空 URL 就判断策略拒绝；后续读取/动作仍要各自检查权限。
+
+selector 快照没有匹配时立即返回空结果，不等待元素出现。先用 `openclaw browser wait "<selector>"` 等待，再取快照。这个行为不改变整页或 frame 传输失败的超时处理。
+
+## Playwright 能力范围
 
 高级点击、输入、AI 快照、元素截图和 PDF 导出通常需要 Playwright。
 
@@ -75,4 +83,3 @@ Authorization: Bearer <gateway token>
 - [浏览器工具](/tutorials/tools/browser)
 - [WSL2 远程 Chrome 排查](/tutorials/tools/browser-wsl2-windows-remote-cdp-troubleshooting)
 - [Gateway 认证](/tutorials/gateway/authentication)
-

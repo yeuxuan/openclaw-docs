@@ -31,3 +31,14 @@ openclaw browser tabs
 ```
 
 高级接口见 [Browser Control API](/tutorials/tools/browser-control)。
+
+## Chrome 扩展配对
+
+```bash
+openclaw browser extension install
+openclaw browser extension status
+openclaw browser extension pair
+openclaw browser extension cdp --json
+```
+
+新版 native host 配合支持唤醒的扩展、自动本地设置，可让直连 loopback relay 在没有本地 Gateway 时启动。外部认证 CDP 客户端可使用它，但 `openclaw browser` 的操作仍需 Gateway；不是启动了 relay 就能脱离 Gateway 使用全部 CLI。详细条件见 [Chrome 扩展](/tutorials/tools/chrome-extension)。

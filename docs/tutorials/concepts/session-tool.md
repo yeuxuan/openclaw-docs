@@ -16,6 +16,12 @@ description: "OpenClaw 核心概念：会话工具（Session Tools）。目标�
 - `sessions_history`
 - `sessions_send`
 - `sessions_spawn`
+- `sessions_search`：搜索可见会话的历史片段。
+- `sessions`：修改会话属性、归档、恢复、删除及管理分组。
+- `session_status`：检查状态与 `stateVersion`。
+- `sessions_yield`、`subagents`：等待、查看或取消受控子任务。
+
+当前 `tools.sessions.visibility` 默认是 `agent`，非沙箱会话可访问同 Agent 的其他会话，可能包括其他用户的内容。严格隔离应显式设置 `self`；`tree` 限定当前及派生范围，但规范主会话仍可访问同 Agent 的全部会话。DM 按发送者分桶不会自动缩小工具权限，详见[会话可见范围](/tutorials/gateway/config-tools#会话工具的可见范围)。
 
 ---
 
@@ -40,7 +46,9 @@ description: "OpenClaw 核心概念：会话工具（Session Tools）。目标�
 - `kinds?: string[]` 过滤器：`"main" | "group" | "cron" | "hook" | "node" | "other"` 中的任意值
 - `limit?: number` 最大行数（默认：服务器默认值，限制如 200）
 - `activeMinutes?: number` 仅在 N 分钟内更新的会话
-- `messageLimit?: number` 0 = 不包含消息（默认 0）；>0 = 包含最后 N 条消息
+- `messageLimit?: number` 0 = 不包含消息；>0 = 包含最近消息，最大 20 条。
+- `agentId`、`label`、`search`：按 Agent、精确标签或文本筛选；`archived: true` 改为查看归档会话。
+- `includeDerivedTitles`、`includeLastMessage`：请求可见范围内的标题或末条消息预览。
 
 行为：
 
@@ -57,12 +65,10 @@ description: "OpenClaw 核心概念：会话工具（Session Tools）。目标�
 - `updatedAt`（毫秒）
 - `sessionId`
 - `model`、`contextTokens`、`totalTokens`
-- `thinkingLevel`、`verboseLevel`、`systemSent`、`abortedLastRun`
-- `sendPolicy`（会话覆盖，如果设置）
-- `lastChannel`、`lastTo`
-- `deliveryContext`（规范化的 `{ channel, to, accountId }`，如果可用）
-- `transcriptPath`（从存储目录 + sessionId 派生的尽力路径）
+- 归档/置顶状态、父子关系、分组、`stateVersion`、运行状态和 `abortedLastRun`
 - `messages?`（仅当 `messageLimit > 0` 时）
+
+列表不会暴露投递路由、记录路径、逐次运行设置或成本明细；需要这些信息时使用对应状态或会话工具。归档、恢复、删除另一条会话时，把列表返回的 `sessionId` 作为 `expectedSessionId`，防止旧键误操作已被替换的新会话。
 
 ---
 
@@ -72,15 +78,17 @@ description: "OpenClaw 核心概念：会话工具（Session Tools）。目标�
 
 参数：
 
-- `sessionKey`（必需；接受会话键或来自 `sessions_list` 的 `sessionId`）
+- `sessionKey`（必需；使用列表返回的会话键，不是持久 `sessionId`）
 - `limit?: number` 最大消息数（服务器限制）
 - `includeTools?: boolean`（默认 false）
 
 行为：
 
 - `includeTools=false` 过滤 `role: "toolResult"` 消息。
-- 以原始记录格式返回消息数组。
-- 当给定 `sessionId` 时，OpenClaw 将其解析为对应的会话键（缺失的 ID 报错）。
+- 返回有界、脱敏的结构化历史，不是原始 transcript 导出。凭据、推理签名和内联图像数据会隐藏；长文本最多 4000 字符，消息总量最多 80 KB。
+- 传 `offset: 0` 获取分页元数据，再用 `nextOffset` 向前翻页。显式分页不合并外部 CLI 的回退导入历史；需要合并视图时使用不带 `offset` 的最新窗口。
+- 已持久受理但未成为 transcript 的输入放在独立 `pendingInputs` 中，状态为 `queued`、`cancelled` 或 `interrupted`；后两者不会自动执行。使用 `pendingBefore` 和返回的 `nextBefore` 翻页，预览共用 4 KB 预算。
+- 这不是 `/subagents log` 的纯文本净化结果：文本中的推理标签、工具调用 XML、模型控制标记仍可能保留；`includeTools` 只控制工具结果消息。
 
 ---
 
@@ -90,7 +98,7 @@ description: "OpenClaw 核心概念：会话工具（Session Tools）。目标�
 
 参数：
 
-- `sessionKey`（必需；接受会话键或来自 `sessions_list` 的 `sessionId`）
+- `sessionKey`（使用列表返回的会话键，不是持久 `sessionId`）
 - `message`（必需）
 - `timeoutSeconds?: number`（默认 >0；0 = 即发即忘）
 
@@ -100,6 +108,7 @@ description: "OpenClaw 核心概念：会话工具（Session Tools）。目标�
 - `timeoutSeconds > 0`：等待最多 N 秒完成，然后返回 `{ runId, status: "ok", reply }`。
 - 如果等待超时：`{ runId, status: "timeout", error }`。运行继续；稍后调用 `sessions_history`。
 - 如果运行失败：`{ runId, status: "error", error }`。
+- 等待完成但没有可见回复时，`status: "no_reply"` 是终态，不应继续等一个不存在的公告。
 - 通知投递在主运行完成后运行，是尽力而为的；`status: "ok"` 不保证通知已被投递。
 - 通过网关 `agent.wait`（服务器端）等待，因此重连不会丢失等待。
 - 为主运行注入智能体间消息上下文。
@@ -171,7 +180,7 @@ description: "OpenClaw 核心概念：会话工具（Session Tools）。目标�
 
 白名单：
 
-- `agents.list[].subagents.allowAgents`：通过 `agentId` 允许的智能体 ID 列表（`["*"]` 允许任意）。默认：仅请求者智能体。
+- `agents.entries.*.subagents.allowAgents`：通过 `agentId` 允许的智能体 ID 列表（`["*"]` 允许任意）。默认：仅请求者智能体。
 
 发现：
 
@@ -181,8 +190,8 @@ description: "OpenClaw 核心概念：会话工具（Session Tools）。目标�
 
 - 启动一个新的 `agent:<agentId>:subagent:<uuid>` 会话，`deliver: false`。
 - 子智能体默认使用完整工具集 减去会话工具（可通过 `tools.subagents.tools` 配置）。
-- 子智能体不允许调用 `sessions_spawn`（无子智能体 → 子智能体派生）。
-- 始终非阻塞：立即返回 `{ status: "accepted", runId, childSessionKey }`。
+- 默认叶子子智能体没有递归编排工具；配置 `maxSpawnDepth >= 2` 后，第一层编排子智能体可使用 `sessions_spawn`、`subagents`、`sessions_list`、`sessions_history` 管理自己的子任务。
+- 启动被接纳后返回 `runId` 和 `childSessionKey`，不等待子任务完成；从 OpenClaw Cloud Worker 派生时，可能先等待子资源 provision 和节点注册，不能承诺立即返回。
 - 完成后，OpenClaw 运行子智能体 通知步骤 并将结果发布到请求者的聊天通道。
 - 在通知步骤中精确回复 `ANNOUNCE_SKIP` 保持沉默。
 - 通知回复规范化为 `Status`/`Result`/`Notes`；`Status` 来自运行时结果（非模型文本）。
@@ -194,6 +203,7 @@ description: "OpenClaw 核心概念：会话工具（Session Tools）。目标�
 ## 沙箱会话可见性
 
 沙箱化的会话可以使用会话工具，但默认只能看到通过 `sessions_spawn` 派生的会话。
+这一收紧仍然生效，即使全局可见性是 `agent` 或 `all`；Incognito 会话不向跨会话工具开放。`tree` 有自己拥有的跨 Agent 原生/ACP 子会话例外，`agent` 不含该例外，依赖这类子任务的工作流应保留显式 `tree`。
 
 配置：
 

@@ -74,12 +74,17 @@ Docker 更像给 OpenClaw 准备一个独立盒子：
 - `OPENCLAW_DOCKER_APT_PACKAGES`：构建时安装额外的 apt 包
 - `OPENCLAW_EXTRA_MOUNTS`：添加额外的主机绑定挂载
 - `OPENCLAW_HOME_VOLUME`：使用命名卷持久化 `/home/node`
+- `OPENCLAW_GATEWAY_PORT`：宿主机映射端口，默认 `18789`；两个容器内部仍使用 `18789`
+
+修改 `.env` 或 Compose 环境变量后，运行 `docker compose up -d openclaw-gateway` 重新创建容器；`docker compose restart` 不会应用新的环境变量。
 
 完成后：
 
 - 在浏览器中打开 `http://127.0.0.1:18789/`。
 - 将 Token 粘贴到控制面板（Settings > token）。
 - 需要再次获取 URL？运行 `docker compose run --rm openclaw-cli dashboard --no-open`。
+
+如果设置了自定义 `OPENCLAW_GATEWAY_PORT`，将打印 URL 中的 `18789` 换成宿主机端口，其他部分保持原样。容器内命令只知道内部端口。
 
 Token 可以理解成“控制面板门钥匙”。看到 unauthorized 时，通常不是坏了，而是还没把钥匙填进去或设备还没批准。
 
@@ -90,26 +95,25 @@ Token 可以理解成“控制面板门钥匙”。看到 unauthorized 时，通
 
 在 VPS 上运行？参见 [Hetzner（Docker VPS）](/tutorials/installation/hetzner)。
 
-### Shell 辅助工具（可选）
+### 从 ClawDock 迁移
 
-为了更方便地日常管理 Docker，安装 `ClawDock`：
+上游已移除 ClawDock，日常管理请直接使用 Docker Compose。已有下载副本不会自动卸载；从 `~/.zshrc` 或 `~/.bashrc` 中移除加载 `clawdock-helpers.sh` 的 `source` 行，再打开新终端。旧路径可能在 `~/.clawdock/`、`scripts/clawdock/` 或 `scripts/shell-helpers/`。
 
-```bash
-mkdir -p ~/.clawdock && curl -sL https://raw.githubusercontent.com/openclaw/openclaw/main/scripts/shell-helpers/clawdock-helpers.sh -o ~/.clawdock/clawdock-helpers.sh
-```
+保留 OpenClaw 状态、凭据、工作区、项目 `.env` 和 volumes，不需要重装或清空数据。
 
-添加到你的 shell 配置（zsh）：
+| 操作 | 命令 |
+|------|------|
+| 启动 | `docker compose up -d openclaw-gateway` |
+| 重启（不修改环境） | `docker compose restart openclaw-gateway` |
+| 查看容器 | `docker compose ps` |
+| 跟随日志 | `docker compose logs -f openclaw-gateway` |
+| 获取面板 URL | `docker compose run --rm openclaw-cli dashboard --no-open` |
+| 列出设备 | `docker compose run --rm openclaw-cli devices list` |
+| 批准设备 | `docker compose run --rm openclaw-cli devices approve <requestId>` |
 
-```bash
-echo 'source ~/.clawdock/clawdock-helpers.sh' >> ~/.zshrc && source ~/.zshrc
-```
+在 `docker-compose.yml` 所在目录运行，先启动 Gateway 再使用 CLI。每次命令必须使用相同顺序的 Compose 文件；默认自动发现 `docker-compose.override.yml`，但 extra/sandbox 文件需要显式 `-f`。用了 `-f` 时，把原来使用的 override 也一起列入，不要遗漏挂载和设置。
 
-然后使用 `clawdock-start`、`clawdock-stop`、`clawdock-dashboard` 等命令。运行 `clawdock-help` 查看所有命令。
-
-详见 [`ClawDock` 辅助工具 README](https://github.com/openclaw/openclaw/blob/main/scripts/shell-helpers/README.md)。
-
-如果你刚开始学 Docker，可以先跳过 ClawDock。
-等你每天都要启动、停止、查看面板时，再装这个辅助工具。
+需要完整 Control UI token 时，私下读取项目 `.env` 中的 `OPENCLAW_GATEWAY_TOKEN`；`config get` 会脱敏，不能用来取回完整 token。旧命令对照见 [ClawDock 迁移页](/tutorials/installation/clawdock)。
 
 ### 手动流程（compose）
 
@@ -368,7 +372,7 @@ pnpm test:docker:qr
 ### 按智能体的沙箱配置（多智能体）
 
 如果你使用多智能体路由，每个智能体可以覆盖沙箱和工具设置：
-`agents.list[].sandbox` 和 `agents.list[].tools`（加上 `agents.list[].tools.sandbox.tools`）。
+`agents.entries.*.sandbox` 和 `agents.entries.*.tools`（加上 `agents.entries.*.tools.sandbox.tools`）。
 这让你可以在一个网关中运行不同的访问级别：
 
 - 完全访问（个人智能体）
@@ -464,8 +468,8 @@ pnpm test:docker:qr
 `network`、`user`、`pidsLimit`、`memory`、`memorySwap`、`cpus`、`ulimits`、
 `seccompProfile`、`apparmorProfile`、`dns`、`extraHosts`。
 
-多智能体：通过 `agents.list[].sandbox.{docker,browser,prune}.*` 按智能体覆盖 `agents.defaults.sandbox.{docker,browser,prune}.*`
-（当 `agents.defaults.sandbox.scope` / `agents.list[].sandbox.scope` 为 `"shared"` 时忽略）。
+多智能体：通过 `agents.entries.*.sandbox.{docker,browser,prune}.*` 按智能体覆盖 `agents.defaults.sandbox.{docker,browser,prune}.*`
+（当 `agents.defaults.sandbox.scope` / `agents.entries.*.sandbox.scope` 为 `"shared"` 时忽略）。
 
 ### 构建默认沙箱镜像
 

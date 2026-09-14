@@ -51,23 +51,20 @@ API 密钥：`openclaw onboard`。
 
 ## Anthropic：setup-token（订阅认证）
 
-对于 Anthropic，推荐路径是 API 密钥。如果你使用的是 Claude
-订阅，也支持 setup-token 流程。在网关（Gateway）主机上运行：
+对于 Anthropic，生产推荐 API Key。要复用订阅，优先在 Gateway 同一主机、
+同一用户下登录 Claude CLI：
+
+```bash
+claude auth status --text
+claude auth login
+```
+
+OpenClaw 通过官方 Agent SDK 使用 Claude CLI，不读取或保存其原生 Token。
+仍需 setup-token 时运行：
 
 ```bash
 claude setup-token
-```
-
-然后将其粘贴到 OpenClaw 中：
-
-```bash
-openclaw models auth setup-token --provider anthropic
-```
-
-如果 Token 是在另一台机器上创建的，请手动粘贴：
-
-```bash
-openclaw models auth paste-token --provider anthropic
+openclaw models auth login --provider anthropic --method setup-token
 ```
 
 如果你看到类似以下的 Anthropic 错误：
@@ -78,10 +75,9 @@ This credential is only authorized for use with Claude Code and cannot be used f
 
 ...请改用 Anthropic API 密钥。
 
-手动 Token 输入（任意提供商（Provider）；写入 `auth-profiles.json` 并更新配置）：
+手动 Token 输入（任意提供商；写入每个 Agent 的 SQLite 认证档案并更新配置）：
 
 ```bash
-openclaw models auth paste-token --provider anthropic
 openclaw models auth paste-token --provider openrouter
 ```
 
@@ -117,7 +113,8 @@ openclaw doctor
 
 ### 按智能体（Agent）（CLI 覆盖）
 
-为智能体（Agent）设置显式的认证 profile 顺序覆盖（存储在该智能体（Agent）的 `auth-profiles.json` 中）：
+为智能体设置显式的认证 profile 顺序覆盖（存储在该 Agent 的
+`openclaw-agent.sqlite` 认证状态中）：
 
 ```bash
 openclaw models auth order get --provider anthropic

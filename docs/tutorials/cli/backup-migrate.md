@@ -8,10 +8,19 @@ sidebarTitle: "备份迁移"
 ## 备份
 
 ```bash
-openclaw backup create
+openclaw backup create --output ~/Backups/openclaw --verify
+openclaw backup verify <archive.tar.gz>
 ```
 
-备份配置、状态、auth profiles、会话和工作区。云端部署和升级前尤其建议先备份。
+备份配置、状态、Auth Profile、会话和工作区。云端部署和升级前尤其建议先备份。不要直接复制正在写入的 SQLite、WAL 或 SHM 文件。
+
+恢复会先写入全新目录，不会覆盖线上状态：
+
+```bash
+openclaw backup restore <archive.tar.gz> --target ./restored-openclaw
+```
+
+完整归档、数据库快照、定时 Git 备份和离线激活步骤见[备份与恢复](/tutorials/installation/backups)。
 
 ## 迁移
 

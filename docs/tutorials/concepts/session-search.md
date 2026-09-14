@@ -14,6 +14,12 @@ description: "理解 OpenClaw 怎样在已有会话里做搜索，以及它和�
 
 它查的是已有会话内容和会话元数据，不是长期记忆系统本身。
 
+## 搜索权限不是“只查自己的聊天”
+
+`sessions_search` 和 `sessions_history` 使用相同可见性规则，当前默认 `tools.sessions.visibility: "agent"`，非沙箱会话能查同 Agent 的其他用户对话。需要收紧时明确设置 `tree` 或 `self`；DM 按发送者分桶只隔离上下文，不限制此工具。沙箱的派生范围收紧和 Incognito 排除仍然生效。
+
+结果先按权限过滤再限制数量，片段经过脱敏；需要上下文时将返回的 `sessionKey` 传给 `sessions_history`，不要拿 `sessionId` 替代会话键。
+
 ---
 
 ## 它和记忆搜索不是一回事
@@ -68,4 +74,3 @@ description: "理解 OpenClaw 怎样在已有会话里做搜索，以及它和�
 - [记忆 Memory](/tutorials/concepts/memory)
 - [记忆搜索](/tutorials/concepts/memory-search)
 - [主动记忆 Active Memory](/tutorials/concepts/active-memory)
-

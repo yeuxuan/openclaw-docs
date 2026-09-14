@@ -117,6 +117,8 @@ openclaw gateway status --deep
 - `Gateway start blocked: set gateway.mode=local` → 本地网关（Gateway）模式未启用。修复：在配置中设置 `gateway.mode="local"`（或运行 `openclaw configure`）。如果你通过 Podman 使用专用 `openclaw` 用户运行 OpenClaw，配置位于 `~openclaw/.openclaw/openclaw.json`。
 - `refusing to bind gateway ... without auth` → 非 loopback 绑定但没有 Token/密码。
 - `another gateway instance is already listening` / `EADDRINUSE` → 端口冲突。
+- `Invalid config` → 启动只会自动迁移能够完整验证的单文件旧键；`$include`、Nix、更新版本写入或仍然无效的配置保持原样并拒绝启动。先看 Doctor 指明的字段，再运行 `openclaw config validate`，不要整份覆盖配置。
+- `newer schema version` → 当前安装不支持磁盘上的数据库。使用兼容的新构建，而不是让旧版 Doctor 强修或调低 schema 标记；参见[数据库升级恢复](/tutorials/reference/database-schemas)。
 
 相关：
 

@@ -12,6 +12,8 @@ description: "OpenClaw 工具系统：配置 tools.exec.mode，控制 host exec�
 
 ::: info 注意
 `tools.exec.mode` 和 `tools.exec.host=auto` 不是一回事。`tools.exec.host` 决定命令在哪里跑；`tools.exec.mode` 决定 host exec 怎么审批。
+
+有活跃沙箱时，`host=auto` 会保持在沙箱内，并拒绝单次 `host=gateway` / `host=node` 覆盖；要固定到某个 host，应显式配置 `tools.exec.host`。
 :::
 
 ---
@@ -62,7 +64,7 @@ openclaw exec-policy show
 
 ## ACPX Harness 权限
 
-ACPX 会话通常是非交互式的，不能点 TTY 权限弹窗，所以它有单独的 Harness 配置：
+ACPX 会话没有交互式 TTY 权限弹窗，所以它有单独的 Harness 配置。受支持的表单或 URL 请求仍可能在通道投递的 turn 中作为 Gateway 问题交给操作者，但那不等同于执行权限审批。
 
 | 设置 | 常见值 | 含义 |
 |------|--------|------|
@@ -93,4 +95,4 @@ openclaw approvals get
 openclaw exec-policy show
 ```
 
-主机命令会取 OpenClaw 配置和本机 approvals 文件中更严格的结果。
+通常取 OpenClaw 配置和本机 approvals 文件中更严格的结果。但经授权设置的会话 `permissionMode: "full"` 在有效 security 仍为 full 时，会绕过宿主审批下限；单轮 security 收紧可恢复下限，只收紧 ask 不会。若必须硬性禁止命令，应通过工具策略 deny exec。会话模式与本页 host exec 模式是不同配置层，详见[会话权限模式](/tutorials/gateway/permission-modes)。

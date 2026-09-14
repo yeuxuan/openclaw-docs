@@ -63,14 +63,13 @@ openclaw doctor
 openclaw doctor --yes
 ```
 
-无需提示接受默认值（包括适用时的重启/服务/沙箱修复步骤）。
-适合脚本或你已经信任默认修复时使用。
+无需提示接受默认的非服务修复；Gateway 服务定义重写仍需交互确认。无头运行通常只报告服务配置漂移，不会悄悄重写服务定义。
 
 ```bash
 openclaw doctor --repair
 ```
 
-无需提示应用推荐的修复（修复 + 在安全时重启）。
+无需提示应用推荐的非服务修复；`--repair` 是 `--fix` 的别名，同样不跳过服务定义重写的交互确认。
 
 ```bash
 openclaw doctor --repair --force
@@ -161,29 +160,19 @@ Doctor 会：
 - 显示应用的迁移。
 - 使用更新后的架构重写 `~/.openclaw/openclaw.json`。
 
-网关（Gateway）在启动时检测到旧版配置格式时也会自动运行 doctor 迁移，
-因此过期配置无需手动干预即可修复。
+Gateway 启动现在可对符合条件的单文件配置自动迁移确定性的旧键。只有完整结果（包括插件配置）验证通过才写入，并在 `openclaw.json.bak`、`.bak.1` 至 `.bak.4` 环形备份中保留旧配置。
 
-当前迁移：
+含 `$include`、Nix 管理、由更新版本写入的配置，以及更新进行中且插件验证尚未完成的配置，不会在启动时自动迁移。迁移后仍无效就保持原文件不变并拒绝启动；交互终端可提示运行 Doctor 后重试一次，无头服务只输出修复命令：
 
-- `routing.allowFrom`：`channels.whatsapp.allowFrom`
-- `routing.groupChat.requireMention`：`channels.whatsapp/telegram/imessage.groups."*".requireMention`
-- `routing.groupChat.historyLimit`：`messages.groupChat.historyLimit`
-- `routing.groupChat.mentionPatterns`：`messages.groupChat.mentionPatterns`
-- `routing.queue`：`messages.queue`
-- `routing.bindings`：顶层 `bindings`
-- `routing.agents`/`routing.defaultAgentId`：`agents.list` + `agents.list[].default`
-- 旧版 `talk.voiceId`/`talk.voiceAliases`/`talk.modelId`/`talk.outputFormat`/`talk.apiKey`
-  改为 `talk.provider` + `talk.providers.<provider>`
-- 旧版顶层 realtime Talk 选择器（`talk.mode`/`talk.transport`/`talk.brain`/`talk.model`/`talk.voice`）
-  改为 `talk.realtime`
-- `routing.agentToAgent`：`tools.agentToAgent`
-- `routing.transcribeAudio`：`tools.media.audio.models`
-- `bindings[].match.accountID`：`bindings[].match.accountId`
-- `identity`：`agents.list[].identity`
-- `agent.*`：`agents.defaults` + `tools.*`（tools/elevated/exec/sandbox/subagents）
-- `agent.model`/`allowedModels`/`modelAliases`/`modelFallbacks`/`imageModelFallbacks`
-  改为 `agents.defaults.models` + `agents.defaults.model.primary/fallbacks` + `agents.defaults.imageModel.primary/fallbacks`
+```bash
+openclaw doctor --fix
+```
+
+Doctor 的自动迁移窗口是有限的，通常只保留约两个月。当前仍可自动迁移的典型项包括
+`agents.list` → keyed `agents.entries`，以及 `tools.exec.security` + `tools.exec.ask` →
+`tools.exec.mode`。很老的 `routing.*`、顶层 `agent.*` / `identity` 等键可能已没有自动迁移
+路径，需要对照[配置参考](/tutorials/gateway/configuration-reference)手工重写；不要假设升级后启动
+Gateway 就会替你完成。改完先运行 `openclaw config validate`，再启动服务。
 
 ### 2b) OpenCode Zen 提供商（Provider）覆盖
 
@@ -201,7 +190,9 @@ openai/* 模型引用 + 默认 Codex runtime
 ```
 
 旧配置里可能还留着 `openai-codex/*`。这很容易让人把“模型路线”和“Codex 登录资料”混在一起。
-新配置优先写 `openai/gpt-5.5`；OpenAI Agent turn 默认会走 Codex harness。
+新安装优先写账号可用的 `openai/gpt-6-astra`；无权限时显式选择
+`openai/gpt-5.5`。只有精确官方 HTTPS native route、无自定义请求覆盖且 runtime
+策略为 unset/auto 时，OpenAI Agent turn 才可能隐式选择 Codex harness。
 
 `openclaw doctor --fix` 现在会尝试修复这些旧路由：
 
@@ -258,17 +249,21 @@ doctor 会把它们迁到当前结构。
 Doctor 可以将旧的磁盘布局迁移到当前结构：
 
 - 会话（Session）存储 + 转录：
-  - 从 `~/.openclaw/sessions/` 到 `~/.openclaw/agents/<agentId>/sessions/`
+  - 把 `~/.openclaw/sessions/` 或每个 Agent 的 `sessions/` 目录中的旧版
+    `sessions.json` 与 JSONL 历史导入
+    `~/.openclaw/agents/<agentId>/agent/openclaw-agent.sqlite`
 - 智能体（Agent）目录：
   - 从 `~/.openclaw/agent/` 到 `~/.openclaw/agents/<agentId>/agent/`
 - WhatsApp 认证状态（Baileys）：
   - 从旧版 `~/.openclaw/credentials/*.json`（除 `oauth.json`）
   - 到 `~/.openclaw/credentials/whatsapp/<accountId>/...`（默认账户 id：`default`）
 
-这些迁移是尽力而为且幂等的；doctor 会在将旧版文件夹作为备份保留时
-发出警告。网关（Gateway）/CLI 在启动时也会自动迁移
-旧版会话（Session）+ 智能体（Agent）目录，使历史/认证/模型无需手动运行 doctor 即可
-到达每智能体（Agent）路径。WhatsApp 认证有意仅通过
+旧版会话文件的导入与修复现在只由显式 Doctor 运行负责。Gateway 和本地 CLI
+启动时只使用 SQLite，不会导入、恢复或改写旧会话 JSON/JSONL；若发现旧会话库，
+会拒绝就绪并打印当前 profile 对应的 `doctor --fix` 命令，而不是用空历史继续运行。
+
+升级时先停止 Gateway、备份状态，再运行 `openclaw doctor --fix`，成功后重启。
+Doctor 会在保留旧目录作为备份时发出警告；WhatsApp 认证也仍只通过
 `openclaw doctor` 迁移。
 
 ### 4) 状态完整性检查（会话（Session）持久化、路由和安全）
@@ -282,12 +277,11 @@ Doctor 检查：
   目录，并提醒它无法恢复丢失的数据。
 - 状态目录权限：验证可写性；提供修复权限的选项
   （当检测到所有者/组不匹配时发出 `chown` 提示）。
-- 会话（Session）目录缺失：`sessions/` 和会话（Session）存储目录
-  是持久化历史和避免 `ENOENT` 崩溃所必需的。
-- 转录不匹配：当最近的会话（Session）条目缺少
-  转录文件时发出警告。
-- 主会话（Session）"1 行 JSONL"：当主转录只有一
-  行时标记（历史没有累积）。
+- 会话目录权限：检查现有会话与存储目录是否可写；新 profile 尚未生成归档目录属于
+  正常状态，需要时才会创建。
+- 旧版转录不匹配：仅在尚未导入的旧会话条目缺少转录文件时警告；SQLite 会话不依赖
+  已归档的 JSONL。
+- 旧版主会话“1 行 JSONL”：仅检查尚未导入、历史未正常累积的旧转录。
 - 多个状态目录：当多个 `~/.openclaw` 文件夹存在于
   不同的 home 目录或当 `OPENCLAW_STATE_DIR` 指向其他位置时发出警告（历史可能
   在安装之间分裂）。
@@ -364,10 +358,13 @@ Doctor 检查已安装的监管配置（launchd/systemd/schtasks）中
 注意：
 
 - `openclaw doctor` 在重写监管配置前会提示。
-- `openclaw doctor --yes` 接受默认的修复提示。
-- `openclaw doctor --repair` 无需提示应用推荐的修复。
-- `openclaw doctor --repair --force` 覆盖自定义监管配置。
-- 你始终可以通过 `openclaw gateway install --force` 强制完全重写。
+- `openclaw doctor --yes`、`--fix`、`--repair` 自动处理非服务修复，服务定义重写仍需交互确认。
+- `openclaw doctor --fix --force` 可以覆盖托管服务定义，但不会修改操作者维护的 systemd drop-in，也不能越过服务所有权边界。
+- Linux 上，匹配的 systemd 单元仍在运行时不会重写启动命令；先用 `systemctl --user cat <unit>.service` 检查实际生效的定义和 drop-in。
+- `OPENCLAW_SERVICE_REPAIR_POLICY=external` 让服务生命周期保持只读：报告健康状况，但不安装、启动、重启或重写服务。
+- 恢复 Gateway token 前会检查已安装与计划服务文件的访问权限。检查被阻止时，服务修复不会改 token 或对应配置；应恢复检查权限或联系部署所有者，`--force` 也不能绕过。
+
+报 `newer schema version` 时，不要对旧安装反复运行 `doctor --fix`。先确认 CLI 和服务使用同一份支持当前数据库的安装。涉及 Agent schema 18/19 的迁移需停止所有写入者并验证备份，详见[数据库版本与升级恢复](/tutorials/reference/database-schemas)。嵌入提供商健康检查不是数据库迁移；向量服务不可用时保留已有语义索引，不会因此替换成纯全文索引。
 
 ### 16) 网关（Gateway）运行时 + 端口诊断
 

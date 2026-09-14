@@ -37,12 +37,16 @@ sidebarTitle: "工具系统"
 | [Web 网络工具](/tutorials/tools/web) | 搜索网页、抓取内容 | 查资料、读文档、做调研 |
 | [Web Fetch](/tutorials/tools/web-fetch) | 读取一个网页正文 | 已知 URL 的内容提取 |
 | [Exec 命令工具](/tutorials/tools/exec) | 在允许范围内运行命令 | 构建项目、跑测试、查看日志 |
+| [Secrets 工具](/tutorials/tools/secrets) | 通过遮罩输入安全保存凭据 | Agent 需要 API Key，但不能让密钥进入聊天 |
 | [Code Execution](/tutorials/tools/code-execution) | 远程 Python 沙盒分析 | 计算、统计、表格分析 |
 | [PDF 分析](/tutorials/tools/pdf) | 阅读 PDF 文件 | 合同、论文、说明书 |
 | [Canvas 画布](/tutorials/tools/canvas) | 在节点上打开可视化界面 | 手机/桌面交互、远程画布 |
 | [Image Generate 图像生成](/tutorials/tools/image-generate) | 生成图片 | 配图、草图、视觉素材 |
 | [Loop Detection 循环检测](/tutorials/tools/loop-detection) | 发现无意义重复 | 防止 Agent 卡住反复调用 |
 | [Goal 会话目标](/tutorials/tools/goal) | 固定当前会话目标 | 长任务、PR 收尾、文档更新 |
+| [MCP](/tutorials/tools/mcp) | 接入第三方工具、资源和 Prompt | 公司系统、外部工具服务 |
+| [Ask User](/tutorials/tools/ask-user) | 等待用户做结构化决定 | 纯偏好、不可替用户决定的选择 |
+| [Show Widget](/tutorials/tools/show-widget) | 渲染隔离的 HTML/SVG 结果 | 交互卡片、仪表盘、可视化 |
 | [权限模式](/tutorials/tools/permission-modes) | 控制命令和写入审批 | 调整 Agent 主机权限 |
 
 ---
@@ -56,6 +60,8 @@ sidebarTitle: "工具系统"
 - [创建技能](/tutorials/tools/creating-skills)：把经验沉淀成可复用能力
 - [Skill Workshop](/tutorials/tools/skill-workshop)：用提案和审批流程创建或更新 workspace skill
 - [子智能体 Subagents](/tutorials/tools/subagents)：把一个大任务拆给多个 Agent
+- [Swarm](/tutorials/tools/swarm)：在 Code Mode 中并发编排 Collector 子智能体
+- [Code Mode](/tutorials/reference/code-mode)：按模型开启代码编排，区分等待、输出截断和失败恢复
 - [斜杠命令](/tutorials/tools/slash-commands)：用短命令触发固定动作
 - [BTW 临时问题](/tutorials/tools/btw)：问旁支问题，不污染主会话
 - [Steer 引导](/tutorials/tools/steer)：Agent 正忙时轻轻纠偏
@@ -168,4 +174,5 @@ sidebarTitle: "工具系统"
 - 想控制命令权限：看 [执行审批](/tutorials/tools/exec-approvals)
 - 想做图片、视频、语音：看 [媒体能力总览](/tutorials/tools/media-overview)
 - 想扩展 OpenClaw：看 [插件专题](/tutorials/plugins/)
+- 想接入第三方 MCP Server：看 [MCP 连接指南](/tutorials/tools/mcp)
 - 想让手机或桌面设备参与：看 [节点](/tutorials/nodes/)

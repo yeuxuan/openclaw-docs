@@ -7,9 +7,15 @@ description: "OpenClaw Gateway：沙箱（Sandbox）。OpenClaw 可以在 Docker
 
 # 沙箱（Sandbox）
 
-OpenClaw 可以在 Docker 容器中运行工具以减少爆炸半径。这是可选的，由配置控制（`agents.defaults.sandbox` 或 `agents.list[].sandbox`）。如果沙箱（Sandbox）关闭，工具在宿主机上运行。网关（Gateway）始终在宿主机上；启用时工具执行在隔离的沙箱（Sandbox）中运行。
+OpenClaw 可以在 Docker 容器中运行工具以减少爆炸半径。这是可选的，由配置控制（`agents.defaults.sandbox` 或 `agents.entries.*.sandbox`）。如果沙箱（Sandbox）关闭，工具在宿主机上运行。网关（Gateway）始终在宿主机上；启用时工具执行在隔离的沙箱（Sandbox）中运行。
 
 这不是完美的安全边界，但当模型做了一些蠢事时，它实质性地限制了文件系统和进程访问。
+
+::: warning 角色强制沙箱的身份边界
+当角色要求沙箱时，已证明的 Gateway profile 创建者按 profile 隔离，同 profile 创建的会话仍复用已有环境；通道、未知来源等非 profile 创建者则按规范会话分别隔离。原始 ID 相同不能复用 profile 的资源，后端失败也不会回退宿主机执行。
+
+创建者命名空间迁移不会删除、采用或复制旧的来源不明环境。升级后这些会话可能看到新的空工作区；先保全旧文件，再由操作者显式恢复所需内容，不要把整个模糊归属环境复制到可信 profile。见[数据库升级恢复](/tutorials/reference/database-schemas)。
+:::
 
 ---
 
@@ -109,16 +115,15 @@ OpenClaw 可以在 Docker 容器中运行工具以减少爆炸半径。这是可
         },
       },
     },
-    list: [
-      {
-        id: "build",
+    entries: {
+      build: {
         sandbox: {
           docker: {
             binds: ["/mnt/cache:/cache:rw"],
           },
         },
       },
-    ],
+    },
   },
 }
 ```
@@ -144,6 +149,14 @@ scripts/sandbox-setup.sh
 
 注意：默认镜像不包含 Node。如果技能需要 Node（或其他运行时），要么制作自定义镜像，要么通过 `sandbox.docker.setupCommand` 安装（需要网络出口 + 可写根 + root 用户）。
 
+如果是 npm 安装而要构建 common 镜像，先构建默认镜像，再从同一 OpenClaw commit/tag 下载 `scripts/docker/sandbox/Dockerfile.common` 和根 `package.json` 到空目录，保留这两个文件名，在该目录运行：
+
+```bash
+docker build -t openclaw-sandbox-common:bookworm-slim -f Dockerfile.common .
+```
+
+`package.json` 提供固定 pnpm 版本，即使 `INSTALL_PNPM=0` 也必须在构建上下文中；宿主机无需另装 pnpm。完成后将 `agents.defaults.sandbox.docker.image` 设为 `openclaw-sandbox-common:bookworm-slim`。
+
 沙箱（Sandbox）浏览器镜像：
 
 ```bash
@@ -163,7 +176,7 @@ Docker 安装和容器化网关（Gateway）在这里：[Docker](/tutorials/inst
 路径：
 
 - 全局：`agents.defaults.sandbox.docker.setupCommand`
-- 每智能体（Agent）：`agents.list[].sandbox.docker.setupCommand`
+- 每智能体（Agent）：`agents.entries.*.sandbox.docker.setupCommand`
 
 常见陷阱：
 
@@ -193,7 +206,7 @@ Docker 安装和容器化网关（Gateway）在这里：[Docker](/tutorials/inst
 
 ## 多智能体（Agent）覆盖
 
-每个智能体（Agent）可以覆盖沙箱（Sandbox） + 工具：`agents.list[].sandbox` 和 `agents.list[].tools`（加上 `agents.list[].tools.sandbox.tools` 用于沙箱（Sandbox）工具策略）。参阅[多智能体（Agent）沙箱（Sandbox）和工具](/tutorials/tools/multi-agent-sandbox-tools)了解优先级。
+每个智能体（Agent）可以覆盖沙箱（Sandbox） + 工具：`agents.entries.*.sandbox` 和 `agents.entries.*.tools`（加上 `agents.entries.*.tools.sandbox.tools` 用于沙箱（Sandbox）工具策略）。参阅[多智能体（Agent）沙箱（Sandbox）和工具](/tutorials/tools/multi-agent-sandbox-tools)了解优先级。
 
 ---
 

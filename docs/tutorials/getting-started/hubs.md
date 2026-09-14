@@ -30,7 +30,7 @@ description: "OpenClaw 中文文档站的完整导览：从安装、Web 控制 U
 
 - [快速入门](/tutorials/getting-started/getting-started)：最短路线，适合第一次安装
 - [安装 OpenClaw](/tutorials/installation/)：脚本安装、npm 安装、检查环境
-- [安装向导](/tutorials/getting-started/wizard)：用 `openclaw onboard --install-daemon` 一步步配置
+- [安装向导](/tutorials/getting-started/wizard)：用 `openclaw onboard` 跑通 Quick start，再按需安装后台服务
 - [基础设置](/tutorials/getting-started/setup)：装好之后要检查什么
 - [更新与回滚](/tutorials/installation/updating)：以后升级时看这里
 - [Docker 部署](/tutorials/installation/docker)：想放到服务器或容器里运行

@@ -10,10 +10,30 @@ OpenClaw 迭代很快（尚未到 "1.0"）。建议把更新当成基础设施�
 
 ---
 
-## 推荐：重新运行网站安装脚本（原地升级）
+## 推荐：使用 `openclaw update`
 
-首选更新路径是重新运行网站的安装脚本。它会检测现有安装、原地升级，
-并在需要时运行 `openclaw doctor`。
+当前首选路径是让 updater 识别 npm、pnpm、Bun 或 git 安装，执行更新、Doctor、插件同步和受管 Gateway 重启：
+
+```bash
+openclaw update --dry-run
+openclaw update
+```
+
+`openclaw update` 没有 `--verbose`。需要诊断时用 `--dry-run`、`--json` 或 `openclaw update status --json`。
+
+更新卡在 Doctor 或插件同步阶段时，先看[更新故障排查](/tutorials/installation/update-troubleshooting)，必要时运行 `openclaw update repair`。
+
+### updater 已损坏时：重新运行安装脚本
+
+如果 npm 包已经部分替换、导致 `openclaw update` 本身无法完成，再用安装脚本直接恢复包安装：
+
+```bash
+curl -fsSL https://openclaw.ai/install.sh | bash -s -- --install-method npm
+```
+
+安装脚本不会再次调用 updater；可以用 `--version <version-or-dist-tag>` 固定恢复目标。
+
+普通原地升级也仍然可以重新运行网站安装脚本：
 
 ```bash
 curl -fsSL https://openclaw.ai/install.sh | bash
@@ -60,7 +80,8 @@ npm i -g openclaw@latest
 pnpm add -g openclaw@latest
 ```
 
-我们不推荐使用 Bun 作为网关运行时（WhatsApp/Telegram 存在 bug）。
+Bun 1.4+ 在提供 WAL-reset-safe `node:sqlite` 时可显式用作 Gateway 运行时；
+Node 仍是默认和推荐路线。详见 [Bun](/tutorials/installation/bun)。
 
 切换更新通道（git + npm 安装方式）：
 
@@ -68,15 +89,19 @@ pnpm add -g openclaw@latest
 openclaw update --channel beta
 openclaw update --channel dev
 openclaw update --channel stable
+openclaw update --channel extended-stable
 ```
 
 使用 `--tag <dist-tag|version>` 进行一次性安装标签/版本。
 如果传的是 GitHub 或 git 源码规格，新版 updater 会先打成临时 tarball，
 再走分阶段全局 npm 安装。这样做是为了先验证包内容，再替换正在使用的全局安装。
 
-参见 [开发通道](/tutorials/installation/development-channels) 了解通道语义和发行说明。
+`extended-stable` 只支持包安装，不支持 git checkout，也不会自动应用更新。参见 [开发通道](/tutorials/installation/development-channels) 了解通道语义和发行说明。
 
-注意：对于 npm 安装，网关启动时会记录更新提示（检查当前通道标签）。通过 `update.checkOnStart: false` 禁用。
+注意：对于 npm 安装，网关启动时会记录更新提示（检查当前通道标签）。
+`update.checkOnStart: false` 会同时关闭自动更新检查、匿名功能统计和更新提示，
+即使 `update.auto.enabled` 为 `true`。详见
+[使用统计与更新检查](/tutorials/gateway/telemetry)。
 
 然后：
 
@@ -177,11 +202,12 @@ openclaw update --dry-run
 openclaw update
 ```
 
-手动方式（大致等效）：
+手动方式（先保存本地改动并确认工作树干净；不是 updater 全部预检的替代）：
 
 ```bash
 git pull
-pnpm install
+corepack enable
+pnpm install --frozen-lockfile
 pnpm build
 pnpm ui:build # 首次运行时自动安装 UI 依赖
 openclaw doctor
@@ -193,8 +219,17 @@ openclaw health
 - 当你运行打包的 `openclaw` 二进制文件（[`openclaw.mjs`](https://github.com/openclaw/openclaw/blob/main/openclaw.mjs)）或使用 Node 运行 `dist/` 时，`pnpm build` 很重要。
 - 如果你从仓库 checkout 运行且没有全局安装，使用 `pnpm openclaw ...` 执行 CLI 命令。
 - 如果你直接从 TypeScript 运行（`pnpm openclaw ...`），通常不需要重新构建，但配置迁移仍然适用，需要运行 doctor。
-- 在全局安装和 git 安装之间切换很容易：安装另一种方式，然后运行 `openclaw doctor`，网关服务入口点就会被重写为当前安装。
-- dev 通道需要临时安装 pnpm 时，新版 updater 会优先用 corepack；如果还不行，再临时安装 `pnpm@11`。
+- 安装方式切换前，先用 `openclaw gateway status --deep` 确认受管服务归属；Doctor 检查不等于授权重定向服务。需要改绑时才显式使用 `gateway install --force`，并遵守服务定义保护。
+- dev 通道需要临时准备 pnpm 时，新版 updater 优先使用 Corepack；失败后通过 npm 临时安装目标 checkout 固定的精确版本，而不是固定 `pnpm@11`。
+- dev 更新会构建包含插件和 Control UI 的完整运行时，但不生成 TypeScript 声明；普通 `pnpm build` 和包构建仍生成声明。
+
+### 源码服务器的参考脚本
+
+在 checkout 中执行 `scripts/update-gateway.sh` 可完成服务器更新。它要求所有 tracked 文件干净（包括构建产物），不会先恢复构建输出；fetch 后固定目标提交，验证其 pnpm pin，再 fast-forward 或 rebase、frozen-lockfile 安装和构建。只有构建成功才重启。
+
+该脚本要求 Corepack，使用临时 shim 和只含包管理器元数据的私有探测工作区，不全局激活。pnpm 元数据缺失、准备失败或版本不一致会在改 checkout 前停止。这个预检不代表本地分支 rebase 后一定可构建；后续安装/构建失败也不会自动回滚，应事先准备恢复路径。
+
+正在运行的旧 updater/脚本不会因拉到新源码而改变引导逻辑。跨 pnpm pin 变化前，先确认实际调用的 launcher 同时支持目标和已知可用回滚版本。pnpm 12 仍可使用 `global/v11` 布局，不能仅因布局编号与 CLI 主版本不同就判断安装损坏。
 
 ---
 
@@ -300,12 +335,10 @@ git fetch origin
 git checkout "$(git rev-list -n 1 --before=\"2026-01-01\" origin/main)"
 ```
 
-然后重新安装依赖 + 重启：
+然后在已切换的 checkout 中选择该 ref 固定的工具链，再安装、构建和重启。先确认 Corepack 支持这个版本；以下 `&&` 确保构建失败不会继续重启：
 
 ```bash
-pnpm install
-pnpm build
-openclaw gateway restart
+corepack enable && corepack pnpm install --frozen-lockfile && corepack pnpm build && openclaw gateway restart
 ```
 
 如果你之后想回到最新版本：
@@ -320,5 +353,9 @@ git pull
 ## 如果你遇到困难
 
 - 再次运行 `openclaw doctor` 并仔细阅读输出（它通常会告诉你修复方法）。
+- 若使用解压版 Chrome 扩展，运行
+  `openclaw browser doctor --browser-profile chrome`；仍提示版本不一致时，在
+  `chrome://extensions` 重新加载，必要时完全重启 Chrome。
+- 想把只读诊断交给编码 Agent，运行 `openclaw triage`。
 - 查看：[故障排除](/tutorials/gateway/troubleshooting)
 - 在 Discord 上提问：[https://discord.gg/clawd](https://discord.gg/clawd)

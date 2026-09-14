@@ -291,7 +291,7 @@ Token 解析是账户感知的。配置 Token 值优先于环境变量回退。`
     提及检测包括：
 
     - 显式的机器人提及
-    - 配置的提及模式（`agents.list[].groupChat.mentionPatterns`，回退 `messages.groupChat.mentionPatterns`）
+    - 配置的提及模式（`agents.entries.*.groupChat.mentionPatterns`，回退 `messages.groupChat.mentionPatterns`）
     - 在支持的情况下，隐式的回复机器人行为
 
     `requireMention` 按公会/频道配置（`channels.discord.guilds...`）。
@@ -414,8 +414,6 @@ Discord 可以在最终回复出来前，先编辑一条临时草稿消息显示
       streaming: {
         mode: "progress",
         progress: {
-          label: "auto",
-          maxLines: 8,
           maxLineChars: 120,
           toolProgress: true,
           commentary: false,
@@ -433,12 +431,22 @@ Discord 可以在最终回复出来前，先编辑一条临时草稿消息显示
 | `mode: "off"` | 关闭预览 |
 | `mode: "partial"` | 随 token 更新一条预览消息 |
 | `mode: "block"` | 按块发送草稿 |
-| `mode: "progress"` | 默认模式，用一条临时消息显示工具进度 |
-| `progress.toolProgress` | 是否把工具进度写进临时草稿，默认 `true` |
-| `progress.commentary` | 是否把 assistant 的前置说明也写进临时草稿，默认 `false` |
-| `progress.commandText` | 工具命令细节显示方式：`raw` 或 `status` |
+| `mode: "progress"` | 用一条临时消息显示工作摘要和 Agent 写出的计划步骤 |
+| `preview.toolProgress` | 控制 `partial` / `block` 模式的工具行；`progress` 不逐条列工具日志 |
+| `progress.commentary` | 是否额外显示清理后的原始 commentary，默认 `false` |
+| `preview.commandText` | 工具预览的命令细节：`raw` 或 `status`；进度摘要不显示普通命令行 |
 
-`progress.commentary` 只影响临时草稿，不改变最终回复。默认关闭，是为了避免把模型的过程性开场白也显示给 Discord 用户。
+`progress.commentary` 只影响临时草稿，不改变最终回复，也不控制默认的工作摘要。没有摘要时显示 `Working`；普通工具调用不变成滚动日志，审批和真实错误仍会显示。确认 Reaction 在工作过程中保持稳定，不再逐工具切换表情或成功时闪烁。
+
+## 线程会话与语音限制
+
+当前线程解绑命令是 `/session unbind`，它只解除绑定，不关闭 Agent 会话。用 `/agents` 查看运行和绑定状态，`/session idle <duration|off>`、`/session max-age <duration|off>` 设置到期时间；不要再照旧教程使用 `/focus` 或 `/unfocus`。关闭 thread bindings 后，线程绑定的 spawn 不可用。
+
+`ignoreOtherMentions` 可忽略只提及其他用户/角色、或回复另一个非 Webhook Bot 的消息；显式提及当前 Bot 仍优先。
+
+::: warning 共享语音频道不要依赖 GPT-Live 唤醒词门控
+OpenAI `agent-proxy` 的应答和唤醒词策略需要 GA Realtime 模型，例如 `gpt-realtime-2.1`。GPT-Live 当前会自主响应音频，不执行这些策略；已经接通语音不代表唤醒词限制有效。
+:::
 
 ## 功能详情
 
@@ -675,6 +683,11 @@ Discord 可以在最终回复出来前，先编辑一条临时草稿消息显示
     - `channels.discord.execApprovals.target`（`dm` | `channel` | `both`，默认：`dm`）
     - `agentFilter`、`sessionFilter`、`cleanupAfterResolve`
 
+    原生 Exec 审批只有在 `enabled: true` 或 `enabled: "auto"`，且能从
+    `execApprovals.approvers` 或 `commands.ownerAllowFrom` 解析出审批者时才启用。
+    省略 `enabled` 与显式 `false` 都会关闭 Discord 审批投递；系统不会从普通
+    Channel `allowFrom`、旧 `dm.allowFrom` 或 `defaultTo` 猜审批者。
+
     当 `target` 为 `channel` 或 `both` 时，审批提示在频道中可见。只有配置的审批者可以使用按钮；其他用户收到临时拒绝消息。审批提示包含命令文本，因此仅在受信任的频道中启用频道投递。如果无法从会话键中导出频道 ID，OpenClaw 回退到私信投递。
 
     如果审批因未知审批 ID 而失败，请验证审批者列表和功能启用状态。
@@ -693,11 +706,18 @@ Discord 消息操作包括消息传递、频道管理、审核、在线状态和
 核心示例：
 
 - 消息传递：`sendMessage`、`readMessages`、`editMessage`、`deleteMessage`、`threadReply`
-- 表情回应：`react`、`reactions`、`emojiList`
+- 表情回应：`react`、`reactions`、`emoji-list`
 - 审核：`timeout`、`kick`、`ban`
 - 在线状态：`setPresence`
 
 操作门控位于 `channels.discord.actions.*` 下。
+
+`emoji-list` 会按名称列出当前服务器自定义表情，并返回可直接传给 `react` 的
+`name:id` identifier；默认最多 100 条。旧写法 `emojiList` 不应继续用于新调用。
+
+新加入允许列表中的服务器时，Discord 默认会在 system channel 或第一个可写
+文本频道发送一次房间介绍。设置 `channels.discord.joinIntro: false` 可关闭，
+也可用 `channels.discord.accounts.<accountId>.joinIntro` 覆盖单个账号。
 
 默认门控行为：
 

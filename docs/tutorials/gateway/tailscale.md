@@ -79,6 +79,8 @@ OpenClaw 可以为网关（Gateway）仪表盘和 WebSocket 端口自动配置 T
 
 推荐使用 `OPENCLAW_GATEWAY_PASSWORD` 而非将密码提交到磁盘。
 
+同一个 Funnel URL 也可从 tailnet 内访问：公网请求会带 Funnel 标记，tailnet peer 则走 Serve 身份路径。OpenClaw 会在专用监听器上识别两者，但两种路径都仍要求这里配置的 Funnel 密码。
+
 ---
 
 ## CLI 示例
@@ -112,7 +114,7 @@ openclaw gateway --tailscale funnel --auth password
 ## Tailscale 前提条件 + 限制
 
 - Serve 要求为你的 tailnet 启用 HTTPS；如果缺失 CLI 会提示。
-- Serve 注入 Tailscale 身份头；Funnel 不会。
+- Tailnet Serve 流量会注入 Tailscale 身份头。公网 Funnel 流量使用 Funnel 标记；tailnet 内访问同一 Funnel URL 时仍走 Serve 身份路径。
 - Funnel 要求 Tailscale v1.38.3+、MagicDNS、启用 HTTPS 和 funnel 节点属性。
 - Funnel 仅支持端口 `443`、`8443` 和 `10000` 的 TLS。
 - macOS 上的 Funnel 需要开源版本的 Tailscale 应用。

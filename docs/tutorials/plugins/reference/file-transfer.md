@@ -18,3 +18,7 @@ Fetch, list, and write files on paired nodes via dedicated node commands. Bypass
 ## Surface
 
 contracts: tools
+
+## 获取整个目录的边界
+
+`dir_fetch` 会获取完整目录树，包括点文件和隐藏目录。文件传输策略逐一检查所有后代；任意一项被拒绝时，整个传输失败，不会悄悄过滤后继续。路径身份、符号链接、压缩包体积和解包限制仍然适用。传目录前先检查是否含凭据、缓存或其他不应传出的隐藏内容。

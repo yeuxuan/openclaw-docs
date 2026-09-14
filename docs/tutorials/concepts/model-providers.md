@@ -44,43 +44,45 @@ OpenClaw 已经认识这些常见模型来源。你只需要配置认证，再�
 
 - 提供商：`openai`
 - 认证：`OPENAI_API_KEY` 或 Codex OAuth 登录资料
-- 示例模型：`openai/gpt-5.5`
+- 示例模型：`openai/gpt-6-astra`（账号无 Astra 权限时显式选可用的 GPT-5.6 / GPT-5.5）
 - CLI：`openclaw onboard --auth-choice openai-api-key`
 
 ```json5
 {
-  agents: { defaults: { model: { primary: "openai/gpt-5.5" } } },
+  agents: { defaults: { model: { primary: "openai/gpt-6-astra" } } },
 }
 ```
 
 ### Anthropic
 
 - 提供商：`anthropic`
-- 认证：`ANTHROPIC_API_KEY` 或 `claude setup-token`
-- 示例模型：`anthropic/claude-opus-4-6`
-- CLI：`openclaw onboard --auth-choice token`（粘贴 setup-token）或 `openclaw models auth paste-token --provider anthropic`
+- 认证：`ANTHROPIC_API_KEY`、同机 Claude CLI 登录，或 setup-token
+- 示例模型：`anthropic/claude-opus-5`
+- CLI：交互式 `openclaw onboard` 选择 Claude CLI；setup-token 使用
+  `openclaw models auth login --provider anthropic --method setup-token`
 
 ```json5
 {
-  agents: { defaults: { model: { primary: "anthropic/claude-opus-4-6" } } },
+  agents: { defaults: { model: { primary: "anthropic/claude-opus-5" } } },
 }
 ```
 
-### OpenAI Codex 订阅登录
+### OpenAI ChatGPT/Codex 订阅登录
 
-- 模型路线：仍然使用 `openai/gpt-5.5`
-- 认证资料：`openai-codex` OAuth (ChatGPT/Codex)
-- 说明：`openai-codex/*` 是旧模型引用，新配置不要这样写
-- CLI：`openclaw onboard --auth-choice openai-codex` 或 `openclaw models auth login --provider openai-codex`
+- 模型路线：使用 `openai/gpt-6-astra`、`openai/gpt-5.6-sol` 等规范 `openai/*` 引用
+- 认证资料：`openai:*` OAuth profile
+- 说明：`openai-codex/*` 和 `openai-codex:*` 都是旧迁移来源
+- CLI：`openclaw onboard --auth-choice openai` 或
+  `openclaw models auth login --provider openai`
 
 ```json5
 {
-  agents: { defaults: { model: { primary: "openai/gpt-5.5" } } },
+  agents: { defaults: { model: { primary: "openai/gpt-6-astra" } } },
 }
 ```
 
 ::: tip 不要被名字绕晕
-`openai` 是模型提供商前缀，`openai-codex` 是 Codex OAuth 登录资料/旧配置命名。
+`openai` 同时是模型提供商和当前认证 profile 命名空间；`openai-codex` 只应出现在旧配置迁移说明中。
 如果你的旧配置里还有 `openai-codex/gpt-*`，先运行 `openclaw doctor --fix`。
 :::
 
@@ -202,19 +204,17 @@ Kimi Coding 使用 Moonshot AI 的 Anthropic 兼容端点：
 }
 ```
 
-### Qwen OAuth（免费层）
+### Qwen Cloud
 
-Qwen 通过设备代码流提供对 Qwen Coder + Vision 的 OAuth 访问。启用捆绑插件，然后登录：
+Qwen 现在通过官方外部 Provider 插件接入 Coding Plan、标准按量付费和团队 Token Plan：
 
 ```bash
-openclaw plugins enable qwen-portal-auth
-openclaw models auth login --provider qwen-portal --set-default
+openclaw plugins install @openclaw/qwen-provider
+openclaw gateway restart
+openclaw onboard --auth-choice qwen-standard-api-key
 ```
 
-模型引用：
-
-- `qwen-portal/coder-model`
-- `qwen-portal/vision-model`
+规范模型引用使用 `qwen/...`；团队 Token Plan 使用 `qwen-token-plan/...`。旧 `qwen-portal` / `qwen-oauth` 路线不再是当前主路径。
 
 参见 [/providers/qwen](/tutorials/providers/qwen) 了解设置详情和注意事项。
 

@@ -1,12 +1,12 @@
 ---
 title: "命令行向导安装指南"
 sidebarTitle: "命令行向导"
-description: "用 openclaw onboard --install-daemon 完成 OpenClaw 首次配置，包括 Gateway、控制 UI、模型和通道。"
+description: "用 openclaw onboard 完成 OpenClaw 首次配置，包括模型真实验证、前台 Gateway 和控制 UI。"
 ---
 
 # 命令行向导安装指南
 
-> 新手建议走这条路径：安装 OpenClaw 后运行 `openclaw onboard --install-daemon`。它支持 macOS、Linux 和 Windows；Windows 上完整体验更推荐 WSL2。
+> 新手建议走这条路径：安装 OpenClaw 后运行 `openclaw onboard`。它支持 macOS、Linux 和 Windows；Windows 上完整体验更推荐 WSL2。
 
 向导会逐步询问模型、Gateway、控制 UI 和通道设置。你按提示回答即可，通常 10 分钟左右能跑通第一条消息。
 
@@ -18,7 +18,7 @@ description: "用 openclaw onboard --install-daemon 完成 OpenClaw 首次配置
 
 - 一个 AI API Key，或一个可登录的模型账号。还没有的话，先看[准备事项](./getting-started#先准备这-3-样东西)。
 
-Node.js 是必需运行环境。推荐 v24，也支持 v22.19+。
+Node.js 是必需运行环境。推荐 v26.1+，也支持 v24.16+；Node 22、23、25 不受支持。
 
 ---
 
@@ -40,7 +40,7 @@ iwr -useb https://openclaw.ai/install.ps1 | iex
 
 ::: tip 这条命令做了什么？
 1. 检测你的操作系统
-2. 如果没有安装合适的 Node.js，优先帮你准备 Node 24
+2. 如果没有安装合适的 Node.js，macOS 准备 Node 26，Linux 准备 Node 24 LTS
 3. 用 npm 全局安装 OpenClaw
 4. 启动设置向导（就是下面说的 9 步）
 
@@ -51,9 +51,9 @@ iwr -useb https://openclaw.ai/install.ps1 | iex
 
 ---
 
-### 方式 B：手动安装（已有 Node.js 24 或 Node.js 22.19+）
+### 方式 B：手动安装（已有兼容的 Node.js）
 
-如果你已经安装了 Node.js 24，或至少 Node.js 22.19+，可以直接用 npm 安装：
+如果你已经安装了 Node 24.16+ 或 26.1+，可以直接用 npm 安装：
 
 验证 Node.js 版本（在终端里输入）：
 
@@ -61,12 +61,12 @@ iwr -useb https://openclaw.ai/install.ps1 | iex
 node --version
 ```
 
-如果显示 `v24.x.x` 最佳；`v22.19.x` 以上也可使用。如果版本低于 22.19，请先升级 Node.js 或使用上面的方式 A（会自动处理）。
+如果显示 `v26.1.0` 或更高最省心；Node 24 至少需要 `v24.16.0`。Node 22、23、25 请先升级，或直接使用方式 A。
 
 在终端里运行以下命令安装 OpenClaw：
 
 ```bash
-npm install -g openclaw@latest
+npm install -g openclaw@latest --allow-scripts=openclaw
 ```
 
 安装完成后，验证一下：
@@ -84,11 +84,11 @@ openclaw --version
 安装好之后，运行这条命令启动设置向导：
 
 ```bash
-openclaw onboard --install-daemon
+openclaw onboard
 ```
 
-> `--install-daemon` 是什么意思？
-> 加上这个参数后，Gateway 会注册为系统后台服务。电脑重启后，它也会自动启动，不需要每次手动打开。
+> Quick start 会把 Gateway 留在当前终端并打开 Dashboard。验证第一条消息后按
+> `Ctrl+C` 停止前台进程，再运行 `openclaw gateway install` 注册后台服务。
 
 ---
 

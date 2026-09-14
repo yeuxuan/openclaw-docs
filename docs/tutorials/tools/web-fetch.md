@@ -43,6 +43,10 @@ sidebarTitle: "网页抓取"
 4. 必要时使用 Firecrawl 回退。
 5. 缓存短时间结果，减少重复抓取。
 
+需要实时重新抓取时，将 `tools.web.fetch.cacheTtlMinutes` 设为 `0`，会同时绕过 OpenClaw fetch 缓存的读和写。正值按当前请求 TTL 限制复用，已有条目仍保留最初到期时间。Firecrawl 等 Provider 自身缓存（如 `maxAgeMs`）需另行配置，不能把绕过本机缓存等同于上游绝不缓存。
+
+取消会传给回退 Provider；即使 Provider 不支持取消，迟到结果也会被拒绝，不写入 fetch 缓存。已经取消的调用即使有缓存也不返回成功。
+
 ---
 
 ## 常见参数
@@ -72,4 +76,3 @@ sidebarTitle: "网页抓取"
 - [Web 网络工具](/tutorials/tools/web)
 - [Firecrawl](/tutorials/tools/firecrawl)
 - [浏览器工具](/tutorials/tools/browser)
-

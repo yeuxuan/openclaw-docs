@@ -50,22 +50,18 @@ QMD 可能需要下载或加载本地模型，也可能要先给文件建索引�
 
 ## 想让 QMD 召回旧会话，还要多开几道门
 
-很多人会以为只要开了 `memorySearch.experimental.sessionMemory`，QMD 就会自动索引历史会话。
+很多人会以为只要开了 `memory.search.experimental.sessionMemory`，QMD 就会自动索引历史会话。
 实际上还不够。
 
 QMD 相关的最小思路是：
 
 ```json5
 {
-  agents: {
-    defaults: {
-      memorySearch: {
-        experimental: { sessionMemory: true },
-        sources: ["memory", "sessions"],
-      },
-    },
-  },
   memory: {
+    search: {
+      experimental: { sessionMemory: true },
+      sources: ["memory", "sessions"],
+    },
     backend: "qmd",
     qmd: {
       sessions: { enabled: true },
@@ -84,8 +80,7 @@ QMD 相关的最小思路是：
 - `memory.qmd.sessions.enabled: true`：把会话内容真正导进 QMD 集合
 - `tools.sessions.visibility`：决定当前会话能不能看见那些历史会话
 
-默认的 `tree` 可见性比较保守，只能看到当前会话和它派生出来的会话。
-如果你希望一个新的 DM 会话召回同一 Agent 以前处理过的别的会话，通常要明确改成 `agent`。
+当前默认可见性为 `agent`，非沙箱会话能召回同一 Agent 的其他会话，包括其他用户的对话。显式设置 `tree` 才收紧到当前及派生范围，但规范主会话仍能访问同 Agent 全部会话；`self` 才严格限制为当前会话。按发送者拆分 DM 不会自动缩小这些召回权限，沙箱限制和 Incognito 排除仍然生效。
 
 ---
 

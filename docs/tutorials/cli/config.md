@@ -43,6 +43,14 @@ openclaw config set channels.whatsapp.groups '["*"]' --strict-json
 - 想图省事写配置片段，又接受 JSON5 风格，用默认模式
 - 改完后始终跑一次 `openclaw config validate`
 
+如果机器可读结果中的 `errors[].kind` 是 `conflict`，表示写入期间配置文件被另一个进程改过，因此本次没有写入任何内容。重新读取当前配置后再执行，不要把它当成 schema 错误继续覆盖。
+
+## 手工改文件之后
+
+直接编辑 `openclaw.json` 后，仍要执行 `openclaw config validate`。Gateway 启动时可对符合条件的单文件配置自动迁移确定性的旧键；只有包含插件校验在内的完整配置通过后才写入，并将旧文件保留在 `.bak` 备份环中。其他无效配置会阻止启动；热重载遇到无效修改会跳过，不会改写文件。
+
+使用 `$include`、Nix 管理或由更新版本写入的配置不适用这类自动迁移。损坏文件或整份配置恢复仍交给 `openclaw doctor --fix`，不要把启动时迁移理解成自动恢复所有配置。
+
 ## 什么时候用
 
 - 想看当前配置文件在哪里。

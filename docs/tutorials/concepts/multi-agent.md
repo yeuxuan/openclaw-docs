@@ -14,16 +14,16 @@ description: "OpenClaw 核心概念：多智能体路由。一个网关可以托
 一个智能体（Agent）是一组独立的运行上下文，拥有自己的：
 
 - 工作区（Workspace）（文件、AGENTS.md/SOUL.md/USER.md、本地笔记、人设规则）。
-- 状态目录（`agentDir`），用于认证配置文件、模型注册表和每智能体配置。
-- 会话存储（聊天历史 + 路由状态），位于 `~/.openclaw/agents/<agentId>/sessions`。
+- 状态目录（`agentDir`），用于认证资料、模型注册表和每智能体配置。
+- 会话与认证主存储，位于 `~/.openclaw/agents/<agentId>/agent/openclaw-agent.sqlite`。
 
-认证配置文件按智能体隔离。每个智能体从自己的路径读取：
+认证资料按智能体隔离。每个智能体从自己的 SQLite 状态库读取：
 
 ```text
-~/.openclaw/agents/<agentId>/agent/auth-profiles.json
+~/.openclaw/agents/<agentId>/agent/openclaw-agent.sqlite
 ```
 
-主智能体凭证不会自动共享。不要在智能体之间重用 `agentDir`，否则会造成认证和会话冲突。如果确实需要共享凭证，请把 `auth-profiles.json` 复制到其他智能体的 `agentDir`。
+不要在智能体之间重用 `agentDir`，否则会造成认证和会话冲突。OAuth 刷新材料默认也不应手工复制；需要独立账户时，应从目标 Agent 重新登录。只有可移植的静态 API key / token 配置才适合按官方支持方式共享。
 
 技能通过每个工作区的 `skills/` 文件夹实现每智能体管理，共享技能从 `~/.openclaw/skills` 获取。参见[技能系统](/tutorials/tools/skills)。
 
@@ -38,8 +38,9 @@ description: "OpenClaw 核心概念：多智能体路由。一个网关可以托
 - 配置：`~/.openclaw/openclaw.json`（或 `OPENCLAW_CONFIG_PATH`）
 - 状态目录：`~/.openclaw`（或 `OPENCLAW_STATE_DIR`）
 - 工作区：`~/.openclaw/workspace`（或 `~/.openclaw/workspace-<agentId>`）
-- 智能体目录：`~/.openclaw/agents/<agentId>/agent`（或 `agents.list[].agentDir`）
-- 会话：`~/.openclaw/agents/<agentId>/sessions`
+- 智能体目录：`~/.openclaw/agents/<agentId>/agent`（或 `agents.entries.*.agentDir`）
+- 会话与认证主存储：`~/.openclaw/agents/<agentId>/agent/openclaw-agent.sqlite`
+- 旧版/归档会话产物：`~/.openclaw/agents/<agentId>/sessions`
 
 ### 单智能体模式（默认）
 
@@ -80,6 +81,10 @@ openclaw agents list --bindings
 
 这样可以让多人共享一个网关服务器，同时保持各自的配置、会话和工作区隔离。
 
+::: info 旧配置迁移
+旧的 `agents.list` roster 会由 `openclaw doctor --fix` 迁移到 `agents.entries`。已有多 Agent 配置还会把过去依赖隐含默认 Agent 的通道与环境服务，物化成显式 binding 或目标，避免升级后靠顺序猜测路由。
+:::
+
 ---
 
 ## 一个 WhatsApp 号码，多人使用（DM 分离）
@@ -93,10 +98,11 @@ openclaw agents list --bindings
 ```json5
 {
   agents: {
-    list: [
-      { id: "alex", workspace: "~/.openclaw/workspace-alex" },
-      { id: "mia", workspace: "~/.openclaw/workspace-mia" },
-    ],
+    ownership: "explicit",
+    entries: {
+      alex: { workspace: "~/.openclaw/workspace-alex" },
+      mia: { workspace: "~/.openclaw/workspace-mia" },
+    },
   },
   bindings: [
     {
@@ -135,7 +141,7 @@ openclaw agents list --bindings
 5. `teamId`（Slack）
 6. 通道的 `accountId` 匹配
 7. 通道级别匹配（`accountId: "*"`）
-8. 回退到默认智能体（`agents.list[].default`，否则列表第一项，默认：`main`）
+8. 单 Agent 配置回退到唯一 owner；显式所有权 fleet 没有默认 Agent，未匹配消息必须补 binding 或 surface `agentId`
 
 如果绑定设置了多个匹配字段（例如 `peer` + `guildId`），所有指定的字段都是必需的（`AND` 语义）。
 
@@ -163,21 +169,19 @@ openclaw agents list --bindings
 ```js
 {
   agents: {
-    list: [
-      {
-        id: "home",
-        default: true,
+    ownership: "explicit",
+    entries: {
+      home: {
         name: "Home",
         workspace: "~/.openclaw/workspace-home",
         agentDir: "~/.openclaw/agents/home/agent",
       },
-      {
-        id: "work",
+      work: {
         name: "Work",
         workspace: "~/.openclaw/workspace-work",
         agentDir: "~/.openclaw/agents/work/agent",
       },
-    ],
+    },
   },
 
   // 确定性路由：第一个匹配优先（最具体的在前）。
@@ -230,20 +234,19 @@ openclaw agents list --bindings
 ```json5
 {
   agents: {
-    list: [
-      {
-        id: "chat",
+    ownership: "explicit",
+    entries: {
+      chat: {
         name: "Everyday",
         workspace: "~/.openclaw/workspace-chat",
         model: "anthropic/claude-sonnet-4-5",
       },
-      {
-        id: "opus",
+      opus: {
         name: "Deep Work",
         workspace: "~/.openclaw/workspace-opus",
         model: "anthropic/claude-opus-4-6",
       },
-    ],
+    },
   },
   bindings: [
     { agentId: "chat", match: { channel: "whatsapp" } },
@@ -266,20 +269,19 @@ openclaw agents list --bindings
 ```json5
 {
   agents: {
-    list: [
-      {
-        id: "chat",
+    ownership: "explicit",
+    entries: {
+      chat: {
         name: "Everyday",
         workspace: "~/.openclaw/workspace-chat",
         model: "anthropic/claude-sonnet-4-5",
       },
-      {
-        id: "opus",
+      opus: {
         name: "Deep Work",
         workspace: "~/.openclaw/workspace-opus",
         model: "anthropic/claude-opus-4-6",
       },
-    ],
+    },
   },
   bindings: [
     {
@@ -302,9 +304,8 @@ openclaw agents list --bindings
 ```json5
 {
   agents: {
-    list: [
-      {
-        id: "family",
+    entries: {
+      family: {
         name: "Family",
         workspace: "~/.openclaw/workspace-family",
         identity: { name: "Family Bot" },
@@ -328,7 +329,7 @@ openclaw agents list --bindings
           deny: ["write", "edit", "apply_patch", "browser", "canvas", "nodes", "cron"],
         },
       },
-    ],
+    },
   },
   bindings: [
     {
@@ -345,7 +346,7 @@ openclaw agents list --bindings
 注意：
 
 - 工具允许/拒绝列表是 工具，不是技能。如果技能需要运行二进制文件，确保 `exec` 被允许且二进制文件存在于沙箱中。
-- 对于更严格的门控，设置 `agents.list[].groupChat.mentionPatterns` 并保持通道的群组白名单启用。
+- 对于更严格的门控，设置 `agents.entries.*.groupChat.mentionPatterns` 并保持通道的群组白名单启用。
 
 ---
 
@@ -356,17 +357,16 @@ openclaw agents list --bindings
 ```js
 {
   agents: {
-    list: [
-      {
-        id: "personal",
+    ownership: "explicit",
+    entries: {
+      personal: {
         workspace: "~/.openclaw/workspace-personal",
         sandbox: {
           mode: "off",  // 个人智能体无沙箱
         },
         // 无工具限制，所有工具可用
       },
-      {
-        id: "family",
+      family: {
         workspace: "~/.openclaw/workspace-family",
         sandbox: {
           mode: "all",     // 始终沙箱化
@@ -381,7 +381,7 @@ openclaw agents list --bindings
           deny: ["exec", "write", "edit", "apply_patch"],    // 拒绝其他
         },
       },
-    ],
+    },
   },
 }
 ```
@@ -395,6 +395,6 @@ openclaw agents list --bindings
 - 资源控制：沙箱化特定智能体同时保持其他智能体在宿主上
 - 灵活策略：每智能体不同的权限
 
-注意：`tools.elevated` 是全局配置，并且基于发送者；它不能按智能体配置。如果你需要每智能体边界，使用 `agents.list[].tools` 拒绝 `exec`。对于群组定向，使用 `agents.list[].groupChat.mentionPatterns`，让 @提及映射到预期智能体。
+注意：`tools.elevated` 有全局门控，也有 `agents.entries.*.tools.elevated` 的每 Agent 门控；每 Agent 配置只能进一步收紧。需要每 Agent 边界时，使用 `agents.entries.*.tools` 拒绝 `exec`。对于群组定向，使用 `agents.entries.*.groupChat.mentionPatterns`，让 @提及映射到预期智能体。
 
 参见[多智能体沙箱与工具](/tutorials/tools/multi-agent-sandbox-tools)了解详细示例。

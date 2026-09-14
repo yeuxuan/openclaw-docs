@@ -100,7 +100,7 @@ OpenClaw 推荐尽可能在独立号码上运行 WhatsApp。（通道元数据�
 - `allowFrom` 包含你的个人号码
 - `selfChatMode: true`
 
-运行时，自聊天保护基于链接的自身号码和 `allowFrom`。
+自聊天能否进入 Agent 和是否启用自聊天保护，是两个不同判断，见下文[个人号码和自聊天行为](#个人号码和自聊天行为)。
 
 :::
 
@@ -144,7 +144,7 @@ OpenClaw 推荐尽可能在独立号码上运行 WhatsApp。（通道元数据�
 运行时行为详情：
 
 - 配对持久化在通道允许存储中，并与配置的 `allowFrom` 合并
-- 如果未配置白名单，链接的自身号码默认被允许
+- 同号码给自己的私信默认允许，即使不在 `allowFrom`；`selfChatMode: false` 或 `dmPolicy: "disabled"` 会阻止它
 - 出站 `fromMe` 私信从不自动配对
 
 
@@ -175,7 +175,7 @@ OpenClaw 推荐尽可能在独立号码上运行 WhatsApp。（通道元数据�
 提及检测包括：
 
 - 机器人身份的显式 WhatsApp 提及
-- 配置的提及正则模式（`agents.list[].groupChat.mentionPatterns`，回退 `messages.groupChat.mentionPatterns`）
+- 配置的提及正则模式（`agents.entries.*.groupChat.mentionPatterns`，回退 `messages.groupChat.mentionPatterns`）
 - 隐式回复机器人检测（回复发送者匹配机器人身份）
 
 会话级激活命令：
@@ -189,11 +189,18 @@ OpenClaw 推荐尽可能在独立号码上运行 WhatsApp。（通道元数据�
 
 ## 个人号码和自聊天行为
 
-当链接的自身号码也存在于 `allowFrom` 中时，WhatsApp 自聊天保护激活：
+`channels.whatsapp.selfChatMode` 控制同号码私信和自聊天保护，也可按账号用 `channels.whatsapp.accounts.<id>.selfChatMode` 覆盖：
+
+- `true` 或未设置：同号码给自己的私信可以进入 Agent，即使号码不在 `allowFrom`；`dmPolicy: "disabled"` 仍阻止所有私信。
+- `false`：忽略来自自身号码的私信，即使它在 `allowFrom`。其他私信和群组仍按各自访问策略处理，这不是“只发不收”模式。
+
+自身号码的隐式放行只适用于私信，不会放开群组白名单。若用给自己发消息来做存活探测，未设置或开启该字段时，探测也可能触发 Agent；要排除这种输入，明确设为 `false`。
+
+自聊天保护在 `true` 时开启、`false` 时关闭；字段未设置时，只有自身号码出现在配置的 `allowFrom` 才开启。保护包括：
 
 - 跳过自聊天轮次的已读回执
 - 忽略否则会 ping 你自己的提及 JID 自动触发行为
-- 如果 `messages.responsePrefix` 未设置，自聊天回复默认使用 `[{identity.name}]` 或 `[openclaw]`
+- 如果未配置回复前缀，自聊天回复使用身份前缀（如 `[{identity.name}]` 或 `[openclaw]`）
 
 ---
 
@@ -287,7 +294,7 @@ OpenClaw 推荐尽可能在独立号码上运行 WhatsApp。（通道元数据�
 }
 ```
 
-    即使全局启用，自聊天轮次也跳过已读回执。
+    即使全局启用，开启自聊天保护的轮次仍跳过已读回执；是否开启见[个人号码和自聊天行为](#个人号码和自聊天行为)。
 
 
 
@@ -301,8 +308,9 @@ OpenClaw 推荐尽可能在独立号码上运行 WhatsApp。（通道元数据�
 ::: details 文本分块
 
 - 默认分块限制：`channels.whatsapp.textChunkLimit = 4000`
-- `channels.whatsapp.chunkMode = "length" | "newline"`
+- `channels.whatsapp.streaming.chunkMode = "length" | "newline"`
 - `newline` 模式优先使用段落边界（空行），然后回退到按长度安全分块
+- Markdown 在发送前转换，格式跨分块保留，WhatsApp 格式标记也计入长度上限
 
 
 :::

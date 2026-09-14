@@ -8,10 +8,11 @@ sidebarTitle: "常用命令"
 ## 安装和初始化
 
 ```bash
-openclaw onboard --install-daemon
+openclaw onboard
+openclaw gateway install
 ```
 
-打开向导，并把 Gateway 装成后台服务。
+先用 Quick start 在前台验证模型与 Dashboard；确认可用后再安装 Gateway 后台服务。
 
 ## 打开控制台
 

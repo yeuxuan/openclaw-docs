@@ -1,59 +1,41 @@
 ---
-title: "Gateway exposure runbook"
-sidebarTitle: "Exposure runbook"
+title: "Gateway 对外暴露检查清单"
+sidebarTitle: "暴露前检查"
+description: "把 OpenClaw Gateway 开放到 LAN、tailnet、反向代理或公网前的预检、验证与回滚清单。"
 ---
 
-# Gateway exposure runbook
+# Gateway 对外暴露检查清单
 
-::: tip 先看人话
-这页用于补齐 OpenClaw 官方最新文档里的新增内容。先按命令和字段原样理解；如果你只是普通用户，优先看本页的标题、小节和示例命令，不需要一口气读完所有维护者细节。
+::: danger 先确认四件事
+只有当你能明确回答“谁能访问、如何认证、能触发哪个 Agent、这个 Agent 能调用哪些工具”时，才继续开放 Gateway。拿不准就回到 loopback，并重新运行安全审计。
 :::
 
-::: warning 注意
-Expose the Gateway only after you can explain who can reach it, how they are
-authenticated, which agents they can trigger, and which tools those agents can
-use. When in doubt, return to loopback-only access and re-run the audit.
-:::
+## 选择最窄的暴露方式
 
+| 方式 | 适合场景 | 必要控制 |
+|------|----------|----------|
+| loopback + SSH 隧道 | 个人管理、排障 | 保持 `gateway.bind: "loopback"`，只转发 `127.0.0.1:18789` |
+| loopback + Tailscale Serve | tailnet 内访问控制 UI | Gateway 仍保持 loopback；不要把 Tailscale 身份头误当成所有 HTTP 接口的认证 |
+| LAN / tailnet bind | 设备明确的私网 | Gateway 认证、主机防火墙白名单、禁止公网端口转发 |
+| 可信反向代理 | 组织 SSO / OIDC | 严格 `trustedProxies`、代理覆写身份头、显式允许用户、阻断直连 Gateway 端口 |
+| 公网 | 极少数确有需要的部署 | 身份代理、TLS、限流、严格 allowlist、非 main 会话沙箱 |
 
-This runbook turns the broader [Security](/tutorials/gateway/security) guidance into an
-operator checklist for remote access and messaging exposure.
+不要把 `18789` 直接端口转发到公网。必须公网访问时，让身份感知代理成为到 Gateway 的唯一网络路径。
 
-## Choose the exposure pattern
+## 改配置前先留清单
 
-Prefer the narrowest pattern that satisfies the workflow.
+- Gateway 主机、OS 用户和 state 目录。
+- 当前 `gateway.bind`、URL 和端口。
+- 认证模式以及 token、密码或可信代理身份来源。
+- 所有启用的通道，以及 DM、群组、Webhook 的开放范围。
+- 外部发送者可以触发的 Agent。
+- 每个 Agent 的工具 profile、沙箱模式和 elevated 策略。
+- Agent 可访问的外部凭据。
+- `openclaw.json`、凭据和状态数据的备份位置。
 
-| Pattern                    | Recommended when                                | Required controls                                                                                   |
-| -------------------------- | ----------------------------------------------- | --------------------------------------------------------------------------------------------------- |
-| Loopback + SSH tunnel      | Personal use, admin access, debugging           | Keep `gateway.bind: "loopback"` and tunnel `127.0.0.1:18789`                                        |
-| Loopback + Tailscale Serve | Personal tailnet access to Control UI/WebSocket | Keep Gateway loopback-only; rely on Tailscale identity headers only for supported surfaces          |
-| Tailnet/LAN bind           | Dedicated private network with known devices    | Gateway auth, firewall allowlist, no public port-forward                                            |
-| Trusted reverse proxy      | Organization SSO/OIDC in front of Gateway       | `trusted-proxy` auth, strict `trustedProxies`, header overwrite/strip rules, explicit allowed users |
-| Public internet            | Rare, high-risk deployments                     | Identity-aware proxy, TLS, rate limits, strict allowlists, sandboxed non-main sessions              |
+多人能给同一个 Agent 发消息，代表多人共享这组委托工具权限；它不是按用户隔离的主机安全边界。
 
-Avoid direct public port-forwarding to the Gateway. If you need public access,
-put an identity-aware proxy in front of it and make the proxy the only network
-path to the Gateway.
-
-## Pre-flight inventory
-
-Record these before changing bind, proxy, Tailscale, or channel policy:
-
-- Gateway host, OS user, and state directory.
-- Gateway URL and bind mode.
-- Auth mode, token/password source, or trusted proxy identity source.
-- All enabled channels and whether they accept DMs, groups, or webhooks.
-- Agents reachable from non-local senders.
-- Tool profile, sandbox mode, and elevated tool policy for each reachable agent.
-- External credentials available to those agents.
-- Backup location for `~/.openclaw/openclaw.json` and credentials.
-
-If more than one person can message the bot, treat this as shared delegated tool
-authority, not as per-user host isolation.
-
-## Baseline checks
-
-Run these before opening access:
+## 暴露前基线检查
 
 ```bash
 openclaw doctor
@@ -62,20 +44,19 @@ openclaw security audit --deep
 openclaw health
 ```
 
-Resolve critical findings first. Warnings may be acceptable only when they are
-intentional and documented for the deployment.
+先解决 critical。只接受你明确理解、并在部署记录里说明过的 warning。
 
-For remote CLI validation, pass credentials explicitly:
+显式探测远程 URL 时，认证也要显式传入：
 
 ```bash
-openclaw gateway probe --url ws://127.0.0.1:18789 --token "$OPENCLAW_GATEWAY_TOKEN"
+openclaw gateway probe \
+  --url ws://127.0.0.1:18789 \
+  --token "$OPENCLAW_GATEWAY_TOKEN"
 ```
 
-Do not assume local config credentials apply to an explicit remote URL.
+不要假设本机配置里的凭据会自动应用到显式远程 URL。
 
-## Minimum safe baseline
-
-Use this shape as the starting point for exposed deployments:
+## 最小安全起点
 
 ```json5
 {
@@ -96,119 +77,66 @@ Use this shape as the starting point for exposed deployments:
   },
   tools: {
     profile: "messaging",
-    exec: { security: "deny", ask: "always" },
+    exec: { mode: "deny" },
     elevated: { enabled: false },
   },
 }
 ```
 
-Then widen one control at a time. For example, add a specific channel allowlist
-before enabling write-capable tools, or enable a reverse proxy before accepting
-remote Control UI traffic.
+一次只放宽一个控制。例如先给某个通道增加明确 allowlist，再考虑开放写工具；不要同时把发送者、网络入口和工具权限都放开。
 
-The strict `exec.security: "deny"` baseline blocks all exec calls, including
-benign diagnostics. If diagnostics or low-risk commands are required, relax this
-only after choosing the specific senders, agents, commands, and approval mode
-that match your threat model.
+`tools.exec.mode: "deny"` 会连诊断命令一起禁止。确实需要低风险命令时，再按风险选择
+`allowlist`、`ask` 或 `auto`，并先明确发送者、Agent、命令范围和审批边界。
 
-## DM and group exposure
+## DM、群组和反向代理
 
-Messaging channels are untrusted input surfaces. Before allowing DMs or groups:
+通道侧：
 
-- Prefer `dmPolicy: "pairing"` or strict `allowFrom` lists.
-- Avoid `dmPolicy: "open"` unless every sender is trusted.
-- Do not combine `"*"` allowlists with broad tool access.
-- Require mentions in groups unless the room is tightly controlled.
-- Use `session.dmScope: "per-channel-peer"` when multiple people can DM the bot.
-- Route shared channels to agents with minimal tools and no personal credentials.
+- 优先 `dmPolicy: "pairing"` 或严格 `allowFrom`，不要默认 `open`。
+- 不要把 `"*"` allowlist 与宽工具权限组合。
+- 群组默认要求提及，除非房间成员和用途都严格受控。
+- 多人私信时使用 `session.dmScope: "per-channel-peer"`；多账户通道用 `per-account-channel-peer`。
+- 共享通道应路由到最小工具、没有个人凭据的 Agent。
 
-Pairing approves the sender to trigger the bot. It does not make that sender a
-separate host security boundary.
+可信反向代理侧：
 
-## Reverse proxy checks
+- 代理必须先认证，再转发。
+- 防火墙必须阻断客户端直接访问 Gateway 端口。
+- `gateway.trustedProxies` 只列代理来源 IP。
+- 代理必须删除或覆写客户端提交的身份与转发头。
+- 多受众代理要配置 `gateway.auth.trustedProxy.allowUsers`。
+- 改完代理后再次运行 `openclaw security audit --deep`。
 
-For identity-aware proxies:
+## 每次改动后的验证
 
-- The proxy must authenticate users before forwarding to the Gateway.
-- Direct access to the Gateway port must be blocked by firewall or network policy.
-- `gateway.trustedProxies` must contain only the proxy source IPs.
-- The proxy must strip or overwrite client-supplied identity and forwarding headers.
-- `gateway.auth.trustedProxy.allowUsers` should list expected users when the proxy serves more than one audience.
-- Same-host loopback proxy mode should use `allowLoopback` only when local processes are trusted and the proxy owns the identity headers.
+1. 重新运行 `openclaw security audit --deep`。
+2. 确认授权连接成功。
+3. 确认未授权发送者或浏览器会话被拒绝。
+4. 确认日志已脱敏。
+5. 确认 DM / 群组只到预期 Agent。
+6. 确认高影响工具会询问审批或直接拒绝。
+7. 记录仍然接受的 warning。
 
-Run `openclaw security audit --deep` after proxy changes. Trusted-proxy findings
-are intentionally high-signal because the proxy becomes the authentication
-boundary.
+## 怀疑过度暴露时立即回滚
 
-## Tool and sandbox review
-
-Before exposing an agent to remote senders:
-
-- Confirm which sessions run on host versus sandbox.
-- Deny or require approval for host exec.
-- Keep elevated tools disabled unless a specific, trusted sender needs them.
-- Avoid browser, canvas, node, cron, gateway, and session-spawn tools for open or semi-open messaging surfaces.
-- Keep bind mounts narrow and avoid credential, home, Docker socket, and system paths.
-- Use separate gateways, OS users, or hosts for materially different trust boundaries.
-
-If remote users are not fully trusted, isolation must come from separate
-deployments, not only from prompts or session labels.
-
-## Post-change validation
-
-After each exposure change:
-
-1. Re-run `openclaw security audit --deep`.
-2. Test a successful authorized connection.
-3. Test that an unauthorized sender or browser session is denied.
-4. Confirm logs redact secrets.
-5. Confirm DM/group routing reaches only the intended agent.
-6. Confirm high-impact tools ask for approval or are denied.
-7. Document the accepted residual warnings.
-
-Do not proceed to the next exposure change until the current one is understood.
-
-## Rollback plan
-
-If the Gateway may be overexposed:
+先停止公网转发、Tailscale Funnel 或反向代理路由，再把 Gateway 收回 loopback：
 
 ```json5
 {
-  gateway: {
-    bind: "loopback",
-  },
-  channels: {
-    whatsapp: { dmPolicy: "disabled" },
-    telegram: { dmPolicy: "disabled" },
-    discord: { dmPolicy: "disabled" },
-    slack: { dmPolicy: "disabled" },
-  },
+  gateway: { bind: "loopback" },
   tools: {
-    exec: { security: "deny", ask: "always" },
+    exec: { mode: "deny" },
     elevated: { enabled: false },
   },
 }
 ```
 
-Then:
+随后按顺序处理：
 
-1. Stop public forwarding, Tailscale Funnel, or reverse proxy routes.
-2. Rotate Gateway tokens/passwords and affected integration credentials.
-3. Remove `"*"` and unexpected senders from allowlists.
-4. Review recent audit logs, run history, tool calls, and config changes.
-5. Re-run `openclaw security audit --deep`.
-6. Re-enable access with the narrowest pattern that satisfies the workflow.
+1. 暂停开放通道的 DM，移除 `"*"` 和异常 allowlist 条目。
+2. 轮换 Gateway token、密码和可能受影响的集成凭据。
+3. 审查近期审计日志、运行记录、工具调用和配置变化。
+4. 再次运行 `openclaw security audit --deep`。
+5. 只恢复真正需要的最窄入口。
 
-## Review checklist
-
-- Gateway remains loopback-only unless there is a documented reason.
-- Non-loopback access has auth, firewalling, and no public direct route.
-- Trusted-proxy deployments have strict proxy IPs and header controls.
-- DMs use pairing or allowlists, not open access by default.
-- Groups require mentions or explicit allowlists.
-- Shared channels do not reach personal credentials.
-- Non-main sessions run in sandbox mode.
-- Host exec and elevated tools are denied or approval-gated.
-- Logs redact secrets.
-- Critical audit findings are resolved.
-- Rollback steps are tested and documented.
+继续阅读：[Gateway 安全说明](/tutorials/gateway/security)、[可信代理认证](/tutorials/gateway/trusted-proxy-auth)、[Gateway 限流](/tutorials/gateway/security/rate-limiting)、[沙箱与工具策略](/tutorials/gateway/sandbox-vs-tool-policy-vs-elevated)。

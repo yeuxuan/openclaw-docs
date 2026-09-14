@@ -208,15 +208,15 @@ openclaw agents set-identity --agent code --name "小赖"
 {
   // 智能体定义：每个可指定独立的工作目录和模型
   agents: {
-    list: [
-      { id: "main" },
-      {
-        id: "code",
+    ownership: "explicit",
+    entries: {
+      main: {},
+      code: {
         workspace: "/home/user/.openclaw/workspace-code",
         agentDir: "/home/user/.openclaw/agents/code/agent",
         model: "openai/gpt-4o",
       },
-    ],
+    },
   },
 
   // 通道中配置多个账户

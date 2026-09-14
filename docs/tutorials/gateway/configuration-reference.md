@@ -473,7 +473,7 @@ exec ssh -T gateway-host imsg "$@"
 提及类型：
 
 - 元数据提及：原生平台 @提及。在 WhatsApp 自聊模式下被忽略。
-- 文本模式：`agents.list[].groupChat.mentionPatterns` 中的正则模式。始终检查。
+- 文本模式：`agents.entries.*.groupChat.mentionPatterns` 中的正则模式。始终检查。
 - 提及门控仅在检测可行时才强制执行（原生提及或至少一个模式）。
 
 ```json5
@@ -482,7 +482,9 @@ exec ssh -T gateway-host imsg "$@"
     groupChat: { historyLimit: 50 },
   },
   agents: {
-    list: [{ id: "main", groupChat: { mentionPatterns: ["@openclaw", "openclaw"] } }],
+    entries: {
+      main: { groupChat: { mentionPatterns: ["@openclaw", "openclaw"] } },
+    },
   },
 }
 ```
@@ -521,12 +523,11 @@ exec ssh -T gateway-host imsg "$@"
     },
   },
   agents: {
-    list: [
-      {
-        id: "main",
+    entries: {
+      main: {
         groupChat: { mentionPatterns: ["reisponde", "@openclaw"] },
       },
-    ],
+    },
   },
 }
 ```
@@ -606,11 +607,11 @@ exec ssh -T gateway-host imsg "$@"
 
 ### `agents.defaults.bootstrapMaxChars`
 
-每个工作区引导文件截断前的最大字符数。默认值：`12000`。
+每个工作区引导文件截断前的最大字符数。默认值：`20000`。
 
 ```json5
 {
-  agents: { defaults: { bootstrapMaxChars: 12000 } },
+  agents: { defaults: { bootstrapMaxChars: 20000 } },
 }
 ```
 
@@ -624,8 +625,8 @@ exec ssh -T gateway-host imsg "$@"
 }
 ```
 
-单个 Agent 可以用 `agents.list[].bootstrapMaxChars` 和
-`agents.list[].bootstrapTotalMaxChars` 覆盖默认值。
+单个 Agent 可以用 `agents.entries.*.bootstrapMaxChars` 和
+`agents.entries.*.bootstrapTotalMaxChars` 覆盖默认值。
 
 ### `agents.defaults.contextInjection`
 
@@ -645,25 +646,9 @@ exec ssh -T gateway-host imsg "$@"
 | `continuation-skip` | 安全续写时跳过，减少上下文 |
 | `never` | 完全不注入，适合自定义 runtime |
 
-单个 Agent 可以用 `agents.list[].contextInjection` 覆盖。
+单个 Agent 可以用 `agents.entries.*.contextInjection` 覆盖。
 
-### `agents.defaults.bootstrapPromptTruncationWarning`
-
-工作区说明文件被截断时，是否在系统提示词里提醒 Agent。默认值：`"always"`。
-
-```json5
-{
-  agents: { defaults: { bootstrapPromptTruncationWarning: "always" } },
-}
-```
-
-可选值：
-
-| 值 | 说明 |
-|----|------|
-| `off` | 不提醒 |
-| `once` | 同一类截断只提醒一次 |
-| `always` | 每次截断都提醒 |
+工作区说明文件被截断时，OpenClaw 会内置注入简短提醒。该提醒不可配置；旧的 `bootstrapPromptTruncationWarning` 不应继续写进新配置。
 
 ### `agents.defaults.contextLimits.toolResultMaxChars`
 
@@ -749,7 +734,26 @@ openclaw doctor --deep
 - `model.primary`：格式为 `provider/model`（例如 `anthropic/claude-opus-4-6`）。如果省略提供商，OpenClaw 假定为 `anthropic`（已弃用）。
 - `models`：已配置的模型目录和 `/model` 的白名单。每个条目可包含 `alias`（快捷方式）和 `params`（提供商特定参数：`temperature`、`maxTokens`）。
 - `imageModel`：仅在主模型不支持图像输入时使用。
-- `maxConcurrent`：跨会话的最大并行代理运行数（每个会话仍然串行）。默认值：1。
+- `maxConcurrent`：跨会话的最大并行 Agent 运行数（每个会话仍然串行）。未设置时
+  根据 `os.availableParallelism()` 自适应，等价于 `min(16, max(8, CPU 并行度))`。
+
+### `agents.defaults.modelSelectionScope`
+
+控制聊天命令和 Gateway 会话模型更新在未显式指定范围时写到哪里：
+
+```json5
+{
+  agents: { defaults: { modelSelectionScope: "session" } },
+}
+```
+
+- `session`：只改当前会话。
+- `agent`：同时更新当前 Agent 的显式 primary。
+- `global`：同时更新共享的 `agents.defaults.model` fallback。
+- 未设置：保留各界面既有行为。
+
+`/model <model> -s`、`-a`、`-g` 会覆盖该默认值；Agent/Global 写入需要
+owner/admin 权限。
 
 内置别名简写（仅在模型在 `agents.defaults.models` 中时生效）：
 
@@ -824,7 +828,7 @@ Z.AI GLM-4.x 模型会自动启用思维模式，除非你设置了 `--thinking 
 ```
 
 - `every`：时间字符串（ms/s/m/h）。默认值：`30m`。
-- 按代理设置：设置 `agents.list[].heartbeat`。当任何代理定义了 `heartbeat` 时，仅这些代理运行心跳。
+- 按 Agent 设置：设置 `agents.entries.*.heartbeat`。当任何 Agent 定义了 `heartbeat` 时，仅这些 Agent 运行心跳。
 - 心跳会运行完整的代理回合；间隔越短，Token 消耗越高。
 
 ### `agents.defaults.compaction`
@@ -914,7 +918,7 @@ Z.AI GLM-4.x 模型会自动启用思维模式，除非你设置了 `--thinking 
 
 - 非 Telegram 通道需要显式设置 `*.blockStreaming: true` 来启用分块回复。
 - 通道覆盖：`channels.<channel>.blockStreamingCoalesce`（以及按账户变体）。Signal/Slack/Discord/Google Chat 默认 `minChars: 1500`。
-- `humanDelay`：分块回复之间的随机暂停。`natural` = 800–2500ms。按代理覆盖：`agents.list[].humanDelay`。
+- `humanDelay`：分块回复之间的随机暂停。`natural` = 800–2500ms。按 Agent 覆盖：`agents.entries.*.humanDelay`。
 
 参阅[流式传输（Streaming）](/tutorials/concepts/streaming)了解行为和分块详情。
 
@@ -981,7 +985,7 @@ Z.AI GLM-4.x 模型会自动启用思维模式，除非你设置了 `--thinking 
           vncPort: 5900,
           noVncPort: 6080,
           headless: false,
-          enableNoVnc: true,
+          noVncEnabled: true,
           allowHostControl: false,
           autoStart: true,
           autoStartTimeoutMs: 12000,
@@ -1053,15 +1057,13 @@ scripts/sandbox-setup.sh           # 主沙箱镜像
 scripts/sandbox-browser-setup.sh   # 可选浏览器镜像
 ```
 
-### `agents.list`（按代理覆盖）
+### `agents.entries`（按 Agent ID 覆盖）
 
 ```json5
 {
   agents: {
-    list: [
-      {
-        id: "main",
-        default: true,
+    entries: {
+      main: {
         name: "Main Agent",
         workspace: "~/.openclaw/workspace",
         agentDir: "~/.openclaw/agents/main/agent",
@@ -1082,17 +1084,20 @@ scripts/sandbox-browser-setup.sh   # 可选浏览器镜像
           elevated: { enabled: true },
         },
       },
-    ],
+    },
   },
 }
 ```
 
-- `id`：稳定的代理 ID（必填）。
-- `default`：当多个代理设置了此项时，第一个生效（会记录警告）。如果都未设置，则列表中第一个条目为默认。
+- 对象键：稳定的 Agent ID（例如 `main`、`work`）。
+- `default` 已退役。单 Agent 配置以唯一条目为隐式 owner；多 Agent 配置应写
+  `agents.ownership: "explicit"`，并通过 bindings 或各 surface 的 `agentId` 指定 owner。
 - `model`：字符串形式仅覆盖 `primary`；对象形式 `{ primary, fallbacks }` 同时覆盖两者（`[]` 禁用全局回退）。
 - `identity.avatar`：工作区相对路径、`http(s)` URL 或 `data:` URI。
 - `identity` 派生默认值：`ackReaction` 来自 `emoji`，`mentionPatterns` 来自 `name`/`emoji`。
 - `subagents.allowAgents`：`sessions_spawn` 的代理 ID 白名单（`["*"]` = 任意；默认：仅限同一代理）。
+
+旧版 `agents.list` 数组由 `openclaw doctor --fix` 迁移；新配置请统一使用 `agents.entries`。
 
 ---
 
@@ -1103,10 +1108,11 @@ scripts/sandbox-browser-setup.sh   # 可选浏览器镜像
 ```json5
 {
   agents: {
-    list: [
-      { id: "home", default: true, workspace: "~/.openclaw/workspace-home" },
-      { id: "work", workspace: "~/.openclaw/workspace-work" },
-    ],
+    ownership: "explicit",
+    entries: {
+      home: { workspace: "~/.openclaw/workspace-home" },
+      work: { workspace: "~/.openclaw/workspace-work" },
+    },
   },
   bindings: [
     { agentId: "home", match: { channel: "whatsapp", accountId: "personal" } },
@@ -1140,13 +1146,12 @@ scripts/sandbox-browser-setup.sh   # 可选浏览器镜像
 ```json5
 {
   agents: {
-    list: [
-      {
-        id: "personal",
+    entries: {
+      personal: {
         workspace: "~/.openclaw/workspace-personal",
         sandbox: { mode: "off" },
       },
-    ],
+    },
   },
 }
 ```
@@ -1159,9 +1164,8 @@ scripts/sandbox-browser-setup.sh   # 可选浏览器镜像
 ```json5
 {
   agents: {
-    list: [
-      {
-        id: "family",
+    entries: {
+      family: {
         workspace: "~/.openclaw/workspace-family",
         sandbox: { mode: "all", scope: "agent", workspaceAccess: "ro" },
         tools: {
@@ -1176,7 +1180,7 @@ scripts/sandbox-browser-setup.sh   # 可选浏览器镜像
           deny: ["write", "edit", "apply_patch", "exec", "process", "browser"],
         },
       },
-    ],
+    },
   },
 }
 ```
@@ -1189,9 +1193,8 @@ scripts/sandbox-browser-setup.sh   # 可选浏览器镜像
 ```json5
 {
   agents: {
-    list: [
-      {
-        id: "public",
+    entries: {
+      public: {
         workspace: "~/.openclaw/workspace-public",
         sandbox: { mode: "all", scope: "agent", workspaceAccess: "none" },
         tools: {
@@ -1223,7 +1226,7 @@ scripts/sandbox-browser-setup.sh   # 可选浏览器镜像
           ],
         },
       },
-    ],
+    },
   },
 }
 ```
@@ -1518,7 +1521,7 @@ Talk 模式（macOS/iOS/Android、浏览器 realtime、Gateway relay）的默认
 }
 ```
 
-- 按代理覆盖（`agents.list[].tools.elevated`）只能进一步限制。
+- 按 Agent 覆盖（`agents.entries.*.tools.elevated`）只能进一步限制。
 - `/elevated on|off|ask|full` 按会话存储状态；内联指令适用于单条消息。
 - 提升的 `exec` 在宿主上运行，绕过沙箱。
 
@@ -1529,8 +1532,9 @@ Talk 模式（macOS/iOS/Android、浏览器 realtime、Gateway relay）的默认
   tools: {
     exec: {
       backgroundMs: 10000,
-      timeoutSec: 1800,
+      timeoutSeconds: 1800,
       cleanupMs: 1800000,
+      grantExpiryDays: 30,
       notifyOnExit: true,
       notifyOnExitEmptySuccess: false,
       applyPatch: {
@@ -1541,6 +1545,10 @@ Talk 模式（macOS/iOS/Android、浏览器 realtime、Gateway relay）的默认
   },
 }
 ```
+
+`grantExpiryDays` 可选，范围 1–3650，只影响未来由自动化“总是允许”生成的
+standing grants。省略时默认一直有效，直到撤销或任务配置变化；修改该值不会追溯改变
+现有授权。
 
 ### `tools.web`
 
@@ -1697,7 +1705,7 @@ OpenClaw 带有内置模型目录。通过配置中的 `models.providers` 或 `~
   完整说明看 [Local model services](/tutorials/gateway/local-model-services)。
 
 ::: warning Runtime 不再放在整个 Agent 上
-不要再依赖 `agents.defaults.agentRuntime`、`agents.list[].agentRuntime` 或
+不要再依赖 `agents.defaults.agentRuntime`、`agents.entries.*.agentRuntime` 或
 `OPENCLAW_AGENT_RUNTIME`。新版 runtime 策略放在 provider 或 model 上。
 旧配置请运行 `openclaw doctor --fix` 清理。
 :::
@@ -2341,8 +2349,10 @@ openclaw gateway --port 19001
 }
 ```
 
-- 按代理的认证配置文件存储在 `<agentDir>/auth-profiles.json`。
-- 旧版 OAuth 从 `~/.openclaw/credentials/oauth.json` 导入。
+- Agent 本地认证档案存储在 `<agentDir>/openclaw-agent.sqlite` 的
+  `auth_profile_store`；共享档案位于 `state/openclaw.sqlite`，本地档案优先。
+- 旧版 `auth-profiles.json`、`auth-state.json`、Agent `auth.json` 和
+  `~/.openclaw/credentials/oauth.json` 只由 `openclaw doctor --fix` 导入。
 - 参阅 [OAuth](/tutorials/concepts/oauth)。
 
 ---
@@ -2391,9 +2401,8 @@ openclaw gateway --port 19001
 ```json5
 {
   agents: {
-    list: [
-      {
-        id: "main",
+    entries: {
+      main: {
         identity: {
           name: "Samantha",
           theme: "helpful sloth",
@@ -2401,7 +2410,7 @@ openclaw gateway --port 19001
           avatar: "avatars/samantha.png",
         },
       },
-    ],
+    },
   },
 }
 ```
@@ -2439,6 +2448,29 @@ openclaw gateway --port 19001
 
 ---
 
+## 使用统计与更新检查
+
+```json5
+{
+  telemetry: {
+    enabled: false,
+  },
+  update: {
+    checkOnStart: false,
+  },
+}
+```
+
+- `telemetry.enabled`：是否随每日更新检查发送匿名功能统计，默认 `false`。
+- `update.checkOnStart: false`：关闭全部自动更新请求、功能统计和更新提示。
+- `DO_NOT_TRACK=1` 只强制关闭功能统计；`OPENCLAW_NO_AUTO_UPDATE=1` 同时阻止
+  自动更新检查和自动应用。
+
+发送前可运行 `openclaw telemetry show --json` 查看实际 payload。详见
+[使用统计与更新检查](/tutorials/gateway/telemetry)。
+
+---
+
 ## 定时任务（Cron）
 
 ```json5
@@ -2456,6 +2488,14 @@ openclaw gateway --port 19001
 参阅[定时任务（Cron Jobs）](/tutorials/automation/cron-jobs)。
 
 ---
+
+## Cloud Worker 暖镜像
+
+`cloudWorkers.profiles.<profile>.settings.warmImage` 为已有 Git 提交的项目准备干净 checkout 和节点 runtime，并在节点注册前捕获；同项目后续会话可立即复用。无 prepared Git project 的路径仍在符合条件的 Worker 退出清理时捕获。
+
+有效 class 已知且 `setupEnv` 为空或省略时默认开启；无 class 或非空 `setupEnv` 默认冷启动。显式 `true` 要求已知 class，显式 `false` 始终禁用。首次分配前记录 class 和原始冷启动/checkpoint 选择，重试及重启不改变它们。镜像会计费并保留干净 Git seed、runtime 缓存和 setup 的其他输出，应仅用于相互信任的工作负载。
+
+清理限时三分钟，checkpoint 捕获另有三分钟（`machine0` 为十分钟）。项目捕获结果不确定会阻止源机器上的节点注册，但仍允许租约清理。旧插件状态需由 Doctor 迁移，无法确定原分配选择时不能直接重试绕过；详见 [Cloud Workers](/tutorials/gateway/cloud-workers)。
 
 ## 媒体模型模板变量
 

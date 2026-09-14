@@ -24,9 +24,9 @@ OpenClaw 按以下顺序选择模型：
 
 另外还有几个容易混淆的配置：
 
-- `agents.defaults.models` 是 OpenClaw 可以使用的模型白名单/目录，也可以配置别名。
+- `agents.defaults.models` 保存模型目录、别名与逐模型参数；显式限制使用 `modelPolicy.allow`。
 - `agents.defaults.imageModel` 只在主模型无法接受图像时使用。
-- 每个智能体可以通过 `agents.list[].model` 和绑定覆盖 `agents.defaults.model`，见[多智能体](/tutorials/concepts/multi-agent)。
+- 每个智能体可以通过 `agents.entries.*.model` 和绑定覆盖 `agents.defaults.model`，见[多智能体](/tutorials/concepts/multi-agent)。
 
 ## 会话固定模型
 
@@ -58,25 +58,26 @@ OpenClaw 按以下顺序选择模型：
 
 ## allowlist 现在更值得注意
 
-如果你配置了 `agents.defaults.models`，它不只是模型目录，还会成为 `/model` 和会话覆盖的白名单。
+`agents.defaults.modelPolicy.allow` 非空时才是显式模型 allowlist。Agent 自己的 `agents.entries.<id>.modelPolicy.allow` 替代全局列表，显式 `[]` 表示允许任意模型。`sessions.create`、`sessions.patch` 使用目标会话所属 Agent 的别名和策略。
 
-因此选了不在白名单里的模型时，OpenClaw 会在正常回复生成之前直接拒绝，用户侧很容易感觉成“没响应”。
+策略省略或为空时，可显式选择 picker 目录之外的 `provider/model`；目录不是隐式白名单。但旧配置若尚未迁移且未设置策略，仍可能保留旧 model-map 限制。即使策略允许，也仍需有效 provider、凭据和兼容 runtime，不能把“允许”当成“保证可用”。
 
 ## 在聊天中切换模型
 
 ```text
 /model
 /model list
-/model 3
-/model openai/gpt-5.2
+/model openai/gpt-5.4
 /model default
 /model status
 ```
 
 常用记法：
 
-- `/model` 和 `/model list`：显示紧凑的编号选择器。
-- `/model <#>`：从编号选择器里选择模型。
+- `/model`：文本聊天中显示当前选择。
+- `/model list` 或 `/models`：浏览 provider；`/models <provider>` 列出模型引用。
+- `/model <alias>`：选择已配置别名；数字编号选择（如 `/model 3`）不再支持。
+- Discord 原生命令无参数时打开 provider/模型 picker，选完按 Submit；Telegram 使用 Browse providers 菜单，回调选择始终仅影响当前会话。
 - `/model <provider/model>`：把当前会话固定到某个模型。
 - `/model status`：查看当前会话到底在用什么模型，并显示认证候选项、provider 端点 `baseUrl` 和 `api` 模式。
 - `/model default`：清除当前会话固定模型，恢复继承默认配置。
@@ -99,7 +100,7 @@ OpenClaw 按以下顺序选择模型：
 
 - `agents.defaults.model.primary` 和 `agents.defaults.model.fallbacks`
 - `agents.defaults.imageModel.primary` 和 `agents.defaults.imageModel.fallbacks`
-- `agents.defaults.models`（白名单 + 别名 + 提供商参数）
+- `agents.defaults.models`（目录 + 别名 + 提供商参数）和 `agents.defaults.modelPolicy.allow`（显式限制）
 - `models.providers`（写入 `models.json` 的自定义提供商）
 
 模型引用会规范化为小写。提供商别名如 `z.ai/*` 会规范化为 `zai/*`。

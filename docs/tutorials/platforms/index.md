@@ -5,7 +5,7 @@ sidebarTitle: "平台支持"
 
 # 平台支持：OpenClaw 应该跑在哪里？
 
-OpenClaw Gateway 推荐使用 Node 24 运行。Node 22.19+ 仍可兼容。Bun 不推荐作为 Gateway 运行时，尤其是 WhatsApp 和 Telegram 这类通道。
+OpenClaw Gateway 推荐使用 Node 26.1+ 运行，也支持 Node 24.16+；Node 22、23、25 不受支持。Bun 1.4+ 也可运行 CLI、Gateway 和 node host，但 Node 仍是主运行时。
 
 如果你是新手：
 
@@ -21,9 +21,9 @@ OpenClaw Gateway 推荐使用 Node 24 运行。Node 22.19+ 仍可兼容。Bun �
 - [macOS](/tutorials/platforms/macos)
 - [Windows](/tutorials/platforms/windows)
 - [Linux](/tutorials/platforms/linux)
+- [ChromeOS](/tutorials/platforms/chromeos)
 - [iOS](/tutorials/platforms/ios)
 - [Android](/tutorials/platforms/android)
 - [DigitalOcean](/tutorials/platforms/digitalocean)
 - [Oracle Cloud](/tutorials/platforms/oracle)
 - [Raspberry Pi](/tutorials/platforms/raspberry-pi)
-

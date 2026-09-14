@@ -100,6 +100,14 @@ OpenClaw 的网关（Gateway）可以提供一个小型的 OpenAI 兼容 Chat Co
 - 每个事件行是 `data: <json>`
 - 流以 `data: [DONE]` 结束
 
+Agent 失败（包括整轮超时）不再表现为成功完成：流式响应发送 `error` 对象后再发送 `[DONE]`。此前可能已有部分文字到达客户端，因此“收到了文字”或 `[DONE]` 都不等于成功，应检查错误与终态。
+
+使用必选或指定函数的 tool choice 时，匹配的工具调用确认前会暂缓输出正文；若运行返回最终正文，使用最终文本而不是暂存的增量。
+
+## Embeddings 向量维度
+
+对支持维度设置的模型，`/v1/embeddings` 可传正整数 `dimensions`，覆盖当前 Agent 的 `memory.search.outputDimensionality`；即使记忆搜索关闭也有效。不传时使用配置或提供商默认维度。改变维度前应确认下游向量库与已有索引兼容。
+
 ---
 
 ## 示例

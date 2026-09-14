@@ -1,229 +1,163 @@
 ---
 title: "OpenAI"
 sidebarTitle: "OpenAI"
-description: "OpenClaw 模型接入：OpenAI。讲清 OpenAI API Key、Codex 订阅登录、openai/* 模型路由和实时语音账单的区别。"
+description: "在 OpenClaw 中使用 OpenAI API Key 或 ChatGPT/Codex 订阅，配置 GPT-6 Astra、GPT-5.6 与媒体模型。"
 ---
 
-# OpenAI
+# OpenAI：模型、认证和运行时要分开看
 
-OpenAI 这一页最容易让人混乱，因为名字很像：
+当前 OpenClaw 对 OpenAI 只使用一个 Provider ID：`openai`。API Key 和
+ChatGPT/Codex OAuth 都使用 `openai:*` 认证档案，模型也统一写成
+`openai/<model>`。
 
-- `openai`：模型提供商前缀，也就是模型写成 `openai/gpt-5.5`。
-- `openai-codex`：旧配置和 Codex OAuth 登录资料的名字。
-- `codex`：OpenClaw 里负责原生 Codex app-server 运行时的插件/运行时。
-
-先记住一句话：
-
-```text
-新配置里，OpenAI Agent 模型优先写 openai/gpt-5.5。
-就算你用的是 ChatGPT/Codex 订阅登录，模型名也不要写成 openai-codex/gpt-*。
-```
-
-旧的 `openai-codex/*` 不是推荐的新模型路线。升级后请运行：
+`openai-codex/*`、`codex/*` 和 `codex-cli/*` 都是旧模型引用。运行：
 
 ```bash
 openclaw doctor --fix
 openclaw config validate
 ```
 
-Doctor 会尽量把旧模型引用修成 `openai/*`，并保留能用的 Codex 登录资料。
+Doctor 会把旧模型引用迁移到 `openai/*`，必要时补模型级
+`agentRuntime.id: "codex"`，并把旧的认证 profile ID 和 `auth.order` 迁移到
+`openai` 命名空间。
 
----
+## 新安装先选哪一个模型
 
-## 先选你是哪一种用法
+| 目标 | 模型 |
+|------|------|
+| 最新旗舰、需要长上下文或在生成中追加指令 | `openai/gpt-6-astra` |
+| 旗舰 Agent | `openai/gpt-5.6-sol` |
+| 平衡能力与成本 | `openai/gpt-5.6-terra` |
+| 更快、更低成本 | `openai/gpt-5.6-luna` |
+| 账号尚无 GPT-5.6 权限 | `openai/gpt-5.5` |
 
-| 你想做什么 | 推荐模型写法 | 登录/付费方式 |
-|------------|--------------|---------------|
-| 用 ChatGPT/Codex 订阅跑 Agent | `openai/gpt-5.5` | `openai-codex` OAuth 登录 |
-| 用 OpenAI Platform API Key 跑 Agent | `openai/gpt-5.5` | 配好 OpenAI API Key，并按需要设置 auth order |
-| 用 OpenAI 图片、语音、Embedding | `openai/gpt-image-2` 等 | OpenAI API Key 或支持的 OAuth 路线 |
-| 试 ChatGPT Instant 最新别名 | `openai/chat-latest` | 只建议 API Key 实验，不建议生产默认 |
+新安装会优先使用精确的 `openai/gpt-6-astra`。它可通过有权限的 OpenAI API Key
+或 ChatGPT/Codex 订阅使用；订阅目录发现失败时，模型选择器会暂时不显示 Astra，
+不会把“目录没加载出来”误判成已授权。Astra 支持文本和图片，官方 API Key +
+OpenClaw runtime 的 WebSocket 路线还支持工具异步执行与生成中的文字/图片纠偏；
+自定义端点、SSE、Codex runtime 不应假定具备同样能力。
 
-把这三层分开看：模型名决定用哪个模型，登录方式决定用哪份凭据，运行时决定由哪个执行后端处理 Agent turn。
-新手只需要先把模型写成 `openai/gpt-5.5`。
-
----
-
-## 方式 A：ChatGPT/Codex 订阅登录
-
-适合：你有 ChatGPT/Codex 订阅，想让 OpenClaw 走原生 Codex 运行时。
-
-### 第一步：登录 Codex OAuth
-
-```bash
-openclaw onboard --auth-choice openai-codex
-```
-
-或者只登录模型认证：
+Sol、Terra、Luna 当前都支持 `xhigh` 和 `max` reasoning。账号权限可能不同，
+先查询：
 
 ```bash
-openclaw models auth login --provider openai-codex
+openclaw models list --provider openai
 ```
 
-如果服务器没有方便打开浏览器，用设备码：
+如果 GPT-5.6 不可用，OpenClaw 会显示上游权限错误，不会偷偷降级；需要你显式
+选择 GPT-5.5：
 
 ```bash
-openclaw models auth login --provider openai-codex --device-code
+openclaw models set openai/gpt-5.5
 ```
 
-### 第二步：设置模型
+## 方式 A：ChatGPT/Codex 订阅
 
 ```bash
-openclaw config set agents.defaults.model.primary openai/gpt-5.5
+openclaw onboard --auth-choice openai
 ```
 
-配置文件里等价写法：
-
-```json5
-{
-  agents: {
-    defaults: {
-      model: { primary: "openai/gpt-5.5" }
-    }
-  }
-}
-```
-
-OpenAI Agent turn 默认会选择原生 Codex app-server 运行时。
-普通用户不需要写 `agents.defaults.agentRuntime`。
-
-### 第三步：检查是否真的登录成功
+只登录认证：
 
 ```bash
-openclaw models auth list --provider openai-codex
-openclaw models status
+openclaw models auth login --provider openai
 ```
 
-Gateway 已经运行后，也可以在聊天里发：
+无头服务器可使用设备码：
 
-```text
-/codex status
+```bash
+openclaw models auth login --provider openai --device-code
 ```
 
----
+多个账号使用 `openai:<name>` profile：
 
-## 方式 B：OpenAI API Key
+```bash
+openclaw models auth login --provider openai --profile-id openai:work
+openclaw models auth login --provider openai --profile-id openai:personal
+```
 
-适合：你想走 OpenAI Platform 按量计费，或者需要图片、Embedding、Realtime 等平台能力。
+OAuth 凭据写入当前 Agent 的 SQLite 认证档案，不再写
+`auth-profiles.json`。新登录如果检测到已有 primary，不会擅自替换；只有
+`--set-default` 或 `openclaw models set` 才会明确改默认模型。
 
-### CLI 设置
+## 方式 B：OpenAI Platform API Key
 
 ```bash
 openclaw onboard --auth-choice openai-api-key
 ```
 
-也可以非交互式传入：
+非交互式：
 
 ```bash
 openclaw onboard --openai-api-key "$OPENAI_API_KEY"
 ```
 
-### 配置示例
+API Key 适合 Platform 按量计费、Realtime、Embedding 等非订阅能力。不要把
+`OPENAI_API_KEY` 当作 ChatGPT 订阅凭据；两者账单和额度相互独立。
+
+## 订阅优先、API Key 备用
+
+两种认证都放在 `auth.order.openai`：
 
 ```json5
 {
-  env: {
-    OPENAI_API_KEY: "sk-..."
-  },
-  agents: {
-    defaults: {
-      model: { primary: "openai/gpt-5.5" }
-    }
-  }
-}
-```
-
-如果你同时有 Codex 订阅和 API Key，并希望订阅优先、API Key 备用，可以把认证顺序放在 `auth.order.openai` 下。
-这样模型名仍然保持 `openai/gpt-5.5`：
-
-```json5
-{
-  agents: {
-    defaults: {
-      model: { primary: "openai/gpt-5.5" }
-    }
-  },
   auth: {
     order: {
-      openai: [
-        "openai-codex:user@example.com",
-        "openai:api-key-backup"
-      ]
-    }
-  }
-}
-```
-
----
-
-## `openai-codex/*` 旧写法怎么办？
-
-如果配置里还有旧引用：
-
-```text
-openai-codex/gpt-*
-codex-cli/gpt-*
-```
-
-先运行：
-
-```bash
-openclaw doctor --fix
-openclaw config validate
-```
-
-Doctor 会尽量：
-
-1. 把旧模型名修成 `openai/*`。
-2. 保留已有的 `openai-codex` OAuth 登录资料。
-3. 清理旧的 runtime pin，避免会话继续走过期路线。
-
-::: warning 不要把 `openai-codex` 当成新模型前缀
-`openai-codex` 现在更多是旧配置和登录资料命名。新 Agent 模型引用优先使用 `openai/gpt-5.5`。
-只有账号目录明确暴露的特殊 Codex 模型，才可能需要保留特殊旧路线；普通用户不要从这里开始。
-:::
-
----
-
-## Realtime 语音账单要特别注意
-
-OpenAI Realtime 语音不是消耗 ChatGPT/Codex 订阅额度。
-它走的是 OpenAI Platform Realtime API，需要 OpenAI Platform 组织有可用额度或账单。
-
-所以可能出现这种情况：
-
-```text
-文字聊天能用，因为 Codex OAuth 正常。
-Realtime 语音失败，因为 OpenAI Platform 没有充值或没有账单。
-```
-
-如果看到 `insufficient_quota` 或 “You exceeded your current quota”，请到
-[OpenAI Platform Billing](https://platform.openai.com/account/billing) 检查对应组织的额度。
-
----
-
-## `openai/chat-latest` 是什么？
-
-`openai/chat-latest` 是 OpenAI API 的移动别名，适合实验 ChatGPT 当前 Instant 模型。
-
-不建议把它当生产默认模型，因为它会随 OpenAI 调整而变化。
-生产配置优先使用明确模型，例如：
-
-```json5
-{
+      openai: ["openai:work", "openai:api-key-backup"],
+    },
+  },
   agents: {
     defaults: {
-      model: { primary: "openai/gpt-5.5" }
-    }
-  }
+      model: { primary: "openai/gpt-6-astra" },
+    },
+  },
 }
 ```
 
----
+订阅达到限额时，OpenClaw 可切换到有资格的备用 profile，并保留模型与原生
+Codex harness。额度恢复后，自动选择可以回到订阅 profile。
 
-## 继续阅读
+## `openai/*` 不等于一定使用 Codex Runtime
 
-- [模型提供商](/tutorials/concepts/model-providers)
-- [模型选择](/tutorials/concepts/models)
-- [OAuth 认证](/tutorials/concepts/oauth)
-- [Agent 运行时](/tutorials/concepts/agent-runtimes)
+Provider、模型、认证与 Agent runtime 是四层独立概念。只有精确的 OpenAI
+官方 HTTPS Responses/ChatGPT Responses 路线、没有自定义请求覆盖，且运行时
+策略未设置或为 `auto` 时，OpenClaw 才可能隐式选择 bundled Codex app-server。
+
+- 自定义 Endpoint 或 `openai-completions` adapter：使用 OpenClaw runtime。
+- `agentRuntime.id: "openclaw"`：强制使用 OpenClaw runtime。
+- `agentRuntime.id: "codex"`：要求 Codex harness；不支持的路线会失败关闭。
+- 官方 Endpoint 写成明文 HTTP：直接拒绝，不发送凭据。
+
+不要只凭模型前缀判断实际 harness；依赖原生能力时应检查完成结果的 runtime。
+
+## Realtime 与图片账单
+
+语音要按使用入口区分认证，不能统称为“都走 Platform”或“订阅都能用”：
+
+| 入口 | 认证要求 |
+|------|----------|
+| GA Realtime 浏览器 Talk | 优先 Platform 凭据；未配置时也可用有权限的 ChatGPT OAuth |
+| GPT-Live 浏览器 / Gateway-relay Talk | 优先 ChatGPT OAuth；无 OAuth 时可用已获 API 权限的 Platform Key |
+| OpenAI TTS、Voice Call、GA Gateway relay、Discord realtime、实时转写 | 仍需 Platform API Key |
+
+启用的 OpenAI 插件会自动启动浏览器 session broker，Gateway 启动后再登录也可以；只有开始 Talk 才创建语音会话，登录本身不会打开麦克风。返回浏览器后会刷新语音入口的就绪状态。
+
+GPT-Live 的 OAuth 路线通过 Codex 后端建会话，Platform 路线通过 `/v1/live`；API 访问仍受账号资格限制。GPT-Live 优先 OAuth，即使已配置 Platform Key；没有 OAuth 且配置的 Key/SecretRef 无法解析时，先修好或移除该配置。
+
+GPT-Live 音色使用 Codex V3 集合：`arbor`、`breeze`、`cove`、`ember`、`juniper`、`maple`、`sol`、`spruce`、`vale`，默认 `cove`。GA Realtime 的 `marin`、`cedar` 不属于这个集合。iOS GPT-Live 传输已实现但设备实时验证仍待完成，Android 仍有设备验证限制，不要把实现存在等同于全部端到端验收。
+
+共享 Discord 语音还要看[唤醒词策略限制](/tutorials/channels/discord#线程会话与语音限制)；电话侧 GPT-Live 不能调用原生挂断或自定义 realtime 工具，见 [Voice Call](/tutorials/plugins/voice-call#实时通话的模型限制)。
+
+图片生成新增 GPT Image 2.5 Flare / Sunburst：
+
+```text
+openai/gpt-image-2.5-flare
+openai/gpt-image-2.5-sunburst
+```
+
+它们需要显式的 OpenAI API Key 路线；仅有 ChatGPT/Codex 订阅不代表具备图片 API
+权限。支持自定义尺寸、`xhigh` 质量、透明 PNG/WebP，OpenAI 编辑最多 5 张参考图。
+旧的 `openai/gpt-image-2` 与 `openai/gpt-image-1.5` 仍可按账号能力使用。
+
+继续阅读：[OAuth](/tutorials/concepts/oauth)、[Agent Runtime](/tutorials/concepts/agent-runtimes)、
+[模型故障转移](/tutorials/concepts/model-failover)。

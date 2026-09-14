@@ -155,7 +155,7 @@ The minimum config to keep group messages flowing after `groupPolicy: "allowlist
 }
 ```
 
-`requireMention: true` under `*` is harmless when no mention patterns are configured: the runtime sets `canDetectMention = false` and short-circuits the mention drop at `inbound-processing.ts:512`. With mention patterns configured (`agents.list[].groupChat.mentionPatterns`), it works as expected.
+`requireMention: true` under `*` is harmless when no mention patterns are configured: the runtime sets `canDetectMention = false` and short-circuits the mention drop at `inbound-processing.ts:512`. With mention patterns configured (`agents.entries.*.groupChat.mentionPatterns`), it works as expected.
 
 If the gateway logs `imessage: dropping group message from chat_id=<id>` or the startup line `imessage: groupPolicy="allowlist" but channels.imessage.groups is empty`, gate 2 is dropping : add the `groups` block.
 

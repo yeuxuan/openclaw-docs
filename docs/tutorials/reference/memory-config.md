@@ -36,12 +36,10 @@ openclaw doctor
 
 ```json5
 {
-  agents: {
-    defaults: {
-      memorySearch: {
-        experimental: { sessionMemory: true },
-        sources: ["memory", "sessions"],
-      },
+  memory: {
+    search: {
+      experimental: { sessionMemory: true },
+      sources: ["memory", "sessions"],
     },
   },
   tools: {
@@ -54,15 +52,11 @@ openclaw doctor
 
 ```json5
 {
-  agents: {
-    defaults: {
-      memorySearch: {
-        experimental: { sessionMemory: true },
-        sources: ["memory", "sessions"],
-      },
-    },
-  },
   memory: {
+    search: {
+      experimental: { sessionMemory: true },
+      sources: ["memory", "sessions"],
+    },
     backend: "qmd",
     qmd: {
       sessions: { enabled: true },
@@ -78,7 +72,12 @@ openclaw doctor
 
 - 只开 `sessionMemory`，却没把 `"sessions"` 放进 `sources`
 - 用 QMD，但没开 `memory.qmd.sessions.enabled`
-- 保持默认 `tools.sessions.visibility = "tree"`，结果新会话看不到旧会话
+- 显式设置了 `tools.sessions.visibility = "tree"` 或 `"self"`，却期望普通会话能召回同 Agent 的任意旧会话
 
-默认的 `tree` 更保守，只暴露当前会话和它派生出来的子会话。
-如果你要让同一 Agent 在不同 DM / 网关会话之间做历史召回，通常要有意改成 `agent`。
+当前默认值是 `agent`，非沙箱会话可召回同 Agent 的其他会话，也可能包括其他用户的对话。`tree` 限定当前及派生会话，但规范主会话仍有同 Agent 全部会话的例外；`self` 才是严格的当前会话范围。
+
+按发送者拆分 DM 上下文不等于禁止跨会话召回。多人场景应显式选择较窄范围或拆分 Agent；沙箱限制和 Incognito 排除仍然生效。`rememberAcrossConversations` 不会扩大普通会话工具的可见范围。
+
+## 搜索结果数量
+
+未传工具参数 `maxResults` 时，`memory_search` 的 `corpus=memory` 和 `corpus=sessions` 使用 `memory.search.query.maxResults`（默认 `6`）；`corpus=wiki`、`corpus=all` 保持独立的默认 `10`。单次显式传入 `maxResults` 会覆盖对应默认值。

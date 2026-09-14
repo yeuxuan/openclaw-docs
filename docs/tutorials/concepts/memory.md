@@ -98,7 +98,7 @@ OpenClaw 的记忆更像一个笔记本：
 - 软阈值：当会话 Token 估算超过 `contextWindow - reserveTokensFloor - softThresholdTokens` 时触发刷新。
 - 默认静默：提示词包含 `NO_REPLY`，因此通常不会投递任何内容。
 - 两个提示词：一个用户提示词，加一个系统提示词提醒。
-- 每个压缩周期只刷新一次，状态记录在 `sessions.json` 中。
+- 每个压缩周期只刷新一次，状态记录在当前会话 SQLite 行中。
 - 工作区必须可写；如果会话运行在 `workspaceAccess: "ro"` 或 `"none"` 沙箱里，刷新会被跳过。
 
 关于完整的压缩生命周期，参见[会话管理 + 压缩](/tutorials/concepts/compaction)。
@@ -118,9 +118,10 @@ OpenClaw 可以在 `MEMORY.md` 和 `memory/*.md` 上构建小型向量索引，�
 
 - 默认启用。
 - 监视记忆文件的变化（带防抖）。
-- 在 `agents.defaults.memorySearch` 下配置记忆搜索（不是顶级 `memorySearch`）。
-- 默认使用远程嵌入。如果未设置 `memorySearch.provider`，OpenClaw 自动选择：
-  1. 如果配置了 `memorySearch.local.modelPath` 且文件存在，则使用 `local`。
+- 在顶层 `memory.search` 下配置全局记忆搜索；单个 Agent 的覆盖写在
+  `agents.entries.*.memory.search`。
+- 默认使用远程嵌入。如果未设置 `memory.search.provider`，OpenClaw 自动选择：
+  1. 如果配置了 `memory.search.local.modelPath` 且文件存在，则使用 `local`。
   2. 如果可以解析 OpenAI 密钥，则使用 `openai`。
   3. 如果可以解析 Gemini 密钥，则使用 `gemini`。
   4. 如果可以解析 Voyage 密钥，则使用 `voyage`。
@@ -130,7 +131,7 @@ OpenClaw 可以在 `MEMORY.md` 和 `memory/*.md` 上构建小型向量索引，�
 
 远程嵌入需要嵌入提供商的 API Key。OpenClaw 会从认证配置文件、`models.providers.*.apiKey` 或环境变量解析密钥。
 
-Codex OAuth 只覆盖 chat/completions，不能满足记忆搜索的嵌入需求。Gemini 使用 `GEMINI_API_KEY` 或 `models.providers.google.apiKey`；Voyage 使用 `VOYAGE_API_KEY` 或 `models.providers.voyage.apiKey`。自定义 OpenAI 兼容端点则设置 `memorySearch.remote.apiKey`，必要时再加 `memorySearch.remote.headers`。
+Codex OAuth 只覆盖 chat/completions，不能满足记忆搜索的嵌入需求。Gemini 使用 `GEMINI_API_KEY` 或 `models.providers.google.apiKey`；Voyage 使用 `VOYAGE_API_KEY` 或 `models.providers.voyage.apiKey`。自定义 OpenAI 兼容端点则设置 `memory.search.remote.apiKey`，必要时再加 `memory.search.remote.headers`。
 
 这里最容易错的是：聊天模型能用，不代表记忆搜索也能用。
 记忆搜索需要“嵌入模型”，它和普通聊天模型不是同一个入口。
@@ -232,11 +233,9 @@ memory: {
 如果你想索引默认工作区布局之外的 Markdown 文件，添加显式路径：
 
 ```json5
-agents: {
-  defaults: {
-    memorySearch: {
+memory: {
+  search: {
       extraPaths: ["../team-docs", "/srv/shared-notes/overview.md"]
-    }
   }
 }
 ```
@@ -253,15 +252,13 @@ agents: {
 将提供商设置为 `gemini` 以直接使用 Gemini 嵌入 API：
 
 ```json5
-agents: {
-  defaults: {
-    memorySearch: {
+memory: {
+  search: {
       provider: "gemini",
       model: "gemini-embedding-001",
       remote: {
         apiKey: "YOUR_GEMINI_API_KEY"
       }
-    }
   }
 }
 ```
@@ -275,9 +272,8 @@ agents: {
 如果你想使用 自定义 OpenAI 兼容端点（OpenRouter、vLLM 或代理），你可以使用 OpenAI 提供商的 `remote` 配置：
 
 ```json5
-agents: {
-  defaults: {
-    memorySearch: {
+memory: {
+  search: {
       provider: "openai",
       model: "text-embedding-3-small",
       remote: {
@@ -285,24 +281,23 @@ agents: {
         apiKey: "YOUR_OPENAI_COMPAT_API_KEY",
         headers: { "X-Custom-Header": "value" }
       }
-    }
   }
 }
 ```
 
-如果你不想设置 API 密钥，使用 `memorySearch.provider = "local"` 或设置 `memorySearch.fallback = "none"`。
+如果你不想设置 API 密钥，使用 `memory.search.provider = "local"` 或设置 `memory.search.fallback = "none"`。
 
 回退：
 
-- `memorySearch.fallback` 可以是 `openai`、`gemini`、`local` 或 `none`。
+- `memory.search.fallback` 可以是 `openai`、`gemini`、`local` 或 `none`。
 - 回退提供商仅在主嵌入提供商失败时使用。
 
 批量索引（OpenAI + Gemini + Voyage）：
 
-- 默认禁用。设置 `agents.defaults.memorySearch.remote.batch.enabled = true` 以启用大规模语料库索引（OpenAI、Gemini 和 Voyage）。
+- 默认禁用。设置 `memory.search.remote.batch.enabled = true` 以启用大规模语料库索引（OpenAI、Gemini 和 Voyage）。
 - 默认行为等待批处理完成；如需可调优 `remote.batch.wait`、`remote.batch.pollIntervalMs` 和 `remote.batch.timeoutMinutes`。
 - 设置 `remote.batch.concurrency` 控制并行提交的批处理作业数（默认：2）。
-- 批量模式在 `memorySearch.provider = "openai"` 或 `"gemini"` 时应用，并使用对应的 API 密钥。
+- 批量模式在 `memory.search.provider = "openai"` 或 `"gemini"` 时应用，并使用对应的 API 密钥。
 - Gemini 批处理作业使用异步嵌入批处理端点，需要 Gemini Batch API 可用。
 
 为什么 OpenAI 批处理快且便宜：
@@ -316,9 +311,8 @@ agents: {
 配置示例：
 
 ```json5
-agents: {
-  defaults: {
-    memorySearch: {
+memory: {
+  search: {
       provider: "openai",
       model: "text-embedding-3-small",
       fallback: "openai",
@@ -326,7 +320,6 @@ agents: {
         batch: { enabled: true, concurrency: 2 }
       },
       sync: { watch: true }
-    }
   }
 }
 ```
@@ -338,20 +331,21 @@ agents: {
 
 本地模式：
 
-- 设置 `agents.defaults.memorySearch.provider = "local"`。
-- 提供 `agents.defaults.memorySearch.local.modelPath`（GGUF 或 `hf:` URI）。
-- 可选：设置 `agents.defaults.memorySearch.fallback = "none"` 以避免远程回退。
+- 设置 `memory.search.provider = "local"`。
+- 提供 `memory.search.local.modelPath`（GGUF 或 `hf:` URI）。
+- 可选：设置 `memory.search.fallback = "none"` 以避免远程回退。
 
 ### 记忆工具如何工作
 
 - `memory_search` 从 `MEMORY.md` + `memory/**/*.md` 对 Markdown 块（约 400 Token 目标，80 Token 重叠）进行语义搜索。返回片段文本（上限约 700 字符）、文件路径、行范围、分数、提供商/模型，以及是否从本地回退到远程嵌入。不返回完整文件负载。
 - `memory_get` 读取特定的记忆 Markdown 文件（相对于工作区），可选从起始行读取 N 行。`MEMORY.md` / `memory/` 之外的路径会被拒绝。
-- 两个工具仅在 `memorySearch.enabled` 对智能体解析为 true 时启用。
+- 两个工具仅在 `memory.search.enabled` 对智能体解析为 true 时启用。
 
 ### 索引什么（以及何时）
 
 - 文件类型：仅 Markdown（`MEMORY.md`、`memory/**/*.md`）。
-- 索引存储：每智能体 SQLite 位于 `~/.openclaw/memory/<agentId>.sqlite`（可通过 `agents.defaults.memorySearch.store.path` 配置，支持 `{agentId}` Token）。
+- 索引与会话状态进入每个 Agent 的 `~/.openclaw/agents/<agentId>/agent/openclaw-agent.sqlite`；
+  旧 `memory.search.store.path` 已移除，不要继续为新配置指定独立索引路径。
 - 新鲜度：`MEMORY.md` + `memory/` 上的监视器标记索引为脏（防抖 1.5 秒）。同步在会话开始时、搜索时或按间隔计划，并异步运行。会话记录使用增量阈值触发后台同步。
 - 重新索引触发器：索引存储嵌入 提供商/模型 + 端点指纹 + 分块参数。如果其中任何一个发生变化，OpenClaw 自动重置并重新索引整个存储。
 
@@ -374,7 +368,7 @@ agents: {
 但在精确的高信号 Token 上可能较弱：
 
 - ID（`a828e60`、`b3b9895a…`）
-- 代码符号（`memorySearch.query.hybrid`）
+- 代码符号（`memory.search.query.hybrid`）
 - 错误字符串（"sqlite-vec unavailable"）
 
 BM25（全文）恰好相反：在精确 Token 上很强，在改述上较弱。混合搜索是务实的中间方案：使用两种检索信号，这样你可以同时获得"自然语言"查询和"大海捞针"查询的良好结果。
@@ -407,9 +401,8 @@ BM25（全文）恰好相反：在精确 Token 上很强，在改述上较弱。
 配置：
 
 ```json5
-agents: {
-  defaults: {
-    memorySearch: {
+memory: {
+  search: {
       query: {
         hybrid: {
           enabled: true,
@@ -418,7 +411,6 @@ agents: {
           candidateMultiplier: 4
         }
       }
-    }
   }
 }
 ```
@@ -430,14 +422,12 @@ OpenClaw 可以在 SQLite 中缓存 块嵌入，这样重新索引和频繁更�
 配置：
 
 ```json5
-agents: {
-  defaults: {
-    memorySearch: {
+memory: {
+  search: {
       cache: {
         enabled: true,
         maxEntries: 50000
       }
-    }
   }
 }
 ```
@@ -447,12 +437,10 @@ agents: {
 你可以选择索引会话记录，并通过 `memory_search` 返回它们。这受实验性标志控制。
 
 ```json5
-agents: {
-  defaults: {
-    memorySearch: {
+memory: {
+  search: {
       experimental: { sessionMemory: true },
       sources: ["memory", "sessions"]
-    }
   }
 }
 ```
@@ -464,21 +452,21 @@ agents: {
 - `memory_search` 永远不会在索引上阻塞；结果在后台同步完成之前可能略有延迟。
 - 结果仍然仅包含片段；`memory_get` 仍然限于记忆文件。
 - 会话索引按智能体隔离（仅索引该智能体的会话日志）。
-- 会话日志位于磁盘上（`~/.openclaw/agents/<agentId>/sessions/*.jsonl`）。任何具有文件系统访问权限的进程/用户都可以读取它们，因此将磁盘访问视为信任边界。对于更严格的隔离，在不同的操作系统用户或主机下运行智能体。
+- 运行时会话位于每个 Agent 的 `openclaw-agent.sqlite`。旧
+  `~/.openclaw/agents/<agentId>/sessions/*.jsonl` 只作为迁移或归档材料；任何具有
+  状态目录文件访问权的进程/用户仍可读取敏感内容，因此更严格的隔离应使用不同 OS 用户或主机。
 
 增量阈值（显示默认值）：
 
 ```json5
-agents: {
-  defaults: {
-    memorySearch: {
+memory: {
+  search: {
       sync: {
         sessions: {
           deltaBytes: 100000,   // ~100 KB
           deltaMessages: 50     // JSONL 行数
         }
       }
-    }
   }
 }
 ```
@@ -490,16 +478,14 @@ agents: {
 配置（可选）：
 
 ```json5
-agents: {
-  defaults: {
-    memorySearch: {
+memory: {
+  search: {
       store: {
         vector: {
           enabled: true,
           extensionPath: "/path/to/sqlite-vec"
         }
       }
-    }
   }
 }
 ```
@@ -513,16 +499,15 @@ agents: {
 ### 本地嵌入自动下载
 
 - 默认本地嵌入模型：`hf:ggml-org/embeddinggemma-300m-qat-q8_0-GGUF/embeddinggemma-300m-qat-Q8_0.gguf`（约 0.6 GB）。
-- 当 `memorySearch.provider = "local"` 时，`node-llama-cpp` 解析 `modelPath`；如果 GGUF 缺失，它会 自动下载 到缓存（或 `local.modelCacheDir`，如果设置了），然后加载。下载支持断点续传。
+- 当 `memory.search.provider = "local"` 时，`node-llama-cpp` 解析 `modelPath`；如果 GGUF 缺失，它会 自动下载 到缓存（或 `local.modelCacheDir`，如果设置了），然后加载。下载支持断点续传。
 - 原生构建要求：运行 `pnpm approve-builds`，选择 `node-llama-cpp`，然后 `pnpm rebuild node-llama-cpp`。
-- 回退：如果本地设置失败且 `memorySearch.fallback = "openai"`，我们自动切换到远程嵌入（`openai/text-embedding-3-small`，除非被覆盖）并记录原因。
+- 回退：如果本地设置失败且 `memory.search.fallback = "openai"`，我们自动切换到远程嵌入（`openai/text-embedding-3-small`，除非被覆盖）并记录原因。
 
 ### 自定义 OpenAI 兼容端点示例
 
 ```json5
-agents: {
-  defaults: {
-    memorySearch: {
+memory: {
+  search: {
       provider: "openai",
       model: "text-embedding-3-small",
       remote: {
@@ -533,7 +518,6 @@ agents: {
           "X-Project": "project-id"
         }
       }
-    }
   }
 }
 ```

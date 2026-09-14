@@ -167,6 +167,8 @@ ClawRouter 不是把一份固定模型表内置在 OpenClaw 里。
 
 ---
 
+目录里的 `displayName` 只影响选择器标签，不改变模型身份。Responses / Chat Completions 按原样发送 catalog `id`；只有原生 Anthropic / Gemini 路线使用 `upstream`。自建统一入口暴露别名时，必填 `upstream` 也应返回安全的别名元数据，把私有目标映射留在入口服务内部。
+
 ## 配额和预算怎么看
 
 可以直接看：

@@ -66,4 +66,8 @@ openclaw models set github-copilot/gpt-4o
 - 需要交互式 TTY；请直接在终端中运行。
 - Copilot 模型可用性取决于你的计划；如果某个模型被拒绝，请尝试
   其他 ID（例如 `github-copilot/gpt-4.1`）。
-- 登录会将 GitHub Token 存储在认证配置文件存储中，并在 OpenClaw 运行时将其交换为 Copilot API Token。
+- 默认设备登录把 GitHub Token 写入 OpenClaw 的本地受保护密钥存储，认证档案 `github-copilot:github` 只保存 `tokenRef`；不需要额外配置外部 Secret Provider。
+- 存储写入失败会在替换认证档案前停止。先修复状态目录/数据库权限，不要靠反复登录绕过。
+- 交互式 onboarding 显式选择 `--secret-input-mode plaintext` 时仍可内联保存，`openclaw secrets audit --check` 会检查到这种情况。
+
+这里的“受保护”不表示磁盘加密：底层 SQLite 依赖状态目录权限。用户可见密钥 API 是只写接口，但备份、目录访问权限仍须妥善保护。运行时解析引用后，再验证 Copilot 访问权和账号专属 API 端点。

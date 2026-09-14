@@ -266,7 +266,7 @@ registerChannel({
 | Slack | Slack (Socket Mode) | 企业通讯，Socket Mode |
 | Google Chat | Google Chat (Chat API) | Google Workspace |
 | Signal | Signal (signal-cli) | 私密通讯，需额外配置 |
-| BlueBubbles | BlueBubbles iMessage | 推荐的 iMessage 路线 |
+| iMessage | iMessage (`imsg`) | 当前 macOS 原生路线；BlueBubbles 插件已移除 |
 | WebChat | WebChat | 浏览器聊天入口 |
 | Matrix / Mattermost / Teams / LINE / Zalo / QQ / WeChat | 插件通道 | 通过插件能力接入 |
 

@@ -50,7 +50,7 @@ Token credentials (`type: "token"`) support inline `token` and/or `tokenRef`.
 
 Agent auth inheritance is read-through. When an agent has no local profile, it
 can resolve profiles from the default/main agent store at runtime without
-copying secret material into its own `auth-profiles.json`.
+copying secret material into its own `openclaw-agent.sqlite` credential store.
 
 Explicit copy flows, such as `openclaw agents add`, use this portability policy:
 
@@ -70,11 +70,11 @@ the target agent signs in separately and creates its own local profile.
 credentials. They are valid when the target provider uses
 `models.providers.<id>.auth: "aws-sdk"` or plugin-owned Amazon Bedrock setup
 AWS SDK route. These profile ids may appear in `auth.order` and session
-overrides even when no matching entry exists in `auth-profiles.json`.
+overrides even when no matching entry exists in the SQLite credential store.
 
-Do not write `type: "aws-sdk"` into `auth-profiles.json`. If a legacy install
-has such a marker, `openclaw doctor --fix` moves it to `auth.profiles` and
-removes the marker from the credential store.
+Do not write `type: "aws-sdk"` into the credential store. If a legacy
+`auth-profiles.json` has such a marker, `openclaw doctor --fix` moves it to
+`auth.profiles` and removes the marker from the migrated store.
 
 ## Explicit auth order filtering
 
