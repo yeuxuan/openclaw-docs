@@ -28,4 +28,6 @@ description: "多个可信操作者共用一个 Agent 时的会话归属、在�
 
 通过 Cloudflare Access 或 Tailscale Serve 验证 GitHub 身份后，当前 **Git co-author credit** 对已验证账号默认开启，会影响公开提交署名；不希望后续产生公开 `Co-authored-by` 信息时，在 **Settings → Profile → Identity** 关闭该选项。
 
+管理员需要查找持久 Profile ID、给现有成员关联新邮箱或合并重复 Profile 时，使用 [`openclaw users`](/tutorials/cli/users)。邮箱关联会保留 Profile 和角色，但不会自动复制 `identityScopes` 等旧身份 grant；切换 IdP 时必须单独核对访问策略。
+
 上游来源：[`docs/concepts/multi-user.md`](https://github.com/openclaw/openclaw/blob/main/docs/concepts/multi-user.md)。

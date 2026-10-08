@@ -6,6 +6,10 @@ description: "在 OpenClaw 中使用 OpenAI API Key 或 ChatGPT/Codex 订阅，�
 
 # OpenAI：模型、认证和运行时要分开看
 
+::: tip 先选认证方式
+Codex 浏览器/设备码登录、Sign in with ChatGPT (Beta) 和 Platform API Key 的模型权限、计费与插件能力不同。先看 [OpenAI 认证方式](/tutorials/providers/openai-authentication)，不要把“账号已连接”直接理解成图片、音频或托管插件都可用。
+:::
+
 当前 OpenClaw 对 OpenAI 只使用一个 Provider ID：`openai`。API Key 和
 ChatGPT/Codex OAuth 都使用 `openai:*` 认证档案，模型也统一写成
 `openai/<model>`。

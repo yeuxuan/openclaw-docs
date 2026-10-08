@@ -79,6 +79,7 @@ openclaw gateway stop
 如果你现在在做运维、托管或故障留痕，也可以继续看：
 
 - [Gateway 审计总览](/tutorials/gateway/audit)
+- [团队 Gateway 生产部署](/tutorials/gateway/team-server)
 - [多租户托管](/tutorials/gateway/multi-tenant-hosting)
 - [重启恢复](/tutorials/gateway/restart-recovery)
 - [稳定的 Tailscale HTTPS 地址](/tutorials/gateway/stable-https-url)
@@ -245,6 +246,7 @@ openclaw pairing list
 - [Tools 配置](/tutorials/gateway/config-tools)
 - [会话权限模式](/tutorials/gateway/permission-modes)
 - [数据库版本与升级恢复](/tutorials/reference/database-schemas)
+- [命名存储与异地备份](/tutorials/concepts/storage-locations)
 - [密钥与 SecretRef](/tutorials/gateway/secrets)
 - [Secrets Apply Plan](/tutorials/gateway/secrets-plan-contract)
 - [Operator 权限范围](/tutorials/gateway/operator-scopes)

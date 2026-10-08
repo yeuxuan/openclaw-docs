@@ -27,6 +27,8 @@ openclaw browser --browser-profile openclaw snapshot
 | `user` | 通过 Chrome DevTools MCP 接入真实登录态 | 第一次附加可能弹远程调试确认，需要人在电脑前 |
 | `chrome` | 通过 OpenClaw 扩展接入真实登录态 | 安装并配对[Chrome 扩展](/tutorials/tools/chrome-extension) |
 
+纯文本、DOM 或容器内低资源任务也可以显式配置 [Lightpanda 轻量浏览器](/tutorials/tools/browser-lightweight)。它不替代 Chromium 的截图、PDF 和完整兼容性能力，建议两种 Profile 并存。
+
 不要把登录态接入当成隔离环境；页面上可见的敏感内容也可能被 Agent 读取。
 
 ## 正确的配置位置
@@ -90,6 +92,6 @@ Control UI Browser 面板跟随当前会话最近一次成功的浏览器目标�
 - 登录、2FA、验证码、摄像头和麦克风授权需要用户处理，不应伪造已完成。
 - Playwright/浏览器二进制缺失时，先看 doctor 诊断，再按[Linux 浏览器排障](/tutorials/tools/browser-linux-troubleshooting)或[Docker 安装](/tutorials/installation/docker)处理，避免安装与当前 OpenClaw 不匹配的任意依赖。
 
-继续阅读：[Browser CLI](/tutorials/cli/browser)、[Chrome 扩展](/tutorials/tools/chrome-extension)、[Browser Control API](/tutorials/tools/browser-control)。
+继续阅读：[Browser CLI](/tutorials/cli/browser)、[Chrome 扩展](/tutorials/tools/chrome-extension)、[轻量浏览器](/tutorials/tools/browser-lightweight)、[Browser Control API](/tutorials/tools/browser-control)。
 
 上游来源：[Browser](https://github.com/openclaw/openclaw/blob/2e3bf941b7848fa9dfcbcfc8c9a89d99e2feeb30/docs/tools/browser.md)。

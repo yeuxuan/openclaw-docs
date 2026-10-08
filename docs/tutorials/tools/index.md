@@ -33,6 +33,7 @@ sidebarTitle: "工具系统"
 | 工具 | 能做什么 | 适合场景 |
 |------|----------|----------|
 | [Browser 浏览器](/tutorials/tools/browser) | 打开网页、点击按钮、读取页面 | 登录后台、网页自动化、检查页面 |
+| [轻量浏览器 Lightpanda](/tutorials/tools/browser-lightweight) | 用可选轻量引擎处理文本和 DOM | 容器、低资源网页任务 |
 | [Browser Control API](/tutorials/tools/browser-control) | 本地脚本控制浏览器 | 高级调试、内部集成 |
 | [Web 网络工具](/tutorials/tools/web) | 搜索网页、抓取内容 | 查资料、读文档、做调研 |
 | [Web Fetch](/tutorials/tools/web-fetch) | 读取一个网页正文 | 已知 URL 的内容提取 |
@@ -62,6 +63,7 @@ sidebarTitle: "工具系统"
 - [子智能体 Subagents](/tutorials/tools/subagents)：把一个大任务拆给多个 Agent
 - [Swarm](/tutorials/tools/swarm)：在 Code Mode 中并发编排 Collector 子智能体
 - [Code Mode](/tutorials/reference/code-mode)：按模型开启代码编排，区分等待、输出截断和失败恢复
+- [Code Mode 执行器](/tutorials/tools/code-mode-executors)：在 Node 默认执行和 QuickJS guest 隔离之间选择
 - [斜杠命令](/tutorials/tools/slash-commands)：用短命令触发固定动作
 - [BTW 临时问题](/tutorials/tools/btw)：问旁支问题，不污染主会话
 - [Steer 引导](/tutorials/tools/steer)：Agent 正忙时轻轻纠偏

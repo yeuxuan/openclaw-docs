@@ -72,6 +72,16 @@ Agent 处理消息也是类似的。
 
 普通补充信息更适合 steer 或 followup。
 
+## `runId` 跟着这条输入走到终点
+
+`chat.send` 返回的 `runId` 是这条输入的公开身份。steer 如果退化成 followup，排队成功不代表它已经完成；只有后续执行成功、失败或取消时，才会发出该 `runId` 的终态。
+
+- `collect` 一批消息时，每条被消费输入的 `runId` 都收到这批执行的结果。
+- 输入在消费前被拒绝、取消、丢弃或因队列溢出移除，会立即收到自己的终态。
+- steer 真正进入当前回合后，会在 transcript receipt 写入后完成该输入的 `runId`，不会把当前活跃回合一起标记完成。
+
+要撤回仍在 steer 或 followup 队列、尚未开始投递的输入，授权客户端可以调用 `chat.abort({ sessionKey, runId })`。这只撤回那条输入，不会停止当前活跃回合；投递开始后则不能保证撤回，也不能撤销已发生的外部副作用。
+
 ---
 
 ## 新手理解重点
@@ -88,4 +98,3 @@ Agent 处理消息也是类似的。
 - [命令队列](/tutorials/concepts/queue)
 - [智能体循环](/tutorials/concepts/agent-loop)
 - [任务自动化](/tutorials/automation/tasks)
-

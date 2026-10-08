@@ -149,6 +149,8 @@ OpenClaw 有两套钩子系统：
 
 - 助手增量被缓冲为聊天 `delta` 消息。
 - 在 lifecycle end/error 时发出聊天 `final`。
+- 某次执行发布确定的 lifecycle `end` 或 `error` 后，事件 owner 会抑制清理阶段迟到的模型更新和重复终态；可重试的 attempt error 不会提前关闭 lifecycle。
+- 主动取消会立即保留一个带 `aborted: true` 和停止原因（如 `rpc`、`restart`、`timeout`）的终态，再通知取消监听器。事件发布结束后，底层执行收敛与清理仍会独立继续。
 
 ---
 

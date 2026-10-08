@@ -83,6 +83,7 @@ OpenClaw 最新架构里，很多通道通过插件提供。
 - [QQ Bot](/tutorials/channels/qqbot)
 - [Raft](/tutorials/channels/raft)
 - [Twitch](/tutorials/channels/twitch)
+- [X / Twitter](/tutorials/channels/x)
 - [Zalo](/tutorials/channels/zalo)
 - [Zalo ClawBot](/tutorials/channels/zaloclawbot)
 - [Zalo Personal](/tutorials/channels/zalouser)

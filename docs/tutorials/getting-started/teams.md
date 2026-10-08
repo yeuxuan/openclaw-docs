@@ -89,4 +89,4 @@ description: "让可信团队共用 OpenClaw：接入群聊、配置身份认证
 3. 用受限角色验证不能操作未授权会话或 Agent；不要只测试管理员账号。
 4. 在 Gateway 主机运行 `openclaw security audit`，处理访问和暴露提示。
 
-继续阅读：[安全指南](/tutorials/gateway/security/)、[Slack](/tutorials/channels/slack)。
+继续阅读：[团队 Gateway 生产部署](/tutorials/gateway/team-server)、[安全指南](/tutorials/gateway/security/)、[Slack](/tutorials/channels/slack)。

@@ -28,6 +28,8 @@ openclaw logs --follow
 - [Gateway 服务命令](/tutorials/cli/gateway-service)
 - [通道和模型命令](/tutorials/cli/channels-models)
 - [备份和迁移命令](/tutorials/cli/backup-migrate)
+- [命名存储命令](/tutorials/cli/storage)
+- [团队用户 Profile 命令](/tutorials/cli/users)
 - [任务和自动化命令](/tutorials/cli/tasks-automation)
 - [安全和密钥命令](/tutorials/cli/security-secrets)
 - [Docs 文档搜索命令](/tutorials/cli/docs)

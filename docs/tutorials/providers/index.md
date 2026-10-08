@@ -102,7 +102,8 @@ API Key 不要发到群里，不要写进公开仓库，也不要贴到截图里
 
 下面是“云端模型”。你的消息会发到对应服务商，由它们返回答案。
 
-- [OpenAI](/tutorials/providers/openai)：OpenAI API、兼容端点和常见配置
+- [OpenAI](/tutorials/providers/openai)：OpenAI 模型、运行时和常见配置
+- [OpenAI 认证方式](/tutorials/providers/openai-authentication)：Codex 登录、SIWC 与 Platform API Key 的能力边界
 - [Anthropic](/tutorials/providers/anthropic)：Claude 系列模型
 - [Google Gemini](/tutorials/providers/google)：文本、多模态与媒体能力
 - [OpenRouter](/tutorials/providers/openrouter)：一个入口访问多家模型

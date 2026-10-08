@@ -78,6 +78,7 @@ OpenClaw 的核心结构可以先这样记：
 - [托管 Worktree](/tutorials/concepts/managed-worktrees)：给 Agent 任务单独开分支和 checkout
 - [多智能体路由](/tutorials/concepts/multi-agent)：多个 Agent 如何分工
 - [多用户模式](/tutorials/concepts/multi-user)：多个可信操作者共享一个 Agent 时的协作边界
+- [命名存储位置](/tutorials/concepts/storage-locations)：外接磁盘、对象存储、加密和异地备份 namespace
 
 如果把 Gateway 看成总机，Agent 就是接到任务后真正去办事的人。
 
@@ -125,6 +126,7 @@ OpenClaw 的核心结构可以先这样记：
 - [模型提供商概念](/tutorials/concepts/model-providers)
 - [模型故障转移](/tutorials/concepts/model-failover)
 - [OAuth](/tutorials/concepts/oauth)
+- [OpenAI 认证方式](/tutorials/providers/openai-authentication)：区分 Codex 登录、SIWC 和 API Key
 
 这里解决“AI 大脑从哪里来”“坏了怎么切备用”“订阅授权怎么接”这些问题。
 

@@ -33,6 +33,21 @@ openclaw backup sqlite create --agent main --repository ~/Backups/openclaw-sqlit
 
 每次会生成带 `manifest.json` 和 `database.sqlite` 的已验证快照。快照目录的上传、保留周期和异地同步由你负责。
 
+## 备份到命名存储位置
+
+长期运行的 Gateway 可以把归档直接写到已初始化的外接磁盘或对象存储：
+
+```bash
+openclaw storage init archive
+openclaw storage test archive
+openclaw backup create --to archive --namespace office-gateway --verify
+openclaw backup enable --to archive --namespace office-gateway --every 24h
+```
+
+`archive` 来自 `storage.locations`。目标根目录和加密口令不会由备份命令自动创建；先按[命名存储位置](/tutorials/concepts/storage-locations)配置、初始化并做真实读写探针。
+
+多台安装共用一个位置时，每台使用不同 namespace。第一次写入会创建所有权声明；换机后确实要接管旧 namespace 时才使用 `--claim-namespace`，不要让两套仍在运行的安装共享保留策略。
+
 ## 定时与 Git 版本化备份
 
 先初始化专用私有仓库，再让 Gateway 建立固定备份任务：
@@ -87,4 +102,4 @@ openclaw database preflight
 
 跨版本恢复时先做数据库预检，随后再启动 Gateway 并运行 `openclaw health` 与 `openclaw doctor`。
 
-上游来源：[`docs/install/backups.md`](https://github.com/openclaw/openclaw/blob/main/docs/install/backups.md)。
+上游来源：[`docs/install/backups.md`](https://github.com/openclaw/openclaw/blob/fb4653dbea6650c0fae516151fa87fda5ee4aaf9/docs/install/backups.md)、[`docs/concepts/storage-locations.md`](https://github.com/openclaw/openclaw/blob/fb4653dbea6650c0fae516151fa87fda5ee4aaf9/docs/concepts/storage-locations.md)。

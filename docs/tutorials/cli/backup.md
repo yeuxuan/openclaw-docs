@@ -14,6 +14,7 @@ openclaw backup create
 openclaw backup create --dry-run
 openclaw backup create --verify
 openclaw backup verify <archive>
+openclaw backup create --to <storage-location> --namespace <name> --verify
 ```
 
 ## 什么时候用
@@ -47,3 +48,12 @@ openclaw backup create --only-config
 
 不要把备份文件放进正在备份的状态目录或工作区里，否则可能出现自我包含。
 推荐放到单独目录，比如 `~/Backups` 或服务器的专用备份盘。
+
+已经配置[命名存储位置](/tutorials/concepts/storage-locations)时，可以直接写入外接磁盘或对象存储：
+
+```bash
+openclaw storage test archive
+openclaw backup create --to archive --namespace office-gateway --verify
+```
+
+多台 Gateway 共用目标时必须分开 namespace。读取、校验和恢复不改变 namespace 所有权；迁移到新硬件且原安装已退役时，才按输出使用 `--claim-namespace` 接管。

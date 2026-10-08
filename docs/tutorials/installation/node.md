@@ -34,6 +34,12 @@ Gateway 服务、nvm/fnm/Volta/Homebrew 中已有的兼容运行时；仍未找�
 确认把校验过的 Node 下载到 `~/.openclaw/tools/cli-node`，然后重试原命令。它不会
 替换系统 Node，也不会自动修复或重启 Gateway 服务。CI、`--json`、`--yes` 和非交互
 调用不会弹出安装提示；Alpine/musl 仍需手动安装。
+
+`openclaw update` 还有一条独立的目标版本预检：更新开始后会读取目标 release 的
+Node 要求，优先选择已有兼容运行时；在 macOS、Windows 和 glibc Linux 的 x64/ARM64
+上，也可以安静地准备校验过的私有运行时。这条更新恢复对 `--yes` 和 `--json` 同样
+生效，但不会修改系统 Node 或 shell。它只在原更新请求和安装所有权仍有效时继续；
+Alpine/musl、其他架构和要求精确进程身份的命令仍需手动准备兼容 Node。
 :::
 
 ---

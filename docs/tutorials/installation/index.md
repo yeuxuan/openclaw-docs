@@ -142,7 +142,14 @@ openclaw onboard
 
 全局链接不会修改 checkout 的包文件；若全局 bin 不在 PATH，运行 `pnpm setup`、重新打开终端后重试。不需要全局 CLI 时，直接在仓库内运行 `pnpm openclaw ...`。
 
-Corepack 会选择项目固定的版本，本次上游快照为 pnpm 12.3.4。没有 Corepack 时可显式安装该版本；npm 11.16+ 使用 `npm install -g pnpm@12.3.4 --allow-scripts=pnpm@12.3.4`，更旧 npm 去掉不支持的参数。不要关闭安装脚本或可选依赖，否则 pnpm 的原生执行文件可能无法安装。后续以实际 checkout 的固定版本为准。
+Corepack 会选择项目固定的版本，本次上游快照为 pnpm 12.5.1。没有 Corepack 时不要手抄可能过期的版本号，从 checkout 读取完整 package spec（`+` 后面是 Corepack 完整性哈希，不属于 npm spec）：
+
+```bash
+pnpm_spec=$(node -p "require('./package.json').packageManager.split('+')[0]")
+npm install -g "$pnpm_spec" --allow-scripts="$pnpm_spec"
+```
+
+npm 11.15 及更早版本不支持 `--allow-scripts`，需去掉该参数或先升级 npm。不要关闭安装脚本或可选依赖，否则 pnpm 的原生执行文件可能无法安装。
 
 ---
 

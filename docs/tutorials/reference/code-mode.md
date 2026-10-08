@@ -8,7 +8,7 @@ description: "OpenClaw Code Mode 的启用优先级、QuickJS 工具调用、等
 
 Code Mode 让模型用一小段 JavaScript/TypeScript 查找和调用工具，减少一次向模型暴露的大量工具定义。它仍遵守原有权限、审批、沙箱、插件 hook 与审计规则，不是绕过工具策略的执行入口。
 
-这里讲的是 **OpenClaw 通用 Agent runtime 的 Code Mode**：外层 `exec` 接收 JSON `{ code, language }`，在 QuickJS-WASI worker 中运行。不要把其他 coding harness 的同名功能、原始 JavaScript 输入格式或 shell `exec.command` 直接套进来。
+这里讲的是 **OpenClaw 通用 Agent runtime 的 Code Mode**：外层 `exec` 接收 JSON `{ code, language }`。当前默认执行器是 Node worker；需要 hardened guest 隔离时可选 QuickJS-WASI。不要把其他 coding harness 的同名功能、原始 JavaScript 输入格式或 shell `exec.command` 直接套进来。
 
 ## 启用与模型覆盖
 
@@ -63,7 +63,7 @@ Code Mode 让模型用一小段 JavaScript/TypeScript 查找和调用工具，�
 
 启用后，模型看到外层 `exec`、`wait` 和必须直接暴露的工具。脚本中使用快速索引列出的异步全局函数，或通过 `catalog.search()` 获取可调用 handle，再用 `describe()` 核实参数；MCP 工具走独立的 `MCP` 命名空间。
 
-不要猜工具名，也不要递归调用外层 `exec` / `wait`。QuickJS 里没有直接文件系统、网络、子进程、环境变量、`import` 或 `require`；这些能力必须经过已授权工具。
+不要猜工具名，也不要递归调用外层 `exec` / `wait`。面向 guest 的 API 不直接暴露文件系统、网络、子进程、环境变量、`import` 或 `require`；这些能力必须经过已授权工具。Node 的 `node:vm` 不是安全边界，执行器差异见 [Code Mode 执行器](/tutorials/tools/code-mode-executors)。
 
 每个工具 Promise 都要 `await` 或显式处理拒绝。未等待调用或定时器回调里的未处理错误，也会令 cell 失败，不能因为脚本已返回就认为所有动作成功。
 
@@ -98,7 +98,7 @@ Code Mode 让模型用一小段 JavaScript/TypeScript 查找和调用工具，�
 
 完成的嵌套调用以有界、脱敏、仅供展示的活动保存；模型重放只保留实际模型调用，不会凭空增加子工具消息。开始事件和中间更新仍是临时数据，缺失的旧活动不能由脚本源码反推回来。
 
-若已启用但 QuickJS-WASI 无法加载，本轮失败关闭，不会静默暴露所有普通工具。
+若配置的执行器无法加载，本轮失败关闭，不会静默切到另一个执行器或暴露所有普通工具。
 
 ## 排查顺序
 
@@ -106,6 +106,6 @@ Code Mode 让模型用一小段 JavaScript/TypeScript 查找和调用工具，�
 2. 检查当前工具策略是否允许所需工具。
 3. 区分外层 waiting/runId 与后台命令 sessionId。
 4. 看原始失败原因、审批记录和真实系统状态，再决定能否继续。
-5. 查看 [Tool Search](/tutorials/tools/tool-search)、[Exec 工具](/tutorials/tools/exec) 与 [Swarm](/tutorials/tools/swarm)。
+5. 查看 [Code Mode 执行器](/tutorials/tools/code-mode-executors)、[Tool Search](/tutorials/tools/tool-search)、[Exec 工具](/tutorials/tools/exec) 与 [Swarm](/tutorials/tools/swarm)。
 
-上游来源：[OpenClaw Code Mode](https://github.com/openclaw/openclaw/blob/2e3bf941b7848fa9dfcbcfc8c9a89d99e2feeb30/docs/tools/code-mode.md)。
+上游来源：[OpenClaw Code Mode](https://github.com/openclaw/openclaw/blob/fb4653dbea6650c0fae516151fa87fda5ee4aaf9/docs/tools/code-mode.md)。
